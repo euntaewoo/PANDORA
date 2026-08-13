@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2순위 배경 보존 텍스트 인 이미지 번역 에디터</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; }
+        header { background-color: #1e293b; padding: 1rem 2rem; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 1.25rem; font-weight: 600; color: #38bdf8; }
+        .toolbar { display: flex; gap: 1rem; align-items: center; }
+        button { background-color: #0284c7; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        button:hover { background-color: #0369a1; }
+        input[type="file"] { display: none; }
+        .file-label { background-color: #334155; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .workspace { flex: 1; display: flex; justify-content: center; align-items: center; padding: 2rem; overflow: auto; background-color: #020617; position: relative; }
+        #canvas-container { position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border-radius: 0.5rem; overflow: hidden; }
+        #clean-plate { display: block; max-width: 100%; height: auto; }
+        .text-box-layer { position: absolute; border: 1px dashed #38bdf8; background: rgba(56, 189, 248, 0.15); cursor: move; padding: 2px; color: white; font-family: sans-serif; user-select: none; }
+        .text-box-layer:focus { border: 2px solid #f43f5e; background: rgba(244, 63, 94, 0.2); outline: none; }
+        .sidebar { width: 320px; background-color: #1e293b; border-left: 1px solid #334155; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .panel-title { font-size: 1rem; font-weight: 600; border-bottom: 1px solid #334155; padding-bottom: 0.5rem; }
+        label { font-size: 0.875rem; color: #94a3b8; }
+        input[type="text"], select { width: 100%; padding: 0.5rem; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 0.25rem; margin-top: 0.25rem; }
+        #loading-overlay { display: none; position: absolute; inset: 0; background: rgba(15, 23, 42, 0.8); justify-content: center; align-items: center; z-index: 100; flex-direction: column; gap: 1rem; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #334155; border-top-color: #38bdf8; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🖼️ 2순위 배경 보존 텍스트 인 이미지 번역 에디터</h1>
+        <div class="toolbar">
+            <label for="image-upload" class="file-label">📁 이미지 업로드</label>
+            <input type="file" id="image-upload" accept="image/*">
+            <select id="target-lang">
+                <option value="JP">🇯🇵 일본어 번역 (약기법)</option>
+                <option value="EN">🇺🇸 영어 번역 (초월번역)</option>
+            </select>
+            <button id="btn-process">🚀 2순위 AI 분석 가동</button>
+            <button id="btn-export">🖼️ PNG 다운로드</button>
+        </div>
+    </header>
+    <div class="main-container">
+        <div class="workspace">
+            <div id="loading-overlay">
+                <div class="spinner"></div>
+                <p id="loading-text">Clean Plate 배경 생성 및 AI 분석 중...</p>
+            </div>
+            <div id="canvas-container">
+                <img id="clean-plate" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='50%' fill='%2394a3b8' dominant-baseline='middle' text-anchor='middle'>이미지를 업로드하고 분석을 가동하세요</text></svg>" alt="Clean Plate">
+            </div>
+        </div>
+        <div class="sidebar">
+            <div class="panel-title">🎛️ 텍스트 레이어 속성 에디터</div>
+            <div>
+                <label>번역문 텍스트</label>
+                <input type="text" id="prop-text" placeholder="선택된 레이어 없음">
+            </div>
+            <div>
+                <label>글자 색상 (Hex)</label>
+                <input type="text" id="prop-color" value="#FFFFFF">
+            </div>
+            <div>
+                <label>정렬 방식</label>
+                <select id="prop-align">
+                    <option value="center">중앙 정렬</option>
+                    <option value="left">좌측 정렬</option>
+                    <option value="right">우측 정렬</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadInput = document.getElementById('image-upload');
+        const processBtn = document.getElementById('btn-process');
+        const cleanPlateImg = document.getElementById('clean-plate');
+        const canvasContainer = document.getElementById('canvas-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const propText = document.getElementById('prop-text');
+        const propColor = document.getElementById('prop-color');
+        const propAlign = document.getElementById('prop-align');
+        
+        let selectedLayer = null;
+        let selectedFile = null;
+
+        uploadInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (evt) => { cleanPlateImg.src = evt.target.result; };
+                reader.readAsDataURL(selectedFile);
+            }
+        });
+
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) { alert('먼저 이미지를 업로드해주세요!'); return; }
+            loadingOverlay.style.display = 'flex';
+            
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('target_lang', document.getElementById('target-lang').value);
+
+            try {
+                const response = await fetch('/api/process-image', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    cleanPlateImg.src = data.clean_plate_b64;
+                    renderTextLayers(data.styled_blocks);
+                } else {
+                    alert('처리 실패: ' + data.detail);
+                }
+            } catch (err) {
+                alert('서버 통신 오류: ' + err.message);
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+
+        function renderTextLayers(blocks) {
+            document.querySelectorAll('.text-box-layer').forEach(el => el.remove());
+            if (!blocks || !Array.isArray(blocks)) return;
+
+            const imgWidth = cleanPlateImg.clientWidth || 800;
+            const imgHeight = cleanPlateImg.clientHeight || 1000;
+
+            blocks.forEach((block, idx) => {
+                if (!block) return;
+                const box = block.box_2d || block.box; 
+                if (!box || !Array.isArray(box) || box.length < 4) return;
+
+                const layer = document.createElement('div');
+                layer.className = 'text-box-layer';
+                layer.tabIndex = 0;
+                layer.innerText = block.translated_text || block.original_text || block.text || '';
+
+                const top = (box[0] / 1000) * imgHeight;
+                const left = (box[1] / 1000) * imgWidth;
+                const height = Math.max(20, ((box[2] - box[0]) / 1000) * imgHeight);
+                const width = Math.max(50, ((box[3] - box[1]) / 1000) * imgWidth);
+
+                layer.style.top = top + 'px';
+                layer.style.left = left + 'px';
+                layer.style.width = width + 'px';
+                layer.style.height = height + 'px';
+                layer.style.color = block.font_color_hex || block.color || '#FFFFFF';
+                layer.style.textAlign = block.alignment || 'center';
+
+                layer.addEventListener('focus', () => {
+                    selectedLayer = layer;
+                    propText.value = layer.innerText;
+                    propColor.value = layer.style.color;
+                    propAlign.value = layer.style.textAlign;
+                });
+
+                canvasContainer.appendChild(layer);
+            });
+        }
+
+        propText.addEventListener('input', (e) => { if (selectedLayer) selectedLayer.innerText = e.target.value; });
+        propColor.addEventListener('input', (e) => { if (selectedLayer) selectedLayer.style.color = e.target.value; });
+        propAlign.addEventListener('change', (e) => { if (selectedLayer) selectedLayer.style.textAlign = e.target.value; });
+    </script>
+</body>
+</html>

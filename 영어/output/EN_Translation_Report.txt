@@ -1,0 +1,49 @@
+==================================================
+🇺🇸 EN V0 엔진: 한국어 원문 vs 영문 번역 매핑 리포트
+==================================================
+
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: “각질 때문에 화장이 들뜨고 요철이 도드라져요”
+[영문 번역문]: “Makeup gets flaky and uneven texture stands out due to dead skin cells”
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: “순한 각질 케어 관리, 없나요?”
+[영문 번역문]: “Is there a gentle way to care for dead skin cells?”
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: “중요한날 사용할 화잘먹 아이템이 필요해요”
+[영문 번역문]: “I need a makeup-boosting item for special occasions”
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: “진정도, 필링도, 광채도 한 번에 되면 얼마나 좋을까?
+[영문 번역문]: “Wouldn't it be great to have soothing, peeling, and glow all at once?”
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: 고요한 결광을 만드는 달항아리 마스크
+[영문 번역문]: Moon Jar Mask for a Tranquil, Glowing Complexion
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: 달빛처럼 맑은 결
+[영문 번역문]: A clear texture like moonlight
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: 고요한 광채
+[영문 번역문]: Tranquil radiance
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: 한국의 달항아리를 닮은
+[영문 번역문]: Resembling a Korean Moon Jar
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: 깊고 기품 있는 피부
+[영문 번역문]: Deep and elegant skin
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: 자연에서 얻은 셀룰로오스가 만들어내는
+[영문 번역문]: Created by cellulose obtained from nature
+--------------------------------------------------
+[파일명]: 1_웹상세설명_BioFit Glow PHA_complex_Mask.png
+[한국어 원문]: 피부와 하나되는 밀착 보습
+[영문 번역문]: Adhesive moisturizing that becomes one with the skin
+--------------------------------------------------
