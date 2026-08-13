@@ -20,3 +20,7 @@
 - 모든 Gemini 3.1+ 모델 호출 시, 추측성 리전 변경을 엄격히 금지하며 무조건 프로젝트 내 구글 공식 가이드(`00_공통자료/.../Vertex_AI_Model_Garden_공식가이드_및_모델선택규칙.md`)의 **`location="global"` (Serverless 관리형 규격)**을 100% 강제 적용합니다.
 - 어떠한 상황에서도 공식 기술 문서의 규격을 이탈하여 `us-central1` 등 임의의 리전으로 단독 변경하는 행위를 절대 금지합니다.
 - **[공식 문서 주기적 체크 필수]**: 구글 클라우드 에이전트 플랫폼(Google Cloud Agent Platform) 및 Vertex AI Model Garden 공식 가이드와 신규 업데이트 내용을 작업 전/주기적으로 반드시 탐색·체크하여 최신 API 표준 및 리전 정책을 차질 없이 반영합니다.
+
+## 6. 깃허브 자동 버전 관리 및 실시간 푸시 규칙 (Automatic GitHub Sync & Push)
+- 모든 작업 진행 시, 소스코드 수정, 문서 개정, 신규 기능 추가가 일어날 때마다 무조건 깃허브 저장소(`https://github.com/euntaewoo/PANDORA.git`)로 자동 커밋 및 푸시(Auto Commit & Push)를 수행하여 버전 관리를 실시간 유지해야 합니다.
+- API 키 및 인증 파일은 `.gitignore`로 안전하게 제외 처리한 후 커밋합니다.
