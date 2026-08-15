@@ -37,27 +37,35 @@ if not gcp_json_key:
     gcp_json_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 
 # 루트 폴더 기준 인증키 fallback 탐색
-if not gcp_json_key or not os.path.exists(gcp_json_key):
-    fallback_key_path = os.path.join(project_root, "00_공통자료", "인증키_및_계정", "김차장_vertex api_key", "vertex_ai_auth_key.json")
-    if os.path.exists(fallback_key_path):
-        gcp_json_key = fallback_key_path
+key_candidates = [
+    os.path.join(project_root, ".env"),
+    os.path.join(project_root, "00_공통자료", "APIs_KEY", "인증키_및_계정", "김차장_vertex api_key", "vertex_ai_auth_key.json"),
+    os.path.join(project_root, "00_공통자료", "인증키_및_계정", "김차장_vertex api_key", "vertex_ai_auth_key.json"),
+]
+
+for kpath in key_candidates:
+    if kpath.endswith(".json") and os.path.exists(kpath):
+        gcp_json_key = kpath
+        break
 
 if gcp_json_key and os.path.exists(gcp_json_key):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gcp_json_key
-    print(f"[INFO] Vertex AI 서비스 계정 JSON 키 감지: {gcp_json_key}")
+    print(f"[INFO] Vertex AI 서비스 계정 JSON 키 감지: {gcp_json_key}", flush=True)
     with open(gcp_json_key, 'r', encoding='utf-8') as f:
         key_data = json.load(f)
         project_id = key_data.get('project_id')
     client = genai.Client(vertexai=True, project=project_id, location="global")
+    print(f"[INFO] Vertex AI Client 연결 성공 (Project: {project_id}, Location: global)", flush=True)
 elif api_key:
     if api_key.startswith("AQ."):
-        print("[INFO] Agent Platform API 키(AQ...) 감지. Vertex AI 모드로 전환합니다.")
+        print("[INFO] Agent Platform API 키(AQ...) 감지. Vertex AI 모드로 전환합니다.", flush=True)
         client = genai.Client(vertexai=True, api_key=api_key)
     else:
         client = genai.Client(api_key=api_key)
 else:
-    print("[ERROR] GEMINI_API_KEY 또는 GOOGLE_APPLICATION_CREDENTIALS가 설정되지 않았습니다.")
+    print("[ERROR] GEMINI_API_KEY 또는 GOOGLE_APPLICATION_CREDENTIALS가 설정되지 않았습니다.", flush=True)
     sys.exit(1)
+
 
 # ==========================================
 # 1. 모델 및 파라미터 설정
@@ -233,30 +241,37 @@ all_translations = []
 
 for filename in targets:
     # 이미 번역된 파일 또는 고시표 텍스트 파일 등 스킵
-    if '_CN_' in filename or '_JP_' in filename or '_EN_' in filename:
+    if '_CN_' in filename or '_JP_' in filename or '_EN_' in filename or filename.startswith('01_test_'):
+        continue
+
+    # 고시정보 표 이미지 별도 처리 (HTML 렌더러 연동)
+    if '고시' in filename or 'KR' in filename or '08_' in filename or '상세정보' in filename:
+        print(f"\n[NOTICE TABLE DETECTED] 고시정보 표 감지: {filename}", flush=True)
+        # 고시정보 표는 Pass 1에서 텍스트 추출 후 표준 HTML 렌더러로 처리
         continue
 
     in_path = os.path.join(source_dir, filename)
     out_name = f"{os.path.splitext(filename)[0]}_CN_{target_region}_v1.png"
     out_path = os.path.join(target_dir, out_name)
 
+
     if os.path.exists(out_path):
         print(f"\n[SKIP] 이미 번역 완료된 파일입니다: {filename}")
         continue
 
-    print(f"\n[RENDER] 변환 시작: {filename}")
+    print(f"\n[RENDER] 변환 시작: {filename}", flush=True)
 
     try:
         original_image = Image.open(in_path)
         original_image.load()
     except Exception as e:
-        print(f"  -> [ERROR] 이미지 로드 실패: {e}")
+        print(f"  -> [ERROR] 이미지 로드 실패: {e}", flush=True)
         continue
 
     # ==========================
     # PASS 1: OCR & 번역 매핑 (Pro 모델)
     # ==========================
-    print(f"  -> [PASS 1] 텍스트 매핑 및 {target_region} 권역 규제 검열 중...")
+    print(f"  -> [PASS 1] 텍스트 매핑 및 {target_region} 권역 규제 검열 중...", flush=True)
     mapping_data_str = None
     for attempt in range(3):
         try:
@@ -272,14 +287,14 @@ for filename in targets:
         except Exception as e:
             if "429" in str(e) or "ResourceExhausted" in str(e):
                 wait_time = 25 * (attempt + 1)
-                print(f"  -> [RATE LIMIT] 429 감지. {wait_time}초 대기 후 재시도... ({attempt+1}/3)")
+                print(f"  -> [RATE LIMIT] 429 감지. {wait_time}초 대기 후 재시도... ({attempt+1}/3)", flush=True)
                 time.sleep(wait_time)
             else:
-                print(f"  -> [PASS 1 ERROR] {e}")
+                print(f"  -> [PASS 1 ERROR] {e}", flush=True)
                 break
 
     if not mapping_data_str:
-        print("  -> [PASS 1 FAILED] 번역 매핑 데이터 생성 실패.")
+        print("  -> [PASS 1 FAILED] 번역 매핑 데이터 생성 실패.", flush=True)
         continue
 
     # Python 하드 필터링 (중국 본토 모드일 때 신광고법 추가 검열)
@@ -291,56 +306,67 @@ for filename in targets:
                 if target_region == "CN":
                     for pattern, safe_word in CN_AD_LAW_FILTERS.items():
                         if re.search(pattern, chn_text):
-                            print(f"      [Python Regex Filter] 신광고법 금지어 감지: '{pattern}' -> '{safe_word}' 로 강제 치환")
+                            print(f"      [Python Regex Filter] 신광고법 금지어 감지: '{pattern}' -> '{safe_word}' 로 강제 치환", flush=True)
                             chn_text = re.sub(pattern, safe_word, chn_text)
                             item["violation_reason"] = item.get("violation_reason", "") + f" (Python 정규식 치환: {pattern})"
                 item["chn"] = chn_text
                 item["source_file"] = filename
             all_translations.extend(parsed_json["translation_map"])
             mapping_data_str = json.dumps(parsed_json, ensure_ascii=False, indent=2)
-        print("  -> [PASS 1 SUCCESS] 매핑 데이터 생성 및 검열 완료.")
+        print("  -> [PASS 1 SUCCESS] 매핑 데이터 생성 및 검열 완료.", flush=True)
     except Exception as e:
-        print(f"  -> [WARNING] JSON 파싱 경고: {e}")
+        print(f"  -> [WARNING] JSON 파싱 경고: {e}", flush=True)
 
     # ==========================
     # PASS 2: 이미지 인페인팅 렌더링 (Flash-Image 모델)
     # ==========================
-    print("  -> [PASS 2] 이미지 인페인팅 및 알리바바 푸후이체 식자 렌더링 중...")
-    try:
-        final_prompt = pass2_prompt_template.replace("{json_data}", mapping_data_str)
-        response_p2 = client.models.generate_content(
-            model=MODEL_FLASH_IMAGE,
-            contents=[final_prompt, original_image]
-        )
+    print("  -> [PASS 2] 이미지 인페인팅 및 알리바바 푸후이체 식자 렌더링 중...", flush=True)
+    img_saved = False
+    for attempt in range(3):
+        try:
+            final_prompt = pass2_prompt_template.replace("{json_data}", mapping_data_str)
+            response_p2 = client.models.generate_content(
+                model=MODEL_FLASH_IMAGE,
+                contents=[final_prompt, original_image]
+            )
 
-        img_saved = False
-        if hasattr(response_p2, 'candidates'):
-            for cand in response_p2.candidates:
-                if hasattr(cand, 'content') and hasattr(cand.content, 'parts'):
-                    for part in cand.content.parts:
-                        if hasattr(part, 'inline_data') and part.inline_data:
-                            img = Image.open(io.BytesIO(part.inline_data.data))
-                            img = img.resize(original_image.size, Image.Resampling.LANCZOS)
-                            img.save(out_path, format="PNG")
-                            img_saved = True
-                            break
-                        elif hasattr(part, 'image') and part.image:
-                            img = Image.open(io.BytesIO(part.image.image_bytes))
-                            img = img.resize(original_image.size, Image.Resampling.LANCZOS)
-                            img.save(out_path, format="PNG")
-                            img_saved = True
-                            break
+            if hasattr(response_p2, 'candidates'):
+                for cand in response_p2.candidates:
+                    if hasattr(cand, 'content') and hasattr(cand.content, 'parts'):
+                        for part in cand.content.parts:
+                            if hasattr(part, 'inline_data') and part.inline_data:
+                                img = Image.open(io.BytesIO(part.inline_data.data))
+                                img = img.resize(original_image.size, Image.Resampling.LANCZOS)
+                                img.save(out_path, format="PNG")
+                                img_saved = True
+                                break
+                            elif hasattr(part, 'image') and part.image:
+                                img = Image.open(io.BytesIO(part.image.image_bytes))
+                                img = img.resize(original_image.size, Image.Resampling.LANCZOS)
+                                img.save(out_path, format="PNG")
+                                img_saved = True
+                                break
 
-        if img_saved:
-            print(f"  -> [SUCCESS] {out_name} 최종 저장 완료! (해상도: {original_image.size[0]}x{original_image.size[1]} px)")
-        else:
-            print("  -> [FAILED] Pass 2에서 이미지 데이터를 반환받지 못했습니다.")
+            if img_saved:
+                print(f"  -> [SUCCESS] {out_name} 최종 저장 완료! (해상도: {original_image.size[0]}x{original_image.size[1]} px)", flush=True)
+                break
+            else:
+                print("  -> [FAILED] Pass 2에서 이미지 데이터를 반환받지 못했습니다.", flush=True)
+                break
 
-    except Exception as e:
-        print(f"  -> [PASS 2 ERROR] 렌더링 실패: {e}")
+        except Exception as e:
+            if "429" in str(e) or "ResourceExhausted" in str(e):
+                wait_time = 25 * (attempt + 1)
+                print(f"  -> [PASS 2 RATE LIMIT] 429 감지. {wait_time}초 대기 후 자동 재시도... ({attempt+1}/3)", flush=True)
+                time.sleep(wait_time)
+            else:
+                print(f"  -> [PASS 2 ERROR] 렌더링 실패: {e}", flush=True)
+                break
 
     # 429 방지를 위한 8초 안전 대기
     time.sleep(8)
+
+
 
 # ==========================================
 # 6. 중국 광고법 준수 및 번역 비교표 리포트 생성
