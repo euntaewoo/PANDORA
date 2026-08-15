@@ -43,8 +43,9 @@ flowchart TD
     
     PostProc --> TableCheck{"📋 고시정보 표(Notice Table) 여부"}
     TableCheck -- "일반 상세페이지 이미지" --> SaveImg["💾 최종 번역 이미지 PNG 저장"]
-    TableCheck -- "고시정보 표 이미지" --> TableRenderer["🖥️ 860px 고시표 Headless Edge 렌더러<br>(Alibaba-PuHuiTi, 타이틀 64px, 본문 32px,<br>max 2580px 이하, 초과 시 2페이지 자동 분할)"]
+    TableCheck -- "고시정보 표 이미지" --> TableRenderer["🖥️ 860px 고시표 Headless Edge 렌더러<br>(Alibaba-PuHuiTi, 타이틀 56px, 본문 28px,<br>max 2580px 이하 1장 단일 페이지 렌더링)"]
     TableRenderer --> SaveImg
+
 
     SaveImg --> Report["📄 중국 광고법 준수 및 번역 비교표 TXT 리포트 생성"]
     Report --> GitSync["🔄 GitHub PANDORA 저장소 실시간 자동 커밋 & 푸시"]
