@@ -28,10 +28,22 @@ def build_notice_html(title, items, lang="EN"):
     """
     if lang.upper() == "JP":
         font_family = "'Noto Sans JP', 'NotoSansJP', 'Meiryo', sans-serif"
+        title_size = "64px"
+        cell_size = "32px"
+        cell_padding = "24px 20px"
+        val_padding = "24px 26px"
     elif lang.upper() in ["CN", "ZH", "SC", "TC"]:
         font_family = "'Alibaba PuHuiTi', 'Alibaba-PuHuiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        title_size = "56px"
+        cell_size = "28px"
+        cell_padding = "20px 18px"
+        val_padding = "20px 22px"
     else:
         font_family = "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        title_size = "64px"
+        cell_size = "32px"
+        cell_padding = "24px 20px"
+        val_padding = "24px 26px"
 
     rows_html = ""
     for it in items:
@@ -102,11 +114,11 @@ def build_notice_html(title, items, lang="EN"):
             margin: 0 auto;
         }}
         .title {{
-            font-size: 64px;
+            font-size: {title_size};
             font-weight: 700;
             text-align: center;
             letter-spacing: -0.5px;
-            margin-bottom: 45px;
+            margin-bottom: 40px;
             color: #111111;
         }}
         table {{
@@ -121,23 +133,23 @@ def build_notice_html(title, items, lang="EN"):
         th.label-cell {{
             width: 250px;
             background-color: #F8F9FA;
-            font-size: 32px;
+            font-size: {cell_size};
             font-weight: 700;
             color: #333333;
-            padding: 24px 20px;
+            padding: {cell_padding};
             text-align: left;
             vertical-align: middle;
             line-height: 1.4;
             border-right: 1px solid #EAEAEA;
         }}
         td.value-cell {{
-            font-size: 32px;
+            font-size: {cell_size};
             font-weight: 400;
             color: #222222;
-            padding: 24px 26px;
+            padding: {val_padding};
             text-align: left;
             vertical-align: middle;
-            line-height: 1.5;
+            line-height: 1.45;
             word-break: keep-all;
             background-color: #FFFFFF;
         }}

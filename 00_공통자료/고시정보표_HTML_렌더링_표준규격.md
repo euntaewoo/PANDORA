@@ -33,12 +33,18 @@
 
 ## 3. 📏 타이포그래피 및 폰트 크기 표준 규격 (Typography Specs)
 
-모든 국가/언어 표에서 공통 적용되는 폰트 크기 계층 구조입니다.
+언어별 특성에 맞춘 최적화 폰트 크기 계층 구조입니다.
+
+| 언어 구분 | 상단 타이틀 (`.title`) | 1열 항목 라벨 (`th.label-cell`) | 2열 본문 내용 (`td.value-cell`) |
+| :--- | :---: | :---: | :---: |
+| **영문(EN) / 일본어(JP)** | **`64px`** (Bold 700) | **`32px`** (Bold 700) | **`32px`** (Regular 400) |
+| **중국어(CN / TW / HK)** | **`56px`** (Bold 700) | **`28px`** (Bold 700) | **`28px`** (Regular 400) |
 
 ```css
+/* [중국어 기준 CSS 예시] */
 /* 상단 메인 타이틀 */
 .notice-title {
-    font-size: 64px;
+    font-size: 56px;
     font-weight: 700;
     line-height: 1.2;
     text-align: center;
@@ -48,26 +54,25 @@
 
 /* 테이블 좌측 항목명 (라벨 열) */
 .notice-table th, .notice-label {
-    font-size: 32px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 700;
     line-height: 1.4;
     color: #333333;
     background-color: #F8F9FA;
-    padding: 24px 20px;
-    width: 260px;
+    padding: 20px 18px;
+    width: 250px;
     vertical-align: middle;
 }
 
 /* 테이블 우측 본문 내용 (값 열) */
 .notice-table td, .notice-value {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 400;
-    line-height: 1.5;
+    line-height: 1.45;
     color: #222222;
-    background-color: #FFFFFF;
-    padding: 24px 28px;
-    vertical-align: middle;
+    padding: 20px 22px;
     word-break: keep-all;
+    vertical-align: middle;
 }
 ```
 
