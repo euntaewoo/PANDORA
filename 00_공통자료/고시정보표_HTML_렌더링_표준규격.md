@@ -83,7 +83,27 @@
 
 ---
 
-## 4. 🚀 렌더링 파이프라인 (Headless Chromium / Edge)
+## 4. 📐 1열 항목명 가로 폭 산정 기준 및 의미 단위 줄바꿈 전역 표준 규칙 (Column 1 Layout Standard)
+
+모든 번역 엔진(프로토/기본, 영문, 일본어, 중국어 등 전 다국어 파이프라인)에서 고시정보 표를 생성할 때 공통 적용되는 1열 레이아웃 2대 원칙입니다:
+
+### 1) 1열 가로 너비 기준점 산정 규칙 (Max Label Width Base Rule)
+- 1열(항목명 라벨)의 가로 너비는 해당 언어의 고시 항목 중 **"가장 긴 단일 항목(불필요한 공백이나 줄바꿈 없이 1줄로 딱 맞게 수납되는 최대 단일 항목)"의 텍스트 길이를 기준점**으로 산정하여 1열 너비를 최적화합니다.
+- **언어별 기준 예시**:
+  - **중국어(CN)**: `特殊用途化妆品审查` (9글자)를 기준으로 `width: 275px` 최적화 수납.
+  - **영문(EN)**: `Country of Origin`, `Cosmetics Manufacturer` 등 언어별 최대 단일 라벨 기준 폭 최적화.
+  - **일본어(JP)**: `化粧品製造販売業者`, `全成分表示` 등 언어별 최대 단일 라벨 기준 폭 최적화.
+
+### 2) 복합 기술 항목의 의미 단위 줄바꿈 규칙 (Semantic Line-Break Rule)
+- 1열 항목명이 2개 이상의 복합적 의미로 길게 기술된 항목(예: `제조업자 및 책임판매업자`, `化妆品生产企业及责任销售商`, `Manufacturer & Distributor`)은 1열 너비를 불필요하게 넓히지 않고 **그 의미 단위로 자연스럽게 줄바꿈(`<br>`)하여 표현**합니다.
+- **적용 예시**:
+  - `化妆品生产企业及`<br>`责任销售商` (중국어)
+  - `제조업자 및`<br>`책임판매업자` (한국어)
+  - `Cosmetics Manufacturer &`<br>`Responsible Distributor` (영문)
+
+---
+
+## 5. 🚀 렌더링 파이프라인 (Headless Chromium / Edge)
 
 - AI 생성형 모델의 글자 흐림(Blurry) 현상을 배제하기 위해, 고시정보 표는 **HTML ➔ Headless Browser ➔ 2x/1x 고해상도 PNG 캡처** 파이프라인을 의무 적용합니다.
 - 실행 명령어 규격:
@@ -91,3 +111,4 @@
   msedge.exe --headless=new --screenshot=output.png --window-size=860,3000 --hide-scrollbars temp.html
   ```
 - 캡처 후 Pillow를 통해 정확한 내용 영역(Content Bounding Box)을 감지하여 세로 `Auto-Fit` 및 `2,580px 초과 검사`를 수행합니다.
+

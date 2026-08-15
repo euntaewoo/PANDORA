@@ -50,7 +50,7 @@ python C:\Users\euntaewoo\Desktop\다국어_이미지_번역\중국어\CN_Text-I
 
 ## 📋 4. 상품 고시정보 표 렌더러 단독 실행 가이드
 
-고시정보 표(Notice Table)를 가로 `860px`, 세로 `Auto-Fit`(타이틀 52px, 본문 26px, 자간+행간 최적화, 최대 2,580px 이하 1장 단일 통합 페이지) 표준 규격으로 단독 렌더링할 때:
+고시정보 표(Notice Table)를 가로 `860px`, 세로 `Auto-Fit`(타이틀 52px, 본문 26px, 1열 275px 기준, 복합항목 의미단위 개행, 최대 2,580px 이하 1장 단일 통합 페이지) 표준 규격으로 단독 렌더링할 때:
 
 ```bash
 python C:\Users\euntaewoo\Desktop\다국어_이미지_번역\00_공통자료\render_notice_table_standard.py

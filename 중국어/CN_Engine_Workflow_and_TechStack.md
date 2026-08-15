@@ -42,7 +42,7 @@ flowchart TD
     
     PostProc --> TableCheck{"📋 고시정보 표(Notice Table) 여부"}
     TableCheck -- "일반 상세페이지 이미지" --> SaveImg["💾 최종 번역 이미지 PNG 저장"]
-    TableCheck -- "고시정보 표 이미지" --> TableRenderer["🖥️ 860px 고시표 Headless Edge 렌더러<br>(Noto Sans SC, 타이틀 52px, 본문 26px, 자간+행간 최적화,<br>max 2580px 이하 1장 단일 페이지 렌더링)"]
+    TableCheck -- "고시정보 표 이미지" --> TableRenderer["🖥️ 860px 고시표 Headless Edge 렌더러<br>(Noto Sans SC, 타이틀 52px, 본문 26px, 1열 275px 기준,<br>복합항목 의미단위 개행, max 2580px 이하 1장 수납)"]
     TableRenderer --> SaveImg
 
 

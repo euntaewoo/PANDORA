@@ -182,8 +182,10 @@ def build_notice_html(title, items, lang="EN"):
 
 def render_notice_table_to_png(title, items, output_path, lang="EN", max_height=2580):
     """
-    고시정보 표 렌더링 실행 함수
-    - 가로 860px 고정, 세로 auto-fit
+    고시정보 표 렌더링 실행 함수 (전 다국어 공통 표준)
+    - 가로 860px 고정, 세로 auto-fit (max 2,580px 이하 1장 수납 원칙)
+    - [1열 너비 기준]: 언어별 가장 긴 단일 항목(예: 중국어 '特殊用途化妆品审查')을 기준으로 1열 폭 최적화
+    - [의미단위 줄바꿈]: '제조업자 및 책임판매업자', '化妆品生产企业及责任销售商' 등 복합 항목은 의미 단위 <br> 개행
     - 2580px 초과 시 자동으로 2페이지(Part 1, Part 2) 분할 렌더링
     """
     browser_bin = get_browser_path()
