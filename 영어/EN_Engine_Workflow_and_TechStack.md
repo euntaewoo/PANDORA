@@ -1,0 +1,85 @@
+# 🇺🇸 EN_Text-In_Image_Translation_Engine_V1 동작 흐름 및 기술 스택 가이드
+
+본 문서는 **다국어 이미지 번역 시스템 (영어 파이프라인)**에 적용된 핵심 엔진(`EN_Text-In_Image_Translation_Engine_V1.py`)의 동작 흐름과 단계별 기술 스택(Tech Stack)을 정리한 표준 기술 문서입니다.
+
+---
+
+## 📊 1. 엔진 작업 동작 흐름 플로우차트 (Workflow Flowchart)
+
+```mermaid
+graph TD
+    %% 1단계: 인증 및 환경 초기화
+    subgraph S1["1단계: 인증 및 환경 초기화"]
+        A["시작: 스크립트 실행"] --> B["Vertex AI 인증 키 로드<br><code>vertex_ai_auth_key.json</code>"]
+        B --> C["Google GenAI Client 생성<br><code>location='global' (Serverless)</code>"]
+    end
+
+    %% 2단계: 원본 이미지 수집 & 분석
+    subgraph S2["2단계: 원본 이미지 수집 & 분석"]
+        C --> D["대상 폴더 이미지 로드<br><code>Pillow (PIL.Image)</code>"]
+        D --> E["원본 가로/세로 해상도(Aspect Ratio) 캡처"]
+    end
+
+    %% 3단계: Pass 1 텍스트 인지 및 초월번역
+    subgraph S3["3단계: [PASS 1] 텍스트 인지 및 초월번역"]
+        E --> F["Gemini 3.1 Pro Preview 호출<br><code>gemini-3.1-pro-preview</code>"]
+        F --> G["한국어/영어 OCR 정밀 스캔 & 언어 자동 감지"]
+        G --> H["글로벌 뷰티 이커머스 초월번역/교정<br>(Transcreation / Polishing)"]
+        H --> I["정형화된 JSON 매핑 데이터 생성<br><code>{original_text, corrected_en}</code>"]
+    end
+
+    %% 4단계: Pass 2 인페인팅 렌더링
+    subgraph S4["4단계: [PASS 2] 시각적 인페인팅 렌더링"]
+        I --> J["Gemini 3.1 Flash Image 호출<br><code>gemini-3.1-flash-image</code>"]
+        J --> K{"429 Quota 에러 발생?"}
+        K -- "Yes (Rate Limit)" --> L["Exponential Backoff 대기<br>(25초~ 재시도)"]
+        L --> J
+        K -- "No (성공)" --> M["기존 텍스트 원본 배경색으로 완벽 삭제"]
+        M --> N["영문 타이포그래피 재식자<br>(Pretendard / Inter 스타일)"]
+        N --> O["제품 본품 용기/로고 100% 원본 보존"]
+    end
+
+    %% 5단계: 후처리 및 저장
+    subgraph S5["5단계: 후처리 & 형상 관리"]
+        O --> P["해상도 강제 동기화 (Aspect Ratio Lock)<br><code>Pillow LANCZOS Resampling</code>"]
+        P --> Q["최종 이미지 파일 저장<br><code>*_수정번역.png</code>"]
+        Q --> R["번역/교정 대조 리포트 문서 자동 발행<br><code>EN_Translation_Polish_Report.txt</code>"]
+        R --> S["GitHub 원격 저장소 자동 동기화<br><code>Git Auto Commit & Push</code>"]
+    end
+
+    S --> T["작업 완료"]
+
+    %% 스타일링
+    style S1 fill:#f8f9fa,stroke:#495057,stroke-width:1px
+    style S2 fill:#e9ecef,stroke:#495057,stroke-width:1px
+    style S3 fill:#e8f4fd,stroke:#1971c2,stroke-width:2px
+    style S4 fill:#ebfbee,stroke:#2f9e44,stroke-width:2px
+    style S5 fill:#fff3bf,stroke:#f08c00,stroke-width:1px
+```
+
+---
+
+## 🛠️ 2. 단계별 적용 기술 스택 (Tech Stack Summary)
+
+| 단계 | 주요 기능 | 적용 기술 스택 (Core Technology) | 핵심 역할 및 설명 |
+| :--- | :--- | :--- | :--- |
+| **0. Auth** | 클라우드 인증 | **Google Cloud Vertex AI** (`google-genai` SDK) | `location="global"` 기반의 Serverless 관리형 공식 표준 엔드포인트 연결 |
+| **1. Pass 1** | 인지 및 초월번역 | **`gemini-3.1-pro-preview`** (추론 엔진) | • 다국어 OCR 정밀 스캔<br>• 한국어 ➔ 영문 초월번역(Transcreation)<br>• 기존 영문 ➔ 네이티브 표현 다듬기(Polishing)<br>• 구조화된 JSON 데이터 출력 |
+| **2. Pass 2** | 이미지 재렌더링 | **`gemini-3.1-flash-image`** (생성 엔진) | • 기존 텍스트 배경색 매칭 삭제 (Seamless Inpainting)<br>• 모던 산세리프(Pretendard/Inter) 폰트 재식자<br>• 제품 패키지/로고 원형 보존 |
+| **3. Retry** | 통신 안정성 | **Exponential Backoff Algorithm** | 429 Resource Exhausted (분당 쿼터 제한) 발생 시 25초~ 점진적 대기 후 자동 재시도 |
+| **4. Post-Proc**| 해상도 보존 | **Python Pillow (LANCZOS)** | 원본 픽셀 종횡비(Aspect Ratio) 및 가로/세로 해상도 1:1 강제 일치 복원 (크롭/찌그러짐 방지) |
+| **5. DevOps** | 형상 관리 | **Git / GitHub Repository (PANDORA)** | 소스코드 및 기술 문서 변경 시 원격 저장소(`main` 브랜치) 실시간 자동 커밋 및 푸시 |
+
+---
+
+## 💡 3. 엔진 핵심 아키텍처 특징 (Two-Pass Architecture)
+
+1. **지능형 언어 자동 감지 (Auto-Detect Dual Mode)**:
+   - 이미지 속 텍스트가 한글이면 자동으로 `TRANSLATE_KR_TO_EN` 모드로 동작하여 한글을 영어로 초월번역합니다.
+   - 이미지 속 텍스트가 영어이면 자동으로 `POLISH_EN_TO_EN` 모드로 동작하여 어색한 콩글리시/문법 오류를 네이티브 이커머스 표현으로 다듬어 교정합니다.
+
+2. **완전 재생성 원칙 (Full Regeneration Rule)**:
+   - 오류나 수정 발생 시 국소 덧칠(Patching)을 금지하고 전체 캔버스를 처음부터 끝까지 완전하게 다시 생성하여 무결점 퀄리티를 유지합니다.
+
+3. **상품 패키지 원본 보존 (Product Package Text & Logo Protection)**:
+   - 화장품 용기, 튜브, 단상자 등에 인쇄된 원본 로고와 텍스트는 인페인팅 대상에서 제외하여 패키지 고유의 시각적 형태를 100% 보존합니다.
