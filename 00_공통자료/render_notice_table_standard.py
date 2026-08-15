@@ -110,13 +110,13 @@ def build_notice_html(title, items, lang="EN"):
             font-family: {font_family};
             width: 860px;
             margin: 0;
-            padding: 50px 30px;
+            padding: 45px 20px;
             color: #111111;
             -webkit-font-smoothing: antialiased;
         }}
 
         .notice-container {{
-            width: 800px;
+            width: 820px;
             margin: 0 auto;
         }}
         .title {{
@@ -137,7 +137,7 @@ def build_notice_html(title, items, lang="EN"):
             border-bottom: 1px solid #E0E0E0;
         }}
         th.label-cell {{
-            width: 250px;
+            width: 290px;
             background-color: #F8F9FA;
             font-size: {cell_size};
             font-weight: 700;
@@ -147,6 +147,7 @@ def build_notice_html(title, items, lang="EN"):
             vertical-align: middle;
             line-height: {line_height};
             letter-spacing: {letter_spacing};
+            word-break: keep-all;
             border-right: 1px solid #EAEAEA;
         }}
         td.value-cell {{
@@ -161,6 +162,7 @@ def build_notice_html(title, items, lang="EN"):
             word-break: keep-all;
             background-color: #FFFFFF;
         }}
+
     </style>
 </head>
 

@@ -56,14 +56,14 @@
 
 /* 테이블 좌측 항목명 (라벨 열) */
 .notice-table th, .notice-label {
+    width: 290px;
     font-size: 26px;
     font-weight: 700;
     line-height: 1.65;
     letter-spacing: 0.6px;
     color: #333333;
     background-color: #F8F9FA;
-    padding: 20px 18px;
-    width: 250px;
+    padding: 45px 20px;
     vertical-align: middle;
 }
 
@@ -74,7 +74,7 @@
     line-height: 1.65;
     letter-spacing: 0.6px;
     color: #222222;
-    padding: 20px 22px;
+    padding: 45px 20px;
     word-break: keep-all;
     vertical-align: middle;
 }
