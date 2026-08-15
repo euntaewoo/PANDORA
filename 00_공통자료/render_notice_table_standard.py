@@ -32,18 +32,24 @@ def build_notice_html(title, items, lang="EN"):
         cell_size = "32px"
         cell_padding = "24px 20px"
         val_padding = "24px 26px"
+        line_height = "1.45"
+        letter_spacing = "-0.2px"
     elif lang.upper() in ["CN", "ZH", "SC", "TC"]:
-        font_family = "'Alibaba PuHuiTi', 'Alibaba-PuHuiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        title_size = "56px"
-        cell_size = "28px"
-        cell_padding = "20px 18px"
-        val_padding = "20px 22px"
+        font_family = "'Noto Sans SC', 'NotoSansSC', 'Source Han Sans SC', '思源黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        title_size = "52px"
+        cell_size = "26px"
+        cell_padding = "18px 16px"
+        val_padding = "18px 20px"
+        line_height = "1.65"
+        letter_spacing = "0.6px"
     else:
         font_family = "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
         title_size = "64px"
         cell_size = "32px"
         cell_padding = "24px 20px"
         val_padding = "24px 26px"
+        line_height = "1.45"
+        letter_spacing = "-0.5px"
 
     rows_html = ""
     for it in items:
@@ -84,13 +90,13 @@ def build_notice_html(title, items, lang="EN"):
             font-weight: 400;
         }}
         @font-face {{
-            font-family: 'Alibaba PuHuiTi';
-            src: local('Alibaba-PuHuiTi-Bold'), local('AlibabaPuHuiTi-Bold'), local('Alibaba PuHuiTi Bold');
+            font-family: 'Noto Sans SC';
+            src: local('Noto Sans SC Bold'), local('NotoSansSC-Bold'), local('Source Han Sans SC Bold'), local('思源黑体 Bold');
             font-weight: 700;
         }}
         @font-face {{
-            font-family: 'Alibaba PuHuiTi';
-            src: local('Alibaba-PuHuiTi-Regular'), local('AlibabaPuHuiTi-Regular'), local('Alibaba PuHuiTi Regular');
+            font-family: 'Noto Sans SC';
+            src: local('Noto Sans SC Regular'), local('NotoSansSC-Regular'), local('Source Han Sans SC Regular'), local('思源黑体 Regular');
             font-weight: 400;
         }}
 
@@ -117,7 +123,7 @@ def build_notice_html(title, items, lang="EN"):
             font-size: {title_size};
             font-weight: 700;
             text-align: center;
-            letter-spacing: -0.5px;
+            letter-spacing: {letter_spacing};
             margin-bottom: 40px;
             color: #111111;
         }}
@@ -139,7 +145,8 @@ def build_notice_html(title, items, lang="EN"):
             padding: {cell_padding};
             text-align: left;
             vertical-align: middle;
-            line-height: 1.4;
+            line-height: {line_height};
+            letter-spacing: {letter_spacing};
             border-right: 1px solid #EAEAEA;
         }}
         td.value-cell {{
@@ -149,12 +156,14 @@ def build_notice_html(title, items, lang="EN"):
             padding: {val_padding};
             text-align: left;
             vertical-align: middle;
-            line-height: 1.45;
+            line-height: {line_height};
+            letter-spacing: {letter_spacing};
             word-break: keep-all;
             background-color: #FFFFFF;
         }}
     </style>
 </head>
+
 <body>
     <div class="notice-container">
         <div class="title">{title}</div>

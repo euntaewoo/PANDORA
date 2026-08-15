@@ -218,14 +218,18 @@ pass2_prompt_template = f"""
 [시각적 렌더링 엄격 규칙]
 1. (KOR ERASING) 원본의 한국어 텍스트는 원래 자리에 남겨두지 말고 배경색/텍스처로 완벽하게 덮어써서 100% 지울 것. 병기 절대 금지.
 2. (JSON APPLY) 지워진 그 자리에 오직 [번역 매핑 데이터 JSON]의 'chn' 텍스트만 렌더링할 것. 모델 임의로 글자를 누락하거나 수정하지 말 것.
-3. (FONT STYLE) 폰트는 중화권 표준 서체인 '알리바바 푸후이체(Alibaba PuHuiTi)' 스타일의 깔끔한 산세리프로 선명하게 렌더링할 것.
-4. (FULL INPAINTING NO PATCHING) 텍스트 수정 시 오류 부분만 오려내어 덧칠(Patching)하지 말고, 캔버스 전체를 완전히 새롭게 렌더링(Full Inpainting)하여 1픽셀의 이질감도 없는 완벽한 하나의 이미지를 생성할 것.
-5. (PACKAGE PRESERVATION) 제품 본품(용기, 튜브, 박스 등) 표면에 인쇄된 영문 텍스트(예: LOGICALLY SKIN 등) 및 브랜드 로고는 절대 다시 그리거나 훼손하지 말고 100% 완벽하게 보존할 것.
-6. (LAYOUT STRICTNESS) 원본 텍스트의 정렬축(좌/우/중앙), 폰트 두께감, 단락 간격을 정확하게 유지할 것.
-7. (NO EXTRA NOISE) 번역과 무관한 AI 주석이나 영어 설명, 괄호를 이미지에 임의로 추가하지 말 것.
+3. (FONT STYLE) 폰트는 중화권 최고급 표준 서체인 'Noto Sans SC (스위안헤이티 / 思源黑体 / Source Han Sans SC)' 스타일의 정갈하고 모던한 산세리프로 선명하게 렌더링할 것.
+4. (CHINESE E-COMMERCE LAYOUT RULES - 3대 실전 팁)
+   - [본문 크기 줄이기]: 한자는 Em-box를 꽉 채우므로, 한국어 원본 대비 폰트 크기를 약 10~15% 슬림하게 낮추어 여백과 밸런스를 완벽하게 유지할 것.
+   - [행간(Line-Height) 15~20% 확장]: 한자가 상하로 빽빽하게 붙어 답답해지지 않도록 한국어 대비 행간을 15~20% 더 넓게 여유 있게 설정할 것.
+   - [자간(Letter-Spacing) 여유 확보]: 글자가 뭉쳐 보이지 않도록 자간에 은은한 여백을 주어 고급스러운 프리미엄 뷰티 브랜드 상세페이지 느낌을 극대화할 것.
+5. (FULL INPAINTING NO PATCHING) 텍스트 수정 시 오류 부분만 오려내어 덧칠(Patching)하지 말고, 캔버스 전체를 완전히 새롭게 렌더링(Full Inpainting)하여 1픽셀의 이질감도 없는 완벽한 하나의 이미지를 생성할 것.
+6. (PACKAGE PRESERVATION) 제품 본품(용기, 튜브, 박스 등) 표면에 인쇄된 영문 텍스트(예: LOGICALLY SKIN 등) 및 브랜드 로고는 절대 다시 그리거나 훼손하지 말고 100% 완벽하게 보존할 것.
+7. (LAYOUT STRICTNESS) 원본 텍스트의 정렬축(좌/우/중앙), 폰트 두께감, 단락 간격을 정확하게 유지할 것.
+8. (NO EXTRA NOISE) 번역과 무관한 AI 주석이나 영어 설명, 괄호를 이미지에 임의로 추가하지 말 것.
 
 [번역 매핑 데이터 JSON]
-{{json_data}}
+{json_data}
 """
 
 # ==========================================
@@ -320,7 +324,7 @@ for filename in targets:
     # ==========================
     # PASS 2: 이미지 인페인팅 렌더링 (Flash-Image 모델)
     # ==========================
-    print("  -> [PASS 2] 이미지 인페인팅 및 알리바바 푸후이체 식자 렌더링 중...", flush=True)
+    print("  -> [PASS 2] 이미지 인페인팅 및 Noto Sans SC(스위안헤이티) 식자 렌더링 중...", flush=True)
     img_saved = False
     for attempt in range(3):
         try:
@@ -380,7 +384,7 @@ if all_translations:
         f.write("중국 신(新) 광고법 준수 및 번역 대조표 리포트\n")
         f.write("==================================================\n")
         f.write(f"타겟 권역: {target_region} ({'중국 본토 간체자 zh-CN' if target_region == 'CN' else '대만 번체자 zh-TW' if target_region == 'TW' else '홍콩 번체자 zh-HK'})\n")
-        f.write(f"표준 폰트: 알리바바 푸후이체 3.0 (Alibaba PuHuiTi)\n\n")
+        f.write(f"표준 폰트: Noto Sans SC (스위안헤이티 / 思源黑体 / Source Han Sans SC)\n\n")
         for t in all_translations:
             kor = t.get("kor", "").replace("\n", " ")
             chn = t.get("chn", "").replace("\n", " ")

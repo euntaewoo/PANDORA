@@ -26,7 +26,8 @@
 | :--- | :--- | :--- | :--- |
 | **🇺🇸 영문 (EN / Global)** | **`Pretendard`** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` |
 | **🇯🇵 일본어 (JP / Qoo10·Rakuten)** | **`Noto Sans JP`** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `"Hiragino Sans", "Meiryo", sans-serif` |
-| **🇨🇳 중국어 (CN / Shopee·Taobao)** | **`Alibaba PuHuiTi` (알리바바 푸후이체)** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif` |
+| **🇨🇳 중국어 (CN / Shopee·Taobao)** | **`Noto Sans SC` (스위안헤이티 / 思源黑体)** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `"Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif` |
+
 
 
 ---
@@ -38,15 +39,16 @@
 | 언어 구분 | 상단 타이틀 (`.title`) | 1열 항목 라벨 (`th.label-cell`) | 2열 본문 내용 (`td.value-cell`) |
 | :--- | :---: | :---: | :---: |
 | **영문(EN) / 일본어(JP)** | **`64px`** (Bold 700) | **`32px`** (Bold 700) | **`32px`** (Regular 400) |
-| **중국어(CN / TW / HK)** | **`56px`** (Bold 700) | **`28px`** (Bold 700) | **`28px`** (Regular 400) |
+| **중국어(CN / TW / HK)** | **`52px`** (Bold 700) | **`26px`** (Bold 700) | **`26px`** (Regular 400) |
 
 ```css
-/* [중국어 기준 CSS 예시] */
+/* [중국어 기준 최적화 CSS 예시 - 3대 실전 팁 적용] */
 /* 상단 메인 타이틀 */
 .notice-title {
-    font-size: 56px;
+    font-size: 52px;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.3;
+    letter-spacing: 0.6px;
     text-align: center;
     color: #111111;
     margin-bottom: 40px;
@@ -54,9 +56,10 @@
 
 /* 테이블 좌측 항목명 (라벨 열) */
 .notice-table th, .notice-label {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
-    line-height: 1.4;
+    line-height: 1.65;
+    letter-spacing: 0.6px;
     color: #333333;
     background-color: #F8F9FA;
     padding: 20px 18px;
@@ -66,9 +69,10 @@
 
 /* 테이블 우측 본문 내용 (값 열) */
 .notice-table td, .notice-value {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 400;
-    line-height: 1.45;
+    line-height: 1.65;
+    letter-spacing: 0.6px;
     color: #222222;
     padding: 20px 22px;
     word-break: keep-all;

@@ -3,7 +3,7 @@
 > **엔진 명칭**: `CN_Text-In_Image_Translation_Engine_V1.py`  
 > **기반 아키텍처**: Two-Pass Multimodal Neural Inpainting Architecture (Gemini 3.1 Pro + Flash-Image)  
 > **지원 권역**: 중국 본토(간체자 `zh-CN`), 대만(번체자 `zh-TW`), 홍콩(번체자 `zh-HK`)  
-> **표준 폰트**: 알리바바 푸후이체 (阿里巴巴普惠体 / Alibaba PuHuiTi 3.0)
+> **표준 폰트**: Noto Sans SC (스위안헤이티 / 思源黑体 / Source Han Sans SC)
 
 ---
 
@@ -16,7 +16,6 @@ flowchart TD
     %% [기초 엔진 주석]: 프로토엔진(PROTO_Engine_V0) 코어 기반 중국어권 특화 파생 모델
     Start(["🚀 원본 이미지 투입<br>(input_dir)"]) --> Auth["🔑 Google Cloud GenAI Client 인증<br>(Vertex AI global Serverless)"]
     Auth --> CheckRegion{"🌐 타겟 권역 확인<br>(Rule 8 적용)"}
-
 
     CheckRegion -- "권역 미지정 시" --> AskUser["❓ 사용자에게 타겟 질문<br>'중국 본토(간체) vs 대만/홍콩(번체)'"]
     AskUser --> Branch
@@ -35,7 +34,7 @@ flowchart TD
 
     subgraph Pass2_Detail ["Pass 2 : 이미지 인페인팅 & 식자"]
         Pass2 --> P2_Erase["1. 원본 한국어 텍스트 완전 제거 (Full Inpainting)"]
-        P2_Erase --> P2_Font["2. 알리바바 푸후이체(Alibaba-PuHuiTi) 벡터 식자"]
+        P2_Erase --> P2_Font["2. Noto Sans SC(스위안헤이티 / 思源黑体) 벡터 식자"]
         P2_Font --> P2_Package["3. 본품 패키지 영문/로고 100% 무손실 보존"]
     end
 
@@ -43,8 +42,10 @@ flowchart TD
     
     PostProc --> TableCheck{"📋 고시정보 표(Notice Table) 여부"}
     TableCheck -- "일반 상세페이지 이미지" --> SaveImg["💾 최종 번역 이미지 PNG 저장"]
-    TableCheck -- "고시정보 표 이미지" --> TableRenderer["🖥️ 860px 고시표 Headless Edge 렌더러<br>(Alibaba-PuHuiTi, 타이틀 56px, 본문 28px,<br>max 2580px 이하 1장 단일 페이지 렌더링)"]
+    TableCheck -- "고시정보 표 이미지" --> TableRenderer["🖥️ 860px 고시표 Headless Edge 렌더러<br>(Noto Sans SC, 타이틀 52px, 본문 26px, 자간+행간 최적화,<br>max 2580px 이하 1장 단일 페이지 렌더링)"]
     TableRenderer --> SaveImg
+
+
 
 
     SaveImg --> Report["📄 중국 광고법 준수 및 번역 비교표 TXT 리포트 생성"]

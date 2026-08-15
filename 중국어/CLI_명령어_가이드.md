@@ -3,9 +3,10 @@
 > **엔진 파일**: `CN_Text-In_Image_Translation_Engine_V1.py`  
 > **엔진 위치**: `C:\Users\euntaewoo\Desktop\다국어_이미지_번역\중국어\`  
 > **기반 코어**: Two-Pass Multimodal Neural Inpainting Architecture (Gemini 3.1 Pro + Flash-Image)  
-> **표준 폰트**: 알리바바 푸후이체 3.0 (`Alibaba-PuHuiTi` 5종 웨이트)
+> **표준 폰트**: Noto Sans SC (스위안헤이티 / 思源黑体 / Source Han Sans SC)
 
 ---
+
 
 ## 📌 1. 기본 명령어 문법 (Syntax)
 
@@ -49,11 +50,12 @@ python C:\Users\euntaewoo\Desktop\다국어_이미지_번역\중국어\CN_Text-I
 
 ## 📋 4. 상품 고시정보 표 렌더러 단독 실행 가이드
 
-고시정보 표(Notice Table)를 가로 `860px`, 세로 `Auto-Fit`(타이틀 56px, 본문 28px, 최대 2,580px 이하 1장 단일 통합 페이지) 표준 규격으로 단독 렌더링할 때:
+고시정보 표(Notice Table)를 가로 `860px`, 세로 `Auto-Fit`(타이틀 52px, 본문 26px, 자간+행간 최적화, 최대 2,580px 이하 1장 단일 통합 페이지) 표준 규격으로 단독 렌더링할 때:
 
 ```bash
 python C:\Users\euntaewoo\Desktop\다국어_이미지_번역\00_공통자료\render_notice_table_standard.py
 ```
+
 
 
 ---
