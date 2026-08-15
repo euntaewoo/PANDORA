@@ -26,7 +26,8 @@
 | :--- | :--- | :--- | :--- |
 | **🇺🇸 영문 (EN / Global)** | **`Pretendard`** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` |
 | **🇯🇵 일본어 (JP / Qoo10·Rakuten)** | **`Noto Sans JP`** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `"Hiragino Sans", "Meiryo", sans-serif` |
-| **🇨🇳 중국어 (CN / Shopee)** | **`Noto Sans SC`** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `"PingFang SC", "Microsoft YaHei", sans-serif` |
+| **🇨🇳 중국어 (CN / Shopee·Taobao)** | **`Alibaba PuHuiTi` (알리바바 푸후이체)** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif` |
+
 
 ---
 
