@@ -137,7 +137,7 @@ def build_notice_html(title, items, lang="EN"):
             border-bottom: 1px solid #E0E0E0;
         }}
         th.label-cell {{
-            width: 290px;
+            width: 275px;
             background-color: #F8F9FA;
             font-size: {cell_size};
             font-weight: 700;
