@@ -69,6 +69,7 @@ graph TD
 | **3. Retry** | 통신 안정성 | **Exponential Backoff Algorithm** | 429 Resource Exhausted (분당 쿼터 제한) 발생 시 25초~ 점진적 대기 후 자동 재시도 |
 | **4. Post-Proc**| 해상도 보존 | **Python Pillow (LANCZOS)** | 원본 픽셀 종횡비(Aspect Ratio) 및 가로/세로 해상도 1:1 강제 일치 복원 (크롭/찌그러짐 방지) |
 | **5. DevOps** | 형상 관리 | **Git / GitHub Repository (PANDORA)** | 소스코드 및 기술 문서 변경 시 원격 저장소(`main` 브랜치) 실시간 자동 커밋 및 푸시 |
+| **6. Notice Spec** | 고시정보 표 렌더링 | **Headless Edge + Pretendard** | 가로 860px 고정, 세로 Auto-Fit (최대 2,580px 이하, 초과 시 2페이지 분할), 타이틀 64px, 본문 32px |
 
 ---
 
@@ -83,3 +84,11 @@ graph TD
 
 3. **상품 패키지 원본 보존 (Product Package Text & Logo Protection)**:
    - 화장품 용기, 튜브, 단상자 등에 인쇄된 원본 로고와 텍스트는 인페인팅 대상에서 제외하여 패키지 고유의 시각적 형태를 100% 보존합니다.
+
+4. **상품 정보 고시 표 표준 렌더링 규격 (Notice Table Rendering Standard)**:
+   - 가로 폭: **`860px` 고정**
+   - 세로 높이: **`Auto-Fit` (최대 허용치 `2,580px` 이하, 2,580px 초과 시 2페이지 분할 렌더링)**
+   - 영문 전용 표준 폰트: **`Pretendard`** (Bold 700 / Regular 400)
+   - 폰트 크기: **타이틀 `64px` (Bold), 항목명 `32px`, 본문 `32px`**
+   - 렌더러: `00_공통자료/render_notice_table_standard.py` 표준 모듈 사용
+

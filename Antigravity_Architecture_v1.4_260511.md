@@ -195,6 +195,13 @@ C:\Users\euntaewoo\
 }
 ```
 
+#### 상품 정보 고시 표(Notice Table) 표준 규격 [2026-08 추가]
+- **캔버스 규격**: 가로 `860px` 고정, 세로 `Auto-Fit` (최대 허용 `2,580px` 이하, 2,580px 초과 시 2페이지 분할 렌더링)
+- **적용 폰트**: 영문 `Pretendard`, 일본어 `Noto Sans JP`
+- **폰트 크기**: 상단 타이틀 `64px` (Bold), 테이블 항목명(라벨) `32px`, 본문 내용(값) `32px`
+- **렌더링 파이프라인**: `00_공통자료/render_notice_table_standard.py`
+
+
 ---
 
 ## PART 4. 공통 설정 정보
