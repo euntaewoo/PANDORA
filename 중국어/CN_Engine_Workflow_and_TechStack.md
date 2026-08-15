@@ -9,10 +9,14 @@
 
 ## 📊 1. 엔진 작업 동작 흐름 플로우차트 (Workflow Diagram)
 
+> 💡 **[아키텍처 주석]**: 본 플로우차트와 엔진(`CN_Text-In_Image_Translation_Engine_V1.py`)은 **프로토 베이직 엔진(`PROTO_Text-In_Image_Translation_Engine_V0.py`)의 Two-Pass 코어를 기반으로 중국어권(본토/대만/홍콩) 특화 번역엔진으로 개발**되었습니다.
+
 ```mermaid
 flowchart TD
+    %% [기초 엔진 주석]: 프로토엔진(PROTO_Engine_V0) 코어 기반 중국어권 특화 파생 모델
     Start(["🚀 원본 이미지 투입<br>(input_dir)"]) --> Auth["🔑 Google Cloud GenAI Client 인증<br>(Vertex AI global Serverless)"]
     Auth --> CheckRegion{"🌐 타겟 권역 확인<br>(Rule 8 적용)"}
+
 
     CheckRegion -- "권역 미지정 시" --> AskUser["❓ 사용자에게 타겟 질문<br>'중국 본토(간체) vs 대만/홍콩(번체)'"]
     AskUser --> Branch
