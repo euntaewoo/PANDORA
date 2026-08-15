@@ -28,8 +28,8 @@ def build_notice_html(title, items, lang="EN"):
     """
     if lang.upper() == "JP":
         font_family = "'Noto Sans JP', 'NotoSansJP', 'Meiryo', sans-serif"
-    elif lang.upper() == "CN":
-        font_family = "'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+    elif lang.upper() in ["CN", "ZH", "SC", "TC"]:
+        font_family = "'Alibaba PuHuiTi', 'Alibaba-PuHuiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif"
     else:
         font_family = "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
@@ -71,6 +71,16 @@ def build_notice_html(title, items, lang="EN"):
             src: local('Noto Sans JP Regular'), local('NotoSansJP-Regular');
             font-weight: 400;
         }}
+        @font-face {{
+            font-family: 'Alibaba PuHuiTi';
+            src: local('Alibaba-PuHuiTi-Bold'), local('AlibabaPuHuiTi-Bold'), local('Alibaba PuHuiTi Bold');
+            font-weight: 700;
+        }}
+        @font-face {{
+            font-family: 'Alibaba PuHuiTi';
+            src: local('Alibaba-PuHuiTi-Regular'), local('AlibabaPuHuiTi-Regular'), local('Alibaba PuHuiTi Regular');
+            font-weight: 400;
+        }}
 
         * {{
             box-sizing: border-box;
@@ -86,6 +96,7 @@ def build_notice_html(title, items, lang="EN"):
             color: #111111;
             -webkit-font-smoothing: antialiased;
         }}
+
         .notice-container {{
             width: 800px;
             margin: 0 auto;
