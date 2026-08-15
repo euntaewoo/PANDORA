@@ -24,3 +24,19 @@
 ## 6. 깃허브 자동 버전 관리 및 실시간 푸시 규칙 (Automatic GitHub Sync & Push)
 - 모든 작업 진행 시, 소스코드 수정, 문서 개정, 신규 기능 추가가 일어날 때마다 무조건 깃허브 저장소(`https://github.com/euntaewoo/PANDORA.git`)로 자동 커밋 및 푸시(Auto Commit & Push)를 수행하여 버전 관리를 실시간 유지해야 합니다.
 - API 키 및 인증 파일은 `.gitignore`로 안전하게 제외 처리한 후 커밋합니다.
+
+## 7. 상품 정보 고시 표(Notice Table) 고해상도 HTML 렌더링 표준 규격 (Notice Table Rendering Standard)
+- **[해상도 규격]**:
+  - 가로 폭: **`860px` 고정**
+  - 세로 높이: **`Auto-Fit` 적용 (단, 최대 허용 높이는 `2,580px` 이하 엄격 준수)**
+  - **[2페이지 분할 룰]**: 전성분 등 본문 내용이 길어져 세로 높이가 **`2,580px`를 초과할 경우 무조건 2페이지(Part 1, Part 2)로 분할 작성**하여 개별 이미지로 렌더링할 것.
+- **[언어별 표준 폰트 적용]**:
+  - **영문(EN)**: **`Pretendard`** (Pretendard-Bold / Pretendard-Regular)
+  - **일본어(JP)**: **`Noto Sans JP`** (NotoSansJP-Bold / NotoSansJP-Regular)
+  - 기타 언어: 해당 국가 및 상품 카테고리에서 가장 빈도가 높고 가독성이 검증된 표준 산세리프 서체 적용.
+- **[타이포그래피 폰트 크기 규격]**:
+  - **상단 타이틀 (PRODUCT DETAILS / 商品基本情報 등)**: **`64px`** (Bold)
+  - **테이블 좌측 항목명 (항목 라벨 열)**: **`32px`**
+  - **테이블 우측 본문 내용 (값 열)**: **`32px`**
+- **[렌더링 엔진]**: AI 생성형 뭉개짐을 배제하고 칼같은 벡터 텍스트 선명도를 위해 Headless Chromium/Edge 기반 초고해상도 렌더링 파이프라인을 의무 적용할 것.
+
