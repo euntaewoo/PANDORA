@@ -1,79 +1,96 @@
-import os
+"""
+===================================================================================
+🇺🇸 EN_Text-In_Image_Translation_Engine_V1.py
+-----------------------------------------------------------------------------------
+• Purpose: Two-Pass Multimodal Neural Inpainting Engine for English E-Commerce (Amazon/Shopee)
+• Core Models:
+    - Pass 1: gemini-3.1-pro-preview (Dual Mode: Transcreation KR->EN / Polishing EN->EN)
+    - Pass 2: gemini-3.1-flash-image (Visual Inpainting & Typography Rendering)
+• Standard Fonts:
+    - Detail Page Main Images: 100% Montserrat (몬세라트 단일 서체 강제)
+    - Notice Tables (고시정보표): Pretendard (render_notice_table_standard.py 독립 분리)
+• Resolution: Aspect Ratio Lock via Pillow LANCZOS Resampling (1:1 픽셀 동기화)
+• Location: Google Cloud Vertex AI (location="global") Serverless Standard
+===================================================================================
+"""
+
 import io
+import json
+import os
+import re
 import sys
 import time
-import json
+from typing import Any, Dict, List, Optional, Tuple
+
 from google import genai
 from google.genai import types
 from PIL import Image
 
-sys.stdout.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding="utf-8")
 
-# 로컬 상대경로의 .env 파일 탐색 및 키 추출
-script_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(script_dir, ".env")
-api_key = None
-gcp_json_key = None
+# =================================================================================
+# 1. 환경 설정 및 클라우드 인증 초기화
+# =================================================================================
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
-if os.path.exists(env_path):
-    with open(env_path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line.startswith("GEMINI_API_KEY="):
-                api_key = line.split("=", 1)[1].strip()
-            elif line.startswith("GOOGLE_APPLICATION_CREDENTIALS="):
-                gcp_json_key = line.split("=", 1)[1].strip().strip('"').strip("'")
-
-if not api_key:
-    api_key = os.environ.get("GEMINI_API_KEY")
-if not gcp_json_key:
-    gcp_json_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-
-if gcp_json_key and os.path.exists(gcp_json_key):
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gcp_json_key
-    print(f"[INFO] Vertex AI 서비스 계정 JSON 키가 감지되었습니다: {gcp_json_key}")
-    with open(gcp_json_key, 'r', encoding='utf-8') as f:
-        key_data = json.load(f)
-        project_id = key_data.get('project_id')
-    client = genai.Client(vertexai=True, project=project_id, location="global")
-elif api_key:
-    if api_key.startswith("AQ."):
-        print("[INFO] Agent Platform API 키(AQ...)가 감지되었습니다. Vertex AI 모드로 전환합니다.")
-        client = genai.Client(vertexai=True, api_key=api_key)
-    else:
-        client = genai.Client(api_key=api_key)
-else:
-    print("[ERROR] GEMINI_API_KEY 또는 GOOGLE_APPLICATION_CREDENTIALS가 설정되지 않았습니다.")
-    sys.exit(1)
-
-# 코어 AI 모델 사양
 MODEL_PRO = "gemini-3.1-pro-preview"
 MODEL_FLASH_IMAGE = "gemini-3.1-flash-image"
 
-# 커맨드라인 파라미터 파싱
-if len(sys.argv) > 1:
-    source_dir = sys.argv[1]
-    if len(sys.argv) > 2:
-        base_target_dir = sys.argv[2]
-    else:
-        base_target_dir = os.path.join(os.path.dirname(source_dir), os.path.normpath(source_dir).split(os.sep)[-1] + "_EN_Translated")
-else:
-    source_dir = r"C:\Users\euntaewoo\Desktop\다국어_이미지_번역\01_번역대상_원본"
-    base_target_dir = r"C:\Users\euntaewoo\Desktop\다국어_이미지_번역\02_번역결과_최종"
 
-if len(sys.argv) > 2:
-    target_dir = base_target_dir
-else:
-    if len(sys.argv) == 1:
-        target_dir = base_target_dir
-    else:
-        folder_name = os.path.normpath(source_dir).split(os.sep)[-1]
-        target_dir = os.path.join(base_target_dir, folder_name)
-os.makedirs(source_dir, exist_ok=True)
-os.makedirs(target_dir, exist_ok=True)
+def load_credentials() -> genai.Client:
+    """Vertex AI 서비스 계정 키 및 API 키를 탐색하여 genai.Client를 초기화합니다."""
+    env_paths = [
+        os.path.join(SCRIPT_DIR, ".env"),
+        os.path.join(PROJECT_ROOT, ".env"),
+    ]
+    api_key = os.environ.get("GEMINI_API_KEY")
+    gcp_json_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 
-# [Pass 1] 자동 언어 감지 및 듀얼 모드 (신규 번역 vs 영문 교정) 프롬프트
-pass1_prompt = """
+    for p in env_paths:
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("#"):
+                        continue
+                    if line.startswith("GEMINI_API_KEY="):
+                        api_key = line.split("=", 1)[1].strip()
+                    elif line.startswith("GOOGLE_APPLICATION_CREDENTIALS="):
+                        gcp_json_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+
+    key_candidates = [
+        gcp_json_key,
+        os.path.join(PROJECT_ROOT, "00_공통자료", "APIs_KEY", "인증키_및_계정", "김차장_vertex api_key", "vertex_ai_auth_key.json"),
+        os.path.join(PROJECT_ROOT, "00_공통자료", "인증키_및_계정", "김차장_vertex api_key", "vertex_ai_auth_key.json"),
+    ]
+
+    for kpath in key_candidates:
+        if kpath and os.path.exists(kpath) and kpath.endswith(".json"):
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = kpath
+            print(f"[AUTH] Vertex AI 서비스 계정 키 감지: {kpath}")
+            with open(kpath, "r", encoding="utf-8") as f:
+                key_data = json.load(f)
+                project_id = key_data.get("project_id")
+            client = genai.Client(vertexai=True, project=project_id, location="global")
+            print(f"[AUTH SUCCESS] Vertex AI Client 연결 완료 (Project: {project_id}, Location: global)")
+            return client
+
+    if api_key:
+        if api_key.startswith("AQ."):
+            print("[AUTH] Agent Platform API 키 감지 -> Vertex AI 모드로 전환")
+            return genai.Client(vertexai=True, api_key=api_key)
+        print("[AUTH] Gemini API 키 인증 모드 연결")
+        return genai.Client(api_key=api_key)
+
+    print("[ERROR] GEMINI_API_KEY 또는 GOOGLE_APPLICATION_CREDENTIALS가 설정되지 않았습니다.")
+    sys.exit(1)
+
+
+# =================================================================================
+# 2. Pass 1 & Pass 2 프롬프트 정의
+# =================================================================================
+PASS1_PROMPT = """
 첨부된 이미지는 이커머스(화장품, 건기식, 패션, 생필품 등) 상세페이지 또는 제품 이미지입니다.
 당신은 아마존(Amazon US), 쇼피(Shopee) 등 글로벌 최상위 이커머스 플랫폼의 수석 영문 카피라이터이자 현지화/초월번역(Transcreation) 최고 전문가입니다.
 
@@ -108,8 +125,7 @@ pass1_prompt = """
 ```
 """
 
-# [Pass 2] 영문 시각적 렌더링 프롬프트 템플릿
-pass2_prompt_template = """
+PASS2_PROMPT_TEMPLATE = """
 당신은 글로벌 이커머스(Amazon, Shopee) 이미지 로컬라이징 최고 전문가입니다.
 첨부된 원본 이미지에서 기존의 원본 텍스트를 감쪽같이 지우고, 교정/번역된 영문 데이터를 바탕으로 완벽하게 재렌더링하세요.
 
@@ -124,133 +140,182 @@ pass2_prompt_template = """
 {json_data}
 """
 
-print("[START] EN_Text-In_Image_Translation_Engine_V1 (Auto-Detect Dual Mode) 엔진 가동...")
-print(f"[INFO] 타겟 스캔 폴더: {source_dir}")
-print(f"[INFO] 결과 저장 폴더: {target_dir}")
 
-targets = sorted(
-    [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.jfif', '.gif'))],
-    key=lambda x: [int(c) if c.isdigit() else c.lower() for c in __import__('re').split(r'(\d+)', x)]
-)
+# =================================================================================
+# 3. 헬퍼 함수
+# =================================================================================
+def natural_sort_key(s: str) -> List[Any]:
+    """파일명 내부의 숫자를 자연스럽게 인식하여 정렬하는 키 함수입니다."""
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r"(\d+)", s)]
 
-if not targets:
-    print(f"[WARNING] '{source_dir}' 폴더에 처리할 이미지가 없습니다.")
-    sys.exit(0)
 
-all_translations = []
-
-for filename in targets:
-    if '_수정번역' in filename or filename.endswith('.txt') or filename.endswith('.md'):
-        continue
-        
-    in_path = os.path.join(source_dir, filename)
-    out_name = f"{os.path.splitext(filename)[0]}_수정번역.png"
-    out_path = os.path.join(target_dir, out_name)
-    
-    if os.path.exists(out_path):
-        print(f"\n[SKIP] 이미 완료된 파일입니다: {filename}")
-        continue
-
-    print(f"\n[RENDER] 처리 시작: {filename}")
-    
-    try:
-        original_image = Image.open(in_path)
-        original_image.load()
-    except Exception as e:
-        print(f"  -> [ERROR] 이미지 로드 실패: {e}")
-        continue
-
-    # ==========================
-    # PASS 1: 언어 자동 감지 및 텍스트 매핑 생성 (pro 모델)
-    # ==========================
-    print("  -> [PASS 1] 텍스트 및 언어 자동 감지, 영문 매핑 생성 중...")
-    mapping_data_str = ""
-    try:
-        response_p1 = client.models.generate_content(
-            model=MODEL_PRO,
-            contents=[original_image, pass1_prompt],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
+def parse_arguments() -> Tuple[str, str]:
+    """커맨드라인 파라미터를 파싱하여 입력 및 출력 디렉토리를 반환합니다."""
+    if len(sys.argv) > 1:
+        src = sys.argv[1]
+        if len(sys.argv) > 2:
+            tgt = sys.argv[2]
+        else:
+            tgt = os.path.join(
+                os.path.dirname(src),
+                os.path.normpath(src).split(os.sep)[-1] + "_EN_Translated",
             )
-        )
-        mapping_data_str = response_p1.text
-        parsed_json = json.loads(mapping_data_str)
-        mode = parsed_json.get("detected_mode", "UNKNOWN")
-        print(f"  -> [PASS 1 SUCCESS] 감지된 모드: {mode} (매핑 항목: {len(parsed_json.get('translation_map', []))}개)")
-        if "translation_map" in parsed_json:
-            for item in parsed_json["translation_map"]:
-                item["source_file"] = filename
-                item["mode"] = mode
-            all_translations.extend(parsed_json["translation_map"])
-    except Exception as e:
-        print(f"  -> [PASS 1 ERROR] 매핑 실패: {e}")
-        continue
+    else:
+        src = os.path.join(SCRIPT_DIR, "input")
+        tgt = os.path.join(SCRIPT_DIR, "output")
 
-    # ==========================
-    # PASS 2: 이미지 렌더링 (flash-image 모델, 재시도 로직 포함)
-    # ==========================
-    print("  -> [PASS 2] 영문 이미지 인페인팅 렌더링 중...")
-    max_retries = 3
-    for attempt in range(max_retries):
+    os.makedirs(src, exist_ok=True)
+    os.makedirs(tgt, exist_ok=True)
+    return src, tgt
+
+
+def extract_image_bytes(response: Any) -> Optional[bytes]:
+    """Gemini API 응답 객체에서 렌더링된 이미지 바이트를 안전하게 추출합니다."""
+    if not hasattr(response, "candidates") or not response.candidates:
+        return None
+
+    for cand in response.candidates:
+        if hasattr(cand, "content") and hasattr(cand.content, "parts"):
+            for part in cand.content.parts:
+                if hasattr(part, "inline_data") and part.inline_data and part.inline_data.data:
+                    return part.inline_data.data
+                if hasattr(part, "image") and part.image and part.image.image_bytes:
+                    return part.image.image_bytes
+    return None
+
+
+# =================================================================================
+# 4. 메인 엔진 파이프라인
+# =================================================================================
+def run_engine():
+    client = load_credentials()
+    source_dir, target_dir = parse_arguments()
+
+    print("\n=======================================================")
+    print("🇺🇸 EN_Text-In_Image_Translation_Engine_V1 가동")
+    print(f"• 입력 경로: {source_dir}")
+    print(f"• 출력 경로: {target_dir}")
+    print(f"• 메인 폰트: Montserrat (100% 단일 서체 강제)")
+    print("=======================================================\n")
+
+    valid_extensions = (".png", ".jpg", ".jpeg", ".jfif", ".gif", ".webp")
+    raw_files = [f for f in os.listdir(source_dir) if f.lower().endswith(valid_extensions)]
+    targets = sorted(raw_files, key=natural_sort_key)
+
+    if not targets:
+        print(f"[WARNING] '{source_dir}' 폴더에 처리할 이미지가 없습니다.")
+        return
+
+    all_translations = []
+
+    for filename in targets:
+        if "_수정번역" in filename or filename.endswith(".txt") or filename.endswith(".md"):
+            continue
+
+        in_path = os.path.join(source_dir, filename)
+        out_name = f"{os.path.splitext(filename)[0]}_수정번역.png"
+        out_path = os.path.join(target_dir, out_name)
+
+        if os.path.exists(out_path):
+            print(f"[SKIP] 이미 완료된 파일입니다: {filename}")
+            continue
+
+        print(f"\n[RENDER] 처리 시작: {filename}")
+
         try:
-            final_prompt = pass2_prompt_template.replace("{json_data}", mapping_data_str)
-            response_p2 = client.models.generate_content(
-                model=MODEL_FLASH_IMAGE,
-                contents=[final_prompt, original_image]
-            )
-            
-            img_saved = False
-            if hasattr(response_p2, 'candidates'):
-                for cand in response_p2.candidates:
-                    if hasattr(cand, 'content') and hasattr(cand.content, 'parts'):
-                        for part in cand.content.parts:
-                            if hasattr(part, 'inline_data') and part.inline_data:
-                                img = Image.open(io.BytesIO(part.inline_data.data))
-                                img = img.resize(original_image.size, Image.Resampling.LANCZOS)
-                                img.save(out_path, format="PNG")
-                                img_saved = True
-                                break
-                            elif hasattr(part, 'image') and part.image:
-                                img = Image.open(io.BytesIO(part.image.image_bytes))
-                                img = img.resize(original_image.size, Image.Resampling.LANCZOS)
-                                img.save(out_path, format="PNG")
-                                img_saved = True
-                                break
-                                
-            if img_saved:
-                print(f"  -> [SUCCESS] {out_name} 최종 저장 완료 (해상도: {original_image.size[0]}x{original_image.size[1]}px)!")
-                break
-            else:
-                print("  -> [RETRY] Pass 2 이미지 반환 없음, 재시도 중...")
-                time.sleep(10)
+            original_image = Image.open(in_path)
+            original_image.load()
+            orig_w, orig_h = original_image.size
         except Exception as e:
-            print(f"  -> [PASS 2 ERROR] 렌더링 에러: {e}")
-            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                wait_sec = 25 * (attempt + 1)
-                print(f"  -> [QUOTA WAIT] 429 쿼터 대기 ({wait_sec}초)...")
-                time.sleep(wait_sec)
-            else:
-                time.sleep(10)
-    
-    time.sleep(15)
+            print(f"  -> [ERROR] 이미지 로드 실패 ({filename}): {e}")
+            continue
 
-if all_translations:
-    print("\n[REPORT] 영문 번역/교정 결과 리포트 생성 중...")
-    report_path = os.path.join(target_dir, "EN_Translation_Polish_Report.txt")
-    with open(report_path, "w", encoding="utf-8") as f:
-        f.write("==================================================\n")
-        f.write("🇺🇸 EN V1 엔진: 원본 텍스트 vs 최종 영문 매핑 리포트\n")
-        f.write("==================================================\n\n")
-        for t in all_translations:
-            orig = t.get("original_text", "").replace("\n", " ")
-            corr = t.get("corrected_en", "").replace("\n", " ")
-            src = t.get("source_file", "")
-            mode = t.get("mode", "")
-            f.write("--------------------------------------------------\n")
-            f.write(f"[파일명]: {src} | [모드]: {mode}\n")
-            f.write(f"[원본 텍스트]: {orig}\n")
-            f.write(f"[교정 영문]: {corr}\n")
-        f.write("--------------------------------------------------\n")
-    print(f"  -> [SUCCESS] 리포트 저장 완료: {report_path}")
+        # -------------------------------------------------------------
+        # PASS 1: 언어 자동 감지 및 초월번역 / 교정 매핑 생성 (Pro 모델)
+        # -------------------------------------------------------------
+        print("  -> [PASS 1] 텍스트 OCR 및 언어 감지, 영문 초월번역 생성 중...")
+        mapping_data_str = ""
+        try:
+            response_p1 = client.models.generate_content(
+                model=MODEL_PRO,
+                contents=[original_image, PASS1_PROMPT],
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            mapping_data_str = response_p1.text.strip()
+            parsed_json = json.loads(mapping_data_str)
+            mode = parsed_json.get("detected_mode", "UNKNOWN")
+            map_count = len(parsed_json.get("translation_map", []))
+            print(f"  -> [PASS 1 SUCCESS] 감지 모드: {mode} (매핑 항목: {map_count}개)")
 
-print("\n[FINISH] EN_Text-In_Image_Translation_Engine_V1 영문 이미지 처리 완료!")
+            if "translation_map" in parsed_json:
+                for item in parsed_json["translation_map"]:
+                    item["source_file"] = filename
+                    item["mode"] = mode
+                all_translations.extend(parsed_json["translation_map"])
+        except Exception as e:
+            print(f"  -> [PASS 1 ERROR] 매핑 생성 실패: {e}")
+            continue
+
+        # -------------------------------------------------------------
+        # PASS 2: 영문 이미지 인페인팅 렌더링 (Flash-Image 모델)
+        # -------------------------------------------------------------
+        print("  -> [PASS 2] Montserrat 영문 타이포그래피 인페인팅 렌더링 중...")
+        max_retries = 3
+        final_prompt = PASS2_PROMPT_TEMPLATE.replace("{json_data}", mapping_data_str)
+
+        for attempt in range(max_retries):
+            try:
+                response_p2 = client.models.generate_content(
+                    model=MODEL_FLASH_IMAGE,
+                    contents=[final_prompt, original_image],
+                )
+
+                img_bytes = extract_image_bytes(response_p2)
+                if img_bytes:
+                    img = Image.open(io.BytesIO(img_bytes))
+                    # 원본 해상도 1:1 강제 일치 (Aspect Ratio Lock)
+                    img = img.resize((orig_w, orig_h), Image.Resampling.LANCZOS)
+                    img.save(out_path, format="PNG")
+                    print(f"  -> [PASS 2 SUCCESS] {out_name} 저장 완료 ({orig_w}x{orig_h}px)!")
+                    break
+                else:
+                    print("  -> [RETRY] Pass 2 이미지 응답 없음, 10초 대기 후 재시도...")
+                    time.sleep(10)
+            except Exception as e:
+                print(f"  -> [PASS 2 ERROR] 렌더링 에러 (시도 {attempt+1}/{max_retries}): {e}")
+                if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                    wait_sec = 25 * (attempt + 1)
+                    print(f"  -> [QUOTA WAIT] 429 쿼터 대기 ({wait_sec}초)...")
+                    time.sleep(wait_sec)
+                else:
+                    time.sleep(10)
+
+        time.sleep(12)
+
+    # -----------------------------------------------------------------
+    # 최종 번역/교정 대조 리포트 발행
+    # -----------------------------------------------------------------
+    if all_translations:
+        print("\n[REPORT] 영문 번역/교정 대조 리포트 생성 중...")
+        report_path = os.path.join(target_dir, "EN_Translation_Polish_Report.txt")
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write("==============================================================\n")
+            f.write("🇺🇸 EN V1 엔진: 국문 원본 vs 최종 영문(Montserrat) 매핑 리포트\n")
+            f.write("==============================================================\n\n")
+            for t in all_translations:
+                orig = t.get("original_text", "").replace("\n", " ")
+                corr = t.get("corrected_en", "").replace("\n", " ")
+                src = t.get("source_file", "")
+                mode = t.get("mode", "")
+                f.write("--------------------------------------------------------------\n")
+                f.write(f"[파일명]: {src} | [모드]: {mode}\n")
+                f.write(f"[원본 텍스트]: {orig}\n")
+                f.write(f"[교정 영문]: {corr}\n")
+            f.write("--------------------------------------------------------------\n")
+        print(f"  -> [REPORT SUCCESS] 리포트 저장 완료: {report_path}")
+
+    print("\n[FINISH] EN_Text-In_Image_Translation_Engine_V1 영문 이미지 처리 파이프라인 종료!")
+
+
+if __name__ == "__main__":
+    run_engine()

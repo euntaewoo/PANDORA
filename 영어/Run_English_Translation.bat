@@ -1,20 +1,25 @@
 @echo off
-chcp 65001
+chcp 65001 > nul
 echo ===========================================================
-echo [EN] Global Text-In_Image Translation Engine 가동 (영어 모드)
+echo [EN] EN_Text-In_Image_Translation_Engine_V1 가동 (영어 모드)
 echo ===========================================================
-echo.
-echo 루트 디렉토리의 통합 코어 엔진을 호출합니다...
 echo.
 
-set SOURCE_DIR=%~dp0input
-set TARGET_DIR=%~dp0output
+set SCRIPT_DIR=%~dp0
+set VENV_PYTHON=%SCRIPT_DIR%..\.venv\Scripts\python.exe
+set SOURCE_DIR=%SCRIPT_DIR%input
+set TARGET_DIR=%SCRIPT_DIR%output
 
 if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 
-python "%~dp0..\Global_Text-In_Image_Translation_Engine.py" "%SOURCE_DIR%" "%TARGET_DIR%" --lang EN
+if exist "%VENV_PYTHON%" (
+    "%VENV_PYTHON%" "%SCRIPT_DIR%EN_Text-In_Image_Translation_Engine_V1.py" "%SOURCE_DIR%" "%TARGET_DIR%"
+) else (
+    python "%SCRIPT_DIR%EN_Text-In_Image_Translation_Engine_V1.py" "%SOURCE_DIR%" "%TARGET_DIR%"
+)
 
 echo.
 echo ===========================================================
-echo 작업이 완료되었습니다.
+echo 영문 이미지 번역 작업이 완료되었습니다.
+echo ===========================================================
 pause
