@@ -235,7 +235,10 @@ pass2_prompt_template = f"""
 # ==========================================
 # 5. 이미지 일괄 번역 루프
 # ==========================================
-targets = [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.jfif', '.webp'))]
+targets = sorted(
+    [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.jfif', '.webp'))],
+    key=lambda x: [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', x)]
+)
 
 if not targets:
     print(f"[WARNING] '{source_dir}' 폴더에 처리할 이미지가 없습니다.")

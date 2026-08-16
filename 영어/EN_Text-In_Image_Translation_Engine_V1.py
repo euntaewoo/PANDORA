@@ -128,7 +128,10 @@ print("[START] EN_Text-In_Image_Translation_Engine_V1 (Auto-Detect Dual Mode) �
 print(f"[INFO] 타겟 스캔 폴더: {source_dir}")
 print(f"[INFO] 결과 저장 폴더: {target_dir}")
 
-targets = [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.jfif', '.gif'))]
+targets = sorted(
+    [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.jfif', '.gif'))],
+    key=lambda x: [int(c) if c.isdigit() else c.lower() for c in __import__('re').split(r'(\d+)', x)]
+)
 
 if not targets:
     print(f"[WARNING] '{source_dir}' 폴더에 처리할 이미지가 없습니다.")
