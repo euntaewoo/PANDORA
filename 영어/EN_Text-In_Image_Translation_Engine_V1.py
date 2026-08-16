@@ -116,7 +116,7 @@ pass2_prompt_template = """
 [시각적 렌더링 엄격 규칙]
 1. (TEXT ERASING) 원본의 기존 텍스트('original_text')를 원래 배경색과 완벽히 블렌딩하여 지울 것.
 2. (NEW COPY RENDERING) 지워진 그 자리에 [매핑 데이터 JSON]의 'corrected_en' 영문 텍스트만 정확한 위치에 렌더링할 것.
-3. (FONT & TYPOGRAPHY) 영미권 글로벌 프리미엄 모던 지오메트릭 산세리프 표준인 'Montserrat (몬세라트)' 폰트를 메인 서체로 적용하고 자간/행간을 최적화할 것. (참고: 상품 정보 고시 표는 Pretendard 적용 분리 규격 준수)
+3. (FONT & TYPOGRAPHY) 모든 영문 텍스트는 100% 오직 'Montserrat (몬세라트)' 폰트만을 유일한 표준 서체로 적용하여 렌더링할 것. (Montserrat 단일 서체 강제 / 타 서체 혼용 절대 금지)
 4. (FULL INPAINTING NO PATCHING) 전체 이미지를 매끄럽게 재렌더링하여 원본과 동일한 해상도/비율을 100% 유지할 것.
 5. (PACKAGE PRESERVATION) 제품 본품 용기/패키지에 인쇄된 로고 및 문구는 100% 원본 유지할 것.
 

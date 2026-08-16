@@ -184,7 +184,7 @@ C:\Users\euntaewoo\
 | **너비** | `860px` 고정 |
 | **높이** | `Auto` |
 | **배치** | Auto Layout 강제 적용 |
-| **기본 폰트** | 영문: Montserrat / 일본어: Noto Sans JP / 중국어: Noto Sans SC (단, 영문 고시정보 표는 Pretendard) |
+| **기본 폰트** | 영문: Montserrat 100% (메인 이미지 단일 강제) / 일본어: Noto Sans JP / 중국어: Noto Sans SC (단, 영문 고시정보 표는 Pretendard 분리 적용) |
 
 #### 황금비(1.618) 폰트 스케일
 
@@ -208,7 +208,7 @@ C:\Users\euntaewoo\
 | --- | --- | --- |
 | **캔버스 규격** | 가로 **`860px` 고정**, 세로 **`Auto-Fit`** | 최대 허용 세로 높이 **`2,580px` 이하** 엄격 준수 |
 | **2페이지 분할 룰** | **`2,580px` 초과 시 자동 분할** | 본문이 길 경우 강제로 줄이지 않고 **Part 1, Part 2로 2페이지 분할 렌더링** |
-| **언어별 표준 폰트** | 영문: **`Pretendard`** (메인 이미지는 **`Montserrat`**) / 일본어: **`Noto Sans JP`** / 중국어: **`Noto Sans SC`** | 100% 벡터 폰트 스크린샷 파이프라인 적용 |
+| **언어별 표준 폰트** | 영문: **`Pretendard`** (메인 이미지는 100% **`Montserrat`** 단일 강제) / 일본어: **`Noto Sans JP`** / 중국어: **`Noto Sans SC`** | 100% 벡터 폰트 스크린샷 파이프라인 적용 |
 | **타이포그래피 크기** | **타이틀 `64px` (Bold) / 항목명 `32px` / 본문 `32px`** | 가독성 극대화 및 황금비 밸런스 유지 |
 | **렌더링 모듈** | `00_공통자료/render_notice_table_standard.py` | Headless Edge 초고해상도 렌더러 파이프라인 |
 

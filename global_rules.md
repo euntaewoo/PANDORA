@@ -30,10 +30,10 @@
   - 가로 폭: **`860px` 고정**
   - 세로 높이: **`Auto-Fit` 적용 (단, 최대 허용 높이는 `2,580px` 이하 엄격 준수)**
   - **[2페이지 분할 룰]**: 전성분 등 본문 내용이 길어져 세로 높이가 **`2,580px`를 초과할 경우 무조건 2페이지(Part 1, Part 2)로 분할 작성**하여 개별 이미지로 렌더링할 것.
-- **[언어별 표준 폰트 적용 (Font Hierarchy)]**:
+- **[언어별 표준 폰트 적용 및 철저한 격리 원칙 (Font Isolation Standard)]**:
   - **영문(EN)**:
-    - **메인 이미지 및 상세페이지 본문/카피**: **`Montserrat (몬세라트)`** (글로벌 이커머스 메인 표준 폰트)
-    - **상품상세정보(고시정보) 테이블**: **`Pretendard`** (Pretendard-Bold / Pretendard-Regular 고시표 전용 분리 적용)
+    - **메인 이미지 및 상세페이지 본문/카피**: **`Montserrat (몬세라트)` 100% 단일 서체 강제** (AI 인페인팅 엔진 렌더링 시 타 폰트 혼용 절대 금지).
+    - **상품상세정보(고시정보) 테이블**: **`Pretendard` 전용 분리 적용** (오직 독립 Headless HTML 렌더러 `render_notice_table_standard.py`에만 국한).
   - **일본어(JP)**: **`Noto Sans JP`** (NotoSansJP-Bold / NotoSansJP-Regular)
   - **중국어(CN / TW / HK)**: **`Noto Sans SC (스위안헤이티 / 思源黑体)`** (NotoSansSC-Bold / NotoSansSC-Regular)
   - 기타 언어: 해당 국가 및 상품 카테고리에서 가장 빈도가 높고 가독성이 검증된 표준 산세리프 서체 적용.
