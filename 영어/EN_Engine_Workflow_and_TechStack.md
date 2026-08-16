@@ -35,7 +35,7 @@ graph TD
         K -- "Yes (Rate Limit)" --> L["Exponential Backoff 대기<br>(25초~ 재시도)"]
         L --> J
         K -- "No (성공)" --> M["기존 텍스트 원본 배경색으로 완벽 삭제"]
-        M --> N["영문 타이포그래피 재식자<br>(Pretendard / Inter 스타일)"]
+        M --> N["영문 타이포그래피 재식자<br>(Montserrat 메인 폰트)"]
         N --> O["제품 본품 용기/로고 100% 원본 보존"]
     end
 
@@ -65,30 +65,34 @@ graph TD
 | :--- | :--- | :--- | :--- |
 | **0. Auth** | 클라우드 인증 | **Google Cloud Vertex AI** (`google-genai` SDK) | `location="global"` 기반의 Serverless 관리형 공식 표준 엔드포인트 연결 |
 | **1. Pass 1** | 인지 및 초월번역 | **`gemini-3.1-pro-preview`** (추론 엔진) | • 다국어 OCR 정밀 스캔<br>• 한국어 ➔ 영문 초월번역(Transcreation)<br>• 기존 영문 ➔ 네이티브 표현 다듬기(Polishing)<br>• 구조화된 JSON 데이터 출력 |
-| **2. Pass 2** | 이미지 재렌더링 | **`gemini-3.1-flash-image`** (생성 엔진) | • 기존 텍스트 배경색 매칭 삭제 (Seamless Inpainting)<br>• 모던 산세리프(Pretendard/Inter) 폰트 재식자<br>• 제품 패키지/로고 원형 보존 |
+| **2. Pass 2** | 이미지 재렌더링 | **`gemini-3.1-flash-image`** (생성 엔진) | • 기존 텍스트 배경색 매칭 삭제 (Seamless Inpainting)<br>• **글로벌 프리미엄 산세리프 `Montserrat` (몬세라트) 메인 폰트 재식자**<br>• 제품 패키지/로고 원형 보존 |
 | **3. Retry** | 통신 안정성 | **Exponential Backoff Algorithm** | 429 Resource Exhausted (분당 쿼터 제한) 발생 시 25초~ 점진적 대기 후 자동 재시도 |
 | **4. Post-Proc**| 해상도 보존 | **Python Pillow (LANCZOS)** | 원본 픽셀 종횡비(Aspect Ratio) 및 가로/세로 해상도 1:1 강제 일치 복원 (크롭/찌그러짐 방지) |
 | **5. DevOps** | 형상 관리 | **Git / GitHub Repository (PANDORA)** | 소스코드 및 기술 문서 변경 시 원격 저장소(`main` 브랜치) 실시간 자동 커밋 및 푸시 |
-| **6. Notice Spec** | 고시정보 표 렌더링 | **Headless Edge + Pretendard** | 가로 860px 고정, 세로 Auto-Fit (최대 2,580px 이하, 초과 시 2페이지 분할), 타이틀 64px, 본문 32px |
+| **6. Notice Spec** | 고시정보 표 렌더링 | **Headless Edge + Pretendard** | 가로 860px 고정, 세로 Auto-Fit (최대 2,580px 이하, 초과 시 2페이지 분할), 타이틀 64px, 본문 32px (고시표 전용 Pretendard 적용) |
 
 ---
 
-## 💡 3. 엔진 핵심 아키텍처 특징 (Two-Pass Architecture)
+## 💡 3. 엔진 핵심 아키텍처 및 폰트 표준화 규칙
 
-1. **지능형 언어 자동 감지 (Auto-Detect Dual Mode)**:
+1. **영문 표준 폰트 이원화 원칙 (Dual Font Hierarchy Rule)**:
+   - **메인 이미지 및 상세페이지 텍스트**: 글로벌 이커머스 표준 지오메트릭 산세리프인 **`Montserrat (몬세라트)`를 메인 폰트**로 100% 강제 적용합니다.
+   - **상품상세정보(고시정보) 테이블**: 데이터 가독성 및 정보 정렬을 위해 **`Pretendard` 폰트**를 고시표 렌더링 전용으로 분리 적용합니다.
+
+2. **지능형 언어 자동 감지 (Auto-Detect Dual Mode)**:
    - 이미지 속 텍스트가 한글이면 자동으로 `TRANSLATE_KR_TO_EN` 모드로 동작하여 한글을 영어로 초월번역합니다.
    - 이미지 속 텍스트가 영어이면 자동으로 `POLISH_EN_TO_EN` 모드로 동작하여 어색한 콩글리시/문법 오류를 네이티브 이커머스 표현으로 다듬어 교정합니다.
 
-2. **완전 재생성 원칙 (Full Regeneration Rule)**:
+3. **완전 재생성 원칙 (Full Regeneration Rule)**:
    - 오류나 수정 발생 시 국소 덧칠(Patching)을 금지하고 전체 캔버스를 처음부터 끝까지 완전하게 다시 생성하여 무결점 퀄리티를 유지합니다.
 
-3. **상품 패키지 원본 보존 (Product Package Text & Logo Protection)**:
+4. **상품 패키지 원본 보존 (Product Package Text & Logo Protection)**:
    - 화장품 용기, 튜브, 단상자 등에 인쇄된 원본 로고와 텍스트는 인페인팅 대상에서 제외하여 패키지 고유의 시각적 형태를 100% 보존합니다.
 
-4. **상품 정보 고시 표 표준 렌더링 규격 (Notice Table Rendering Standard)**:
+5. **상품 정보 고시 표 표준 렌더링 규격 (Notice Table Rendering Standard)**:
    - 가로 폭: **`860px` 고정**
    - 세로 높이: **`Auto-Fit` (최대 허용치 `2,580px` 이하, 2,580px 초과 시 2페이지 분할 렌더링)**
-   - 영문 전용 표준 폰트: **`Pretendard`** (Bold 700 / Regular 400)
+   - 고시표 전용 폰트: **`Pretendard`** (Bold 700 / Regular 400)
    - 폰트 크기: **타이틀 `64px` (Bold), 항목명 `32px`, 본문 `32px`**
    - 렌더러: `00_공통자료/render_notice_table_standard.py` 표준 모듈 사용
 

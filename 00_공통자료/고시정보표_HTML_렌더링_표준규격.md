@@ -24,7 +24,7 @@
 
 | 대상 언어 / 국가 | 지정 표준 폰트 (Standard Font) | 적용 웨이트 (Weight) | 대체 폰트 스택 (Fallback) |
 | :--- | :--- | :--- | :--- |
-| **🇺🇸 영문 (EN / Global)** | **`Pretendard`** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` |
+| **🇺🇸 영문 (EN / Global)** | **`Pretendard`**<br>*(메인 이미지는 Montserrat 적용, 고시표 전용 Pretendard)* | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` |
 | **🇯🇵 일본어 (JP / Qoo10·Rakuten)** | **`Noto Sans JP`** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `"Hiragino Sans", "Meiryo", sans-serif` |
 | **🇨🇳 중국어 (CN / Shopee·Taobao)** | **`Noto Sans SC` (스위안헤이티 / 思源黑体)** | • 타이틀: **Bold (700)**<br>• 본문: **Regular (400) / Medium (500)** | `"Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif` |
 
