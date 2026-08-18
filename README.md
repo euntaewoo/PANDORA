@@ -12,13 +12,14 @@ flowchart TD
         IN["📂 01_번역대상_원본<br/>(한국어 원본 이미지 일괄 수납)"]
     end
 
-    subgraph S2["2. 통합 런처 구동 및 대화형 언어 선택"]
-        P_MAIN["🥇 [1순위 메인] Universal_Translation_Engine.py<br/>(터미널 직접 실행 표준)"]
-        BAT_SUB["🥈 [2순위 차선책] 다국어_통합번역_원클릭실행.bat<br/>(더블클릭 보조 런처)"]
-        PROMPT{"도착 언어 선택 콘솔 질의응답<br/>(1: EN, 2: JP, 3: CN, 4: TW, 5: ALL)"}
+    subgraph S2["2. 실행 진입점 (User Execution Trigger)"]
+        AGENT["🤖 [최우선] 안티그래비티 채팅창 대화 요청<br/>(예: '영어 번역해줘', '일본어 번역 시작해')"]
+        P_MAIN["🥇 [터미널 직접 실행] Universal_Translation_Engine.py<br/>(파이썬 명령어로 직접 구동)"]
+        BAT_SUB["🥈 [보조 차선책] 다국어_통합번역_원클릭실행.bat<br/>(탐색기 더블클릭 런처)"]
         
-        P_MAIN --> PROMPT
-        BAT_SUB -.->|보조 구동| PROMPT
+        AGENT -->|에이전트가 자동 실행| P_MAIN
+        P_MAIN --> PROMPT{"도착 언어 자동 분기 / 선택<br/>(EN / JP / CN / TW / ALL)"}
+        BAT_SUB -.->|대화형 질의응답| PROMPT
     end
 
     subgraph S3["3. 국가별 규정 및 톤앤매너 자동 분기"]
@@ -47,13 +48,12 @@ flowchart TD
         OUT_TW["📂 02_번역결과_최종/중국어_번체"]
     end
 
-    IN --> P_MAIN
-    IN -.-> BAT_SUB
-    PROMPT -->|1 선택| EN
-    PROMPT -->|2 선택| JP
-    PROMPT -->|3 선택| CN
-    PROMPT -->|4 선택| TW
-    PROMPT -->|5 선택| EN & JP & CN & TW
+    IN --> AGENT & P_MAIN & BAT_SUB
+    PROMPT -->|EN 모드| EN
+    PROMPT -->|JP 모드| JP
+    PROMPT -->|CN 모드| CN
+    PROMPT -->|TW 모드| TW
+    PROMPT -->|ALL 모드| EN & JP & CN & TW
 
     EN & JP & CN & TW --> P1
     HTML & P2 --> OUT_EN & OUT_JP & OUT_CN & OUT_TW
@@ -63,34 +63,30 @@ flowchart TD
 
 ## 🚀 빠른 시작 (사용자 표준 실행법)
 
-1. **원본 이미지 넣기**:
-   - `01_번역대상_원본` 폴더에 번역할 한국어 이미지(`.png`, `.jpg` 등)를 넣습니다.
+### 💬 [방법 1: 최우선] 안티그래비티 창에서 말로 요청하기 (가장 편리)
+1. `01_번역대상_원본` 폴더에 번역할 한국어 이미지를 넣습니다.
+2. 안티그래비티 채팅창에 아래와 같이 말씀하시면 제가 즉시 번역을 수행하고 품질을 검수하여 보고합니다:
+   - *"01_번역대상_원본에 이미지 넣었어, 영어로 번역해줘"*
+   - *"일본어 약기법 번역 시작해줘"*
+   - *"중국어 간체로 번역해줘"*
+   - *"전체 언어로 일괄 번역해줘"*
 
-2. **통합 엔진 실행 (우선순위 표준)**:
-   - **[1순위 표준]**: 터미널에서 아래 명령어로 직접 구동합니다.
-     ```bash
-     .venv\Scripts\python.exe Universal_Translation_Engine.py
-     ```
-   - **[2순위 차선책]**: 탐색기에서 `다국어_통합번역_원클릭실행.bat` 파일을 더블클릭합니다.
+### 💻 [방법 2] 터미널에서 직접 실행
+- **대화형 선택 모드**:
+  ```bash
+  .venv\Scripts\python.exe Universal_Translation_Engine.py
+  ```
+- **특정 언어 즉시 실행 모드**:
+  ```bash
+  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang EN   # 영어
+  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang JP   # 일본어
+  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang CN   # 중국어 간체
+  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang TW   # 중국어 번체
+  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang ALL  # 전체 일괄
+  ```
 
-3. **도착 언어 선택 (콘솔 질문에 답변)**:
-   ```text
-   번역할 도착 언어를 선택하세요:
-     [1] 🇺🇸 영어 (EN - Amazon / Shopee US 초월번역 + Montserrat)
-     [2] 🇯🇵 일본어 (JP - Qoo10 Japan / 후생노동성 56종 약기법 준수)
-     [3] 🇨🇳 중국어 간체 (CN - 중국 본토 신광고법 및 NMPA 규정 준수)
-     [4] 🇹🇼 중국어 번체 (TW - 대만/홍콩 TFDA 규정 준수)
-     [5] 🌐 전체 언어 일괄 번역 (EN -> JP -> CN -> TW 순차 실행)
-     [Q] 종료 (Quit)
-   ```
-   - 원하는 언어 번호(`1`, `2`, `3`, `4`, `5`)를 입력하고 엔터를 누릅니다.
-
-4. **결과 확인**:
-   - 번역이 완료되면 `02_번역결과_최종` 하위의 각 언어별 폴더로 자동 저장됩니다:
-     - `02_번역결과_최종/영어`
-     - `02_번역결과_최종/일본어`
-     - `02_번역결과_최종/중국어_간체`
-     - `02_번역결과_최종/중국어_번체`
+### 🖱️ [방법 3: 차선책] 탐색기 더블클릭 런처
+- `다국어_통합번역_원클릭실행.bat` 더블클릭 ➔ 콘솔에서 숫자(1~5) 입력
 
 ---
 
