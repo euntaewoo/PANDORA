@@ -1,4 +1,4 @@
-# PANDORA - 다국어 원클릭 텍스트-인-이미지 번역 시스템
+# PANDORA - Multi-lingual_Text-In_Image_Translation_Engine
 
 한국어 원본 상세페이지/제품 이미지를 단일 공통 폴더에 넣고, 도착 언어(영어, 일본어, 중국어 간체/번체)를 선택하면 각 국가별 법률 및 폰트 규정에 맞추어 원클릭으로 일괄 번역·렌더링하는 통합 시스템입니다.
 
@@ -14,7 +14,7 @@ flowchart TD
 
     subgraph S2["2. 실행 진입점 (User Execution Trigger)"]
         AGENT["🤖 [최우선] 안티그래비티 채팅창 대화 요청<br/>(예: '영어 번역해줘', '일본어 번역 시작해')"]
-        P_MAIN["🥇 [터미널 직접 실행] Universal_Translation_Engine.py<br/>(파이썬 명령어로 직접 구동)"]
+        P_MAIN["🥇 [터미널 직접 실행] Multi-lingual_Text-In_Image_Translation_Engine.py<br/>(파이썬 명령어로 직접 구동)"]
         BAT_SUB["🥈 [보조 차선책] 다국어_통합번역_원클릭실행.bat<br/>(탐색기 더블클릭 런처)"]
         
         AGENT -->|에이전트가 자동 실행| P_MAIN
@@ -74,15 +74,15 @@ flowchart TD
 ### 💻 [방법 2] 터미널에서 직접 실행
 - **대화형 선택 모드**:
   ```bash
-  .venv\Scripts\python.exe Universal_Translation_Engine.py
+  .venv\Scripts\python.exe Multi-lingual_Text-In_Image_Translation_Engine.py
   ```
 - **특정 언어 즉시 실행 모드**:
   ```bash
-  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang EN   # 영어
-  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang JP   # 일본어
-  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang CN   # 중국어 간체
-  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang TW   # 중국어 번체
-  .venv\Scripts\python.exe Universal_Translation_Engine.py --lang ALL  # 전체 일괄
+  .venv\Scripts\python.exe Multi-lingual_Text-In_Image_Translation_Engine.py --lang EN   # 영어
+  .venv\Scripts\python.exe Multi-lingual_Text-In_Image_Translation_Engine.py --lang JP   # 일본어
+  .venv\Scripts\python.exe Multi-lingual_Text-In_Image_Translation_Engine.py --lang CN   # 중국어 간체
+  .venv\Scripts\python.exe Multi-lingual_Text-In_Image_Translation_Engine.py --lang TW   # 중국어 번체
+  .venv\Scripts\python.exe Multi-lingual_Text-In_Image_Translation_Engine.py --lang ALL  # 전체 일괄
   ```
 
 ### 🖱️ [방법 3: 차선책] 탐색기 더블클릭 런처

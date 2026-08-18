@@ -1,18 +1,18 @@
 @echo off
 chcp 65001 > nul
-title PANDORA 다국어 원클릭 이미지 번역 엔진
+title Multi-lingual_Text-In_Image_Translation_Engine
 
 echo ========================================================================
-echo  🌐 PANDORA 다국어 원클릭 이미지 번역 엔진 가동
+echo  🌐 Multi-lingual_Text-In_Image_Translation_Engine 가동
 echo ========================================================================
 echo.
 
 cd /d "%~dp0"
 
 if exist ".venv\Scripts\python.exe" (
-    ".venv\Scripts\python.exe" Universal_Translation_Engine.py
+    ".venv\Scripts\python.exe" Multi-lingual_Text-In_Image_Translation_Engine.py
 ) else (
-    python Universal_Translation_Engine.py
+    python Multi-lingual_Text-In_Image_Translation_Engine.py
 )
 
 echo.
