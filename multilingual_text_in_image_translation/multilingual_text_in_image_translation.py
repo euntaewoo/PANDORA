@@ -5,11 +5,11 @@
 • Purpose: multilingual_text_in_image_translation
 • Location: multilingual_text_in_image_translation/multilingual_text_in_image_translation.py
 • Features:
-    1. 단일 공통 인풋 폴더(01_번역대상_원본) 기준 구동
+    1. 단일 공통 인풋 폴더(01_번역대상_원본) 기준 구동 (서브폴더/낱개 파일 모두 지원)
     2. 실행 시 도착 언어(EN, JP, CN, TW, ALL) 대화형 질의응답 선택
     3. 도착어별 규정/법률(영어 초월번역, 일본 약기법 56종, 중국 신광고법) 자동 적용
     4. 표(고시표/성분표) 자동 감지 시 HTML 표준 헤드리스 렌더러로 고선명 분기 처리
-    5. 결과물을 02_번역결과_최종/[언어명] 폴더로 자동 분류 저장
+    5. 상품 혼재 방지: [최초 번역대상 상품명]_[번역국가언어] 전용 서브폴더 자동 생성 및 저장
 • Models:
     - Pass 1: gemini-3.1-pro-preview (추론, 번역, 법률 필터링)
     - Pass 2: gemini-3.1-flash-image (시각적 신경망 인페인팅 렌더링)
@@ -37,7 +37,6 @@ sys.stdout.reconfigure(encoding="utf-8")
 # 1. 시스템 기본 경로 및 인증 초기화 (서브폴더 구조 지원)
 # =================================================================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# 서브폴더 안에 위치하므로 상위 폴더를 PROJECT_ROOT로 탐색
 if os.path.basename(SCRIPT_DIR) == "multilingual_text_in_image_translation":
     PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 else:
@@ -145,7 +144,7 @@ def load_jp_efficacy_list() -> str:
                     return "\n".join([f"{it['id']}. {it['claim_jp']} ({it['claim_ko']})" for it in data])
             except Exception:
                 pass
-    return "1. 肌を整える\n2. 肌荒れを防ぐ\n3. 皮膚에うるおいを与える 등 56종"
+    return "1. 肌を整える\n2. 肌荒れを防ぐ\n3. 皮膚にうるおいを与える 등 56종"
 
 
 # =================================================================================
@@ -460,24 +459,44 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
         return False
 
 
-def run_translation_batch(client: genai.Client, source_dir: str, target_lang: str):
+def extract_product_name_from_files(file_list: List[str], folder_name: str) -> str:
+    """파일 목록이나 폴더명에서 상품 식별명을 정제 추출합니다."""
+    if folder_name and folder_name != "01_번역대상_원본" and folder_name != "input":
+        return folder_name
+
+    # 파일명 패턴에서 공통 상품명 추출 시도 (예: 1_웹상세페이지_Professional-Sun-Block-70.png -> Professional-Sun-Block-70)
+    if not file_list:
+        return "번역상품"
+
+    first_file = os.path.splitext(file_list[0])[0]
+    # 웹상세페이지_ 또는 PDP_ 등의 접두사 제거
+    cleaned = re.sub(r"^\d+[_.-]?(웹상세페이지|PDP|상세설명|상세페이지)?[_.-]?", "", first_file)
+    if cleaned:
+        return cleaned.strip("_.- ")
+    return first_file
+
+
+def run_translation_batch_for_folder(client: genai.Client, current_source_dir: str, target_lang: str, product_name: str):
     config = LANG_CONFIGS[target_lang]
-    target_dir = os.path.join(DEFAULT_OUTPUT_BASE, config["folder_name"])
+    
+    # [사용자 규칙 강제 적용]: {상품명}_{번역국가언어} 서브폴더 생성
+    target_subfolder_name = f"{product_name}_{config['folder_name']}"
+    target_dir = os.path.join(DEFAULT_OUTPUT_BASE, target_subfolder_name)
     os.makedirs(target_dir, exist_ok=True)
 
     print(f"\n================================================================================")
-    print(f"🚀 [{config['name']}] 일괄 번역 시작")
-    print(f"📁 [입력 폴더] {source_dir}")
+    print(f"🚀 [{config['name']}] 일괄 번역 시작 (상품: {product_name})")
+    print(f"📁 [입력 폴더] {current_source_dir}")
     print(f"📁 [출력 폴더] {target_dir}")
     print(f"================================================================================")
 
     targets = sorted(
-        [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))],
+        [f for f in os.listdir(current_source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))],
         key=lambda x: [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', x)]
     )
 
     if not targets:
-        print(f"⚠️ [WARNING] '{source_dir}' 폴더에 처리할 이미지가 없습니다.")
+        print(f"⚠️ [WARNING] '{current_source_dir}' 폴더에 처리할 이미지가 없습니다.")
         return
 
     total = len(targets)
@@ -488,7 +507,7 @@ def run_translation_batch(client: genai.Client, source_dir: str, target_lang: st
             print(f"[{idx}/{total}] ⏭️ [SKIP] 이미 번역된 파일: {filename}")
             continue
 
-        in_path = os.path.join(source_dir, filename)
+        in_path = os.path.join(current_source_dir, filename)
         base_name = os.path.splitext(filename)[0]
         out_name = f"{base_name}{config['tag']}"
         out_path = os.path.join(target_dir, out_name)
@@ -511,6 +530,29 @@ def run_translation_batch(client: genai.Client, source_dir: str, target_lang: st
     print(f"📂 저장 경로: {target_dir}\n")
 
 
+def run_translation_batch(client: genai.Client, source_dir: str, target_lang: str):
+    """source_dir 내에 서브폴더가 있으면 각 상품 서브폴더별로 분기 처리하고, 파일만 있으면 파일 기반으로 처리합니다."""
+    # 1. 서브폴더 탐색
+    subdirs = [os.path.join(source_dir, d) for d in os.listdir(source_dir) if os.path.isdir(os.path.join(source_dir, d)) and not d.startswith('.')]
+    
+    # 2. 직속 이미지 파일 탐색
+    direct_images = [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+
+    if subdirs:
+        # 상품별 서브폴더가 있는 경우: 각 폴더별로 순차 번역
+        for sdir in subdirs:
+            pname = os.path.basename(sdir)
+            run_translation_batch_for_folder(client, sdir, target_lang, pname)
+
+    if direct_images:
+        # 인풋 폴더에 직접 이미지가 있는 경우: 공통 상품명 추출하여 전용 폴더 생성
+        pname = extract_product_name_from_files(direct_images, os.path.basename(source_dir))
+        run_translation_batch_for_folder(client, source_dir, target_lang, pname)
+
+    if not subdirs and not direct_images:
+        print(f"⚠️ [WARNING] '{source_dir}' 폴더에 처리할 이미지나 서브폴더가 없습니다.")
+
+
 # =================================================================================
 # 6. 메인 실행 및 대화형 사용자 질의응답
 # =================================================================================
@@ -525,13 +567,16 @@ def main():
 
     chosen_lang = args.lang
     if not chosen_lang:
-        image_count = len([f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]) if os.path.exists(source_dir) else 0
+        # 하위 이미지 총 개수 카운트
+        image_count = 0
+        for root, _, files in os.walk(source_dir):
+            image_count += len([f for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))])
 
         print("\n" + "=" * 76)
         print(" 🌐 multilingual_text_in_image_translation")
         print("=" * 76)
         print(f" 📂 [공통 인풋 폴더] : {source_dir}")
-        print(f" 🖼️ [감지된 원본 이미지] : {image_count}개")
+        print(f" 🖼️ [감지된 원본 이미지] : 총 {image_count}개")
         print("-" * 76)
         print(" 번역할 도착 언어를 선택하세요:")
         print("   [1] 🇺🇸 영어 (EN - Amazon / Shopee US 초월번역 + Montserrat)")
