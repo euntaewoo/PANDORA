@@ -4,6 +4,59 @@
 
 ---
 
+## 📊 워크플로우 차트 다이어그램 (System Architecture)
+
+```mermaid
+flowchart TD
+    subgraph S1["1. 단일 공통 인풋"]
+        IN["📂 01_번역대상_원본<br/>(한국어 원본 이미지 일괄 수납)"]
+    end
+
+    subgraph S2["2. 통합 런처 구동 및 대화형 언어 선택"]
+        BAT["🚀 다국어_통합번역_원클릭실행.bat<br/>(또는 Universal_Translation_Engine.py)"]
+        PROMPT{"도착 언어 선택 콘솔<br/>(1: EN, 2: JP, 3: CN, 4: TW, 5: ALL)"}
+        BAT --> PROMPT
+    end
+
+    subgraph S3["3. 국가별 규정 및 톤앤매너 자동 분기"]
+        EN["🇺🇸 영어 (EN)<br/>• Amazon/Shopee US 초월번역<br/>• Montserrat 단일 서체 강제"]
+        JP["🇯🇵 일본어 (JP)<br/>• 후생노동성 56종 약기법 포지티브 리스트<br/>• Noto Sans JP 서체"]
+        CN["🇨🇳 중국어 간체 (CN)<br/>• 중국 신광고법 8대 절대화 금지어 순화<br/>• Noto Sans SC (思源黑体) 서체"]
+        TW["🇹🇼 중국어 번체 (TW)<br/>• 대만/홍콩 TFDA 규정 준수<br/>• Noto Sans TC 서체"]
+    end
+
+    subgraph S4["4. 하이브리드 투패스 렌더링 엔진"]
+        P1["🔍 Pass 1: gemini-3.1-pro-preview<br/>(텍스트 전수 스캔, 번역, 법률 필터링, 표 감지)"]
+        DECIDE{"이미지 속성 판별"}
+        
+        HTML["📊 고시정보표 (테이블)<br/>Headless HTML 표준 렌더러<br/>(860px 고정, 100% 벡터 선명도)"]
+        P2["🎨 일반 상세페이지 (인페인팅)<br/>Pass 2: gemini-3.1-flash-image<br/>(배경 텍스처 복원, 1:1 종횡비 잠금)"]
+        
+        P1 --> DECIDE
+        DECIDE -->|고시표 / 성분표| HTML
+        DECIDE -->|일반 디자인 이미지| P2
+    end
+
+    subgraph S5["5. 언어별 결과 폴더 자동 분류 저장"]
+        OUT_EN["📂 02_번역결과_최종/영어"]
+        OUT_JP["📂 02_번역결과_최종/일본어"]
+        OUT_CN["📂 02_번역결과_최종/중국어_간체"]
+        OUT_TW["📂 02_번역결과_최종/중국어_번체"]
+    end
+
+    IN --> BAT
+    PROMPT -->|1 선택| EN
+    PROMPT -->|2 선택| JP
+    PROMPT -->|3 선택| CN
+    PROMPT -->|4 선택| TW
+    PROMPT -->|5 선택| EN & JP & CN & TW
+
+    EN & JP & CN & TW --> P1
+    HTML & P2 --> OUT_EN & OUT_JP & OUT_CN & OUT_TW
+```
+
+---
+
 ## 🚀 빠른 시작 (원클릭 사용법)
 
 1. **원본 이미지 넣기**:
