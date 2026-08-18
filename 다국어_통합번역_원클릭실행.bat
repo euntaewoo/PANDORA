@@ -1,18 +1,18 @@
 @echo off
 chcp 65001 > nul
-title Multi-lingual_Text-In_Image_Translation_Engine
+title multilingual_text_in_image_translation
 
 echo ========================================================================
-echo  🌐 Multi-lingual_Text-In_Image_Translation_Engine 가동
+echo  🌐 multilingual_text_in_image_translation 가동
 echo ========================================================================
 echo.
 
 cd /d "%~dp0"
 
 if exist ".venv\Scripts\python.exe" (
-    ".venv\Scripts\python.exe" Multi-lingual_Text-In_Image_Translation_Engine.py
+    ".venv\Scripts\python.exe" multilingual_text_in_image_translation.py
 ) else (
-    python Multi-lingual_Text-In_Image_Translation_Engine.py
+    python multilingual_text_in_image_translation.py
 )
 
 echo.
