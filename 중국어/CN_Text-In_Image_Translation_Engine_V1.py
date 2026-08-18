@@ -210,7 +210,7 @@ pass1_prompt = f"""
 # ==========================================
 # 4. [Pass 2] 렌더링 지시 프롬프트 템플릿
 # ==========================================
-pass2_prompt_template = f"""
+pass2_prompt_template = """
 당신은 정밀한 시각적 로컬라이제이션을 수행하는 이미지 인페인팅 AI입니다.
 첨부된 원본 이미지 속의 텍스트 위치, 배경 텍스처, 제품 누끼, 디자인 레이아웃을 1픽셀의 왜곡 없이 그대로 유지하세요.
 아래에 제공된 [번역 매핑 데이터 JSON]을 바탕으로 다음 규칙을 엄격히 적용하여 단일 이미지를 생성하세요.
@@ -252,7 +252,7 @@ for filename in targets:
         continue
 
     # 고시정보 표 이미지 별도 처리 (HTML 렌더러 연동)
-    if '고시' in filename or 'KR' in filename or '08_' in filename or '상세정보' in filename:
+    if '고시' in filename or 'KR' in filename or '상세정보' in filename:
         print(f"\n[NOTICE TABLE DETECTED] 고시정보 표 감지: {filename}", flush=True)
         # 고시정보 표는 Pass 1에서 텍스트 추출 후 표준 HTML 렌더러로 처리
         continue

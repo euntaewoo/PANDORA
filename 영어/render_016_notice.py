@@ -13,7 +13,7 @@ items = [
     {"label": "Manufacturer /<br>Responsible Distributor", "value": "Natuzen Co., Ltd. / Skin Reverse Lab Co., Ltd."},
     {"label": "Country of Manufacture", "value": "Republic of Korea"},
     {"label": "Full Ingredients", "value": "Water, Glycerin, Myristic Acid, Lauric Acid, Lauramide DEA, Sodium Laureth Sulfate, Potassium Hydroxide, Butylene Glycol, Cocamidopropyl Betaine, PEG-120 Methyl Glucose Dioleate, Salicylic Acid, Sodium Chloride, Lavandula Angustifolia (Lavender) Oil, Decylene Glycol, Laurylpyridinium Chloride, Linalool, Tetrasodium EDTA, PCA Ethyl Cocoyl Arginate, Camellia Sinensis Leaf Extract, Aloe Barbadensis Leaf Extract, Tocopherol"},
-    {"label": "Functional Cosmetics Review", "value": "None"},
+    {"label": "Functional Cosmetics Review", "value": "MFDS Certified Functional Cosmetic for Acne-Prone Skin Relief"},
     {"label": "Precautions for Use", "value": "1) If you experience abnormal symptoms or side effects such as red spots, swelling, or itching due to direct sunlight during or after use, consult a specialist.<br>2) Refrain from using on wounded or damaged areas.<br>3) Precautions for storage and handling:<br>&nbsp;&nbsp;A. Keep out of reach of children.<br>&nbsp;&nbsp;B. Store away from direct sunlight."},
     {"label": "Quality Assurance Standards", "value": "In accordance with applicable consumer dispute resolution regulations."},
     {"label": "Customer Service", "value": "+82-2-6743-3206"}
