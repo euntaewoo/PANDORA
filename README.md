@@ -13,9 +13,12 @@ flowchart TD
     end
 
     subgraph S2["2. 통합 런처 구동 및 대화형 언어 선택"]
-        BAT["🚀 다국어_통합번역_원클릭실행.bat<br/>(또는 Universal_Translation_Engine.py)"]
-        PROMPT{"도착 언어 선택 콘솔<br/>(1: EN, 2: JP, 3: CN, 4: TW, 5: ALL)"}
-        BAT --> PROMPT
+        P_MAIN["🥇 [1순위 메인] Universal_Translation_Engine.py<br/>(터미널 직접 실행 표준)"]
+        BAT_SUB["🥈 [2순위 차선책] 다국어_통합번역_원클릭실행.bat<br/>(더블클릭 보조 런처)"]
+        PROMPT{"도착 언어 선택 콘솔 질의응답<br/>(1: EN, 2: JP, 3: CN, 4: TW, 5: ALL)"}
+        
+        P_MAIN --> PROMPT
+        BAT_SUB -.->|보조 구동| PROMPT
     end
 
     subgraph S3["3. 국가별 규정 및 톤앤매너 자동 분기"]
@@ -44,7 +47,8 @@ flowchart TD
         OUT_TW["📂 02_번역결과_최종/중국어_번체"]
     end
 
-    IN --> BAT
+    IN --> P_MAIN
+    IN -.-> BAT_SUB
     PROMPT -->|1 선택| EN
     PROMPT -->|2 선택| JP
     PROMPT -->|3 선택| CN
@@ -57,14 +61,17 @@ flowchart TD
 
 ---
 
-## 🚀 빠른 시작 (원클릭 사용법)
+## 🚀 빠른 시작 (사용자 표준 실행법)
 
 1. **원본 이미지 넣기**:
    - `01_번역대상_원본` 폴더에 번역할 한국어 이미지(`.png`, `.jpg` 등)를 넣습니다.
 
-2. **통합 런처 실행**:
-   - `다국어_통합번역_원클릭실행.bat` 파일을 더블클릭하여 실행합니다.
-   - (또는 터미널에서 `python Universal_Translation_Engine.py` 실행)
+2. **통합 엔진 실행 (우선순위 표준)**:
+   - **[1순위 표준]**: 터미널에서 아래 명령어로 직접 구동합니다.
+     ```bash
+     .venv\Scripts\python.exe Universal_Translation_Engine.py
+     ```
+   - **[2순위 차선책]**: 탐색기에서 `다국어_통합번역_원클릭실행.bat` 파일을 더블클릭합니다.
 
 3. **도착 언어 선택 (콘솔 질문에 답변)**:
    ```text
