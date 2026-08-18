@@ -7,6 +7,7 @@
 ## 📁 주요 문서 링크
 - 📊 **[워크플로우 차트 다이어그램](file:///C:/Users/euntaewoo/Desktop/다국어_이미지_번역/multilingual_text_in_image_translation/워크플로우_차트_다이어그램.md)**: 전체 시스템 아키텍처 및 5단계 처리 흐름도
 - 📖 **[3가지 실행 방법 가이드](file:///C:/Users/euntaewoo/Desktop/다국어_이미지_번역/multilingual_text_in_image_translation/실행_방법_가이드.md)**: 안티그래비티 대화 요청 / CLI / BAT 실행 상세 가이드
+- 🧬 **[기술적 기초 및 계승 내역 레퍼런스](file:///C:/Users/euntaewoo/Desktop/다국어_이미지_번역/multilingual_text_in_image_translation/기술적_기초_및_계승_내역_레퍼런스.md)**: 프로토/영어/일본어/중국어 엔진의 핵심 기술 융합 내역
 
 ---
 
@@ -47,11 +48,14 @@ flowchart TD
         DECIDE -->|일반 디자인 이미지| P2
     end
 
-    subgraph S5["5. 언어별 결과 폴더 자동 분류 저장"]
-        OUT_EN["📂 02_번역결과_최종/영어"]
-        OUT_JP["📂 02_번역결과_최종/일본어"]
-        OUT_CN["📂 02_번역결과_최종/중국어_간체"]
-        OUT_TW["📂 02_번역결과_최종/중국어_번체"]
+    subgraph S5["5. 상품별·언어별 자동 서브폴더 분류 저장"]
+        OUT["📂 02_번역결과_최종/"]
+        OUT1["📁 [상품명]_영어/"]
+        OUT2["📁 [상품명]_일본어/"]
+        OUT3["📁 [상품명]_중국어_간체/"]
+        OUT4["📁 [상품명]_중국어_번체/"]
+        
+        OUT --> OUT1 & OUT2 & OUT3 & OUT4
     end
 
     IN --> AGENT & P_MAIN & BAT_SUB
@@ -62,7 +66,7 @@ flowchart TD
     PROMPT -->|ALL 모드| EN & JP & CN & TW
 
     EN & JP & CN & TW --> P1
-    HTML & P2 --> OUT_EN & OUT_JP & OUT_CN & OUT_TW
+    HTML & P2 --> OUT1 & OUT2 & OUT3 & OUT4
 ```
 
 ---
