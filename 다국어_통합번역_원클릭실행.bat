@@ -10,9 +10,9 @@ echo.
 cd /d "%~dp0"
 
 if exist ".venv\Scripts\python.exe" (
-    ".venv\Scripts\python.exe" multilingual_text_in_image_translation.py
+    ".venv\Scripts\python.exe" multilingual_text_in_image_translation\multilingual_text_in_image_translation.py
 ) else (
-    python multilingual_text_in_image_translation.py
+    python multilingual_text_in_image_translation\multilingual_text_in_image_translation.py
 )
 
 echo.
