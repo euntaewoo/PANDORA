@@ -312,57 +312,238 @@ def build_prompts(lang_code: str) -> Tuple[str, str]:
 
 
 # =================================================================================
-# 4. 고시정보 표 자동 HTML 렌더러 연동
+# 4. 고시정보 표 자동 HTML 렌더러 연동 및 DOCX 파싱 지원
 # =================================================================================
+def parse_docx_content(docx_path: str) -> List[Tuple[str, str]]:
+    """DOCX 파일에서 항목-내용 쌍을 추출합니다."""
+    import zipfile
+    import xml.etree.ElementTree as ET
+
+    items = []
+    try:
+        with zipfile.ZipFile(docx_path) as z:
+            xml_content = z.read("word/document.xml")
+            tree = ET.fromstring(xml_content)
+            
+            # 테이블 탐색
+            ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+            tables = tree.findall(".//w:tbl", ns)
+            if tables:
+                for tbl in tables:
+                    rows = tbl.findall(".//w:tr", ns)
+                    for tr in rows:
+                        cells = tr.findall(".//w:tc", ns)
+                        if len(cells) >= 2:
+                            c0_texts = [t.text for t in cells[0].findall(".//w:t", ns) if t.text]
+                            c1_texts = [t.text for t in cells[1].findall(".//w:t", ns) if t.text]
+                            lbl = "".join(c0_texts).strip()
+                            val = "\n".join(["".join([t.text for t in p.findall(".//w:t", ns) if t.text]) for p in cells[1].findall(".//w:p", ns)]).strip()
+                            if lbl and lbl != "항목":
+                                items.append((lbl, val))
+            
+            # 테이블이 없거나 비어있는 경우 단락 파싱
+            if not items:
+                paragraphs = []
+                for p in tree.findall(".//w:p", ns):
+                    txt = "".join([t.text for t in p.findall(".//w:t", ns) if t.text]).strip()
+                    if txt:
+                        paragraphs.append(txt)
+                
+                # 라인 단위로 항목-내용 파싱
+                i = 0
+                while i < len(paragraphs):
+                    p = paragraphs[i]
+                    if p in ["상품상세정보", "항목", "내용"]:
+                        i += 1
+                        continue
+                    if i + 1 < len(paragraphs):
+                        items.append((p, paragraphs[i+1]))
+                        i += 2
+                    else:
+                        items.append((p, ""))
+                        i += 1
+    except Exception as e:
+        print(f"  ❌ [DOCX ERROR] 파싱 실패: {e}")
+    return items
+
+
 def render_notice_table(mapping_data: Dict[str, Any], lang_code: str, out_path: str, orig_width: int = 860) -> bool:
     """render_notice_table_standard.py 모듈을 활용하여 고선명 표 이미지를 렌더링합니다."""
-    std_script = os.path.join(PROJECT_ROOT, "00_공통자료", "render_notice_table_standard.py")
-    if not os.path.exists(std_script):
-        return False
+    std_script_dir = os.path.join(PROJECT_ROOT, "00_공통자료")
+    if std_script_dir not in sys.path:
+        sys.path.insert(0, std_script_dir)
 
     try:
+        import render_notice_table_standard as rnts
         items = []
         for row in mapping_data.get("translation_map", []):
             kor = row.get("kor", "")
             tgt = row.get("target_text", "")
-            if ":" in kor or "：" in kor:
+            if ":" in tgt or "：" in tgt:
                 parts = re.split(r"[:：]", tgt, 1)
                 lbl = parts[0].strip()
                 val = parts[1].strip() if len(parts) > 1 else ""
+            elif ":" in kor or "：" in kor:
+                parts = re.split(r"[:：]", kor, 1)
+                lbl = parts[0].strip()
+                val = tgt
             else:
                 lbl = kor
                 val = tgt
             items.append({"label": lbl, "value": val})
 
-        tmp_json = os.path.join(PROJECT_ROOT, "00_공통자료", f"_tmp_table_{lang_code}.json")
-        with open(tmp_json, "w", encoding="utf-8") as f:
-            json.dump({"title": "PRODUCT DETAILS", "items": items, "lang": lang_code, "out_path": out_path, "width": orig_width}, f, ensure_ascii=False)
-
-        cmd = [sys.executable, "-c", f"""
-import sys, json, os
-from PIL import Image
-sys.path.insert(0, r'{os.path.join(PROJECT_ROOT, "00_공통자료")}')
-import render_notice_table_standard as rnts
-
-with open(r'{tmp_json}', 'r', encoding='utf-8') as f:
-    cfg = json.load(f)
-
-browser = rnts.get_browser_path()
-html = rnts.build_notice_html(cfg['title'], cfg['items'], lang=cfg['lang'])
-tmp_html = r'{tmp_json}.html'
-with open(tmp_html, 'w', encoding='utf-8') as hf:
-    hf.write(html)
-
-ret = rnts.render_html_to_png(tmp_html, cfg['out_path'], browser_path=browser, target_width=cfg['width'])
-if os.path.exists(tmp_html): os.remove(tmp_html)
-sys.exit(0 if ret else 1)
-"""]
-        res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
-        if os.path.exists(tmp_json):
-            os.remove(tmp_json)
-        return res.returncode == 0 and os.path.exists(out_path)
+        title_map = {
+            "EN": "PRODUCT DETAILS",
+            "JP": "商品基本情報",
+            "CN": "商品基本信息",
+            "TW": "商品基本資訊"
+        }
+        title = title_map.get(lang_code, "PRODUCT DETAILS")
+        return rnts.render_notice_table_to_png(title, items, out_path, lang=lang_code)
     except Exception as e:
-        print(f"  -> [TABLE FALLBACK FAIL] 표 렌더러 예외: {e}")
+        print(f"  -> [TABLE RENDER FAIL] 표 렌더러 예외: {e}")
+        return False
+
+
+def process_docx_notice_table(client: genai.Client, docx_path: str, out_path: str, lang_code: str) -> bool:
+    """DOCX 고시정보표를 번역하여 표준 고선명 HTML 테이블 PNG로 렌더링합니다."""
+    print(f"\n================================================================================")
+    print(f"📄 [DOCX 고시정보표 번역] {os.path.basename(docx_path)} -> [{LANG_CONFIGS[lang_code]['name']}]")
+    print(f"================================================================================")
+    
+    raw_items = parse_docx_content(docx_path)
+    if not raw_items:
+        print(f"  ❌ [ERROR] DOCX 파일에서 고시정보 항목을 추출하지 못했습니다.")
+        return False
+
+    prompt_en = """
+You are a senior regulatory affairs and e-commerce localization expert.
+Translate the following Korean cosmetic product details (specifications table) into professional English for Amazon / Shopee US.
+Standard field names must follow:
+- 내용물의 용량: Volume / Net Weight
+- 제품 주요 사양: Skin Type / Key Specifications
+- 사용기한 또는 개봉 후 사용기간: Expiration Date / Period After Opening
+- 사용방법: How to Use / Directions
+- 화장품제조업자 / 책임판매업자: Manufacturer / Distributor
+- 제조국: Country of Origin
+- 전성분: Ingredients / Full Ingredients List (Use official INCI standard names)
+- 기능성 화장품 심사 필 유무: Functional Cosmetics Review Status
+- 사용할 때의 주의사항: Precautions for Use / Cautions
+- 품질보증기준: Quality Assurance Standard
+- 소비자 상담 전화번호: Customer Service / Contact (MUST format Korean phone number with international country code, e.g. +82-2-6743-3206)
+
+Output MUST be a JSON object:
+{
+  "title": "PRODUCT DETAILS",
+  "items": [
+    {"label": "Volume / Net Weight", "value": "25ml"},
+    ...
+  ]
+}
+"""
+
+    prompt_cn = """
+你是资深化妆品法规与电商本地化专家。请将以下韩国化妆品产品详细信息（中文告示表）翻译为规范的简体中文，严格遵守中国国家药监局(NMPA)及新广告法规范。
+标准字段命名参考：
+- 내용물의 용량: 净含量 / 容量
+- 제품 주요 사양: 适用肤质 / 产品规格
+- 사용기한 또는 개봉 후 사용기간: 使用期限 / 保质期
+- 사용방법: 使用方法
+- 화장품제조업자 / 책임판매업자: 化妆品生产企业 / 责任销售商
+- 제조국: 原产国 / 产地
+- 전성분: 全成分 (使用中国化妆品标准中文全成分名)
+- 기능성 화장품 심사 필 유무: 特殊用途化妆品审查状态 (如：已完成审查 (美白、改善皱纹双重功效))
+- 사용할 때의 주의사항: 使用注意事项
+- 품질보증기준: 质量保证标准
+- 소비자 상담 전화번호: 消费者咨询电话 (电话号码必须带有韩国国际区号，格式为：+82-2-6743-3206)
+
+输出必须为纯 JSON 格式：
+{
+  "title": "商品基本信息",
+  "items": [
+    {"label": "净含量", "value": "25ml"},
+    ...
+  ]
+}
+"""
+
+    prompt_jp = """
+あなたは日本の化粧品薬機法およびQoo10 Japanの専門家です。以下の韓国化粧品の商品基本情報表を自然で正確な日本語に翻訳してください。
+お客様相談電話番号は必ず韓国国際国番号付き(+82-2-6743-3206)で表記してください。
+出力は純粋なJSONオブジェクトである必要があります：
+{
+  "title": "商品基本情報",
+  "items": [
+    {"label": "内容量", "value": "25ml"},
+    ...
+  ]
+}
+"""
+    prompt_tw = """
+你是資深化妝品法規與電商本地化專家。請將以下產品詳細資訊翻譯為規範的繁體中文（台灣/香港TFDA標準）。
+客服諮詢電話必須帶有韓國國際區號（例如：+82-2-6743-3206）。
+輸出必須為純 JSON 格式：
+{
+  "title": "商品基本資訊",
+  "items": [
+    {"label": "容量 / 淨含量", "value": "25ml"},
+    ...
+  ]
+}
+"""
+    p_map = {"EN": prompt_en, "CN": prompt_cn, "JP": prompt_jp, "TW": prompt_tw}
+    selected_prompt = p_map.get(lang_code, prompt_en)
+
+    input_text = "\n".join([f"[{lbl}]\n{val}" for lbl, val in raw_items])
+    full_prompt = f"{selected_prompt}\n\n[입력 고시정보 표 데이터]\n{input_text}"
+
+    print(f"  🔍 [PASS 1] 고시정보 표 텍스트 다국어 번역 및 표준화 중 ({MODEL_PRO})...", flush=True)
+    try:
+        resp = client.models.generate_content(
+            model=MODEL_PRO,
+            contents=[full_prompt],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.1
+            )
+        )
+        res_json = json.loads(resp.text.strip())
+        items = res_json.get("items", [])
+        title = res_json.get("title", LANG_CONFIGS[lang_code]["name"])
+        
+        # [사용자 규칙 강제]: 고객상담 전화번호는 반드시 +82 국제전화 국가번호로 표기
+        for item in items:
+            lbl = item.get("label", "")
+            val = item.get("value", "")
+            if any(k in lbl.lower() for k in ["customer", "contact", "phone", "电话", "電話", "상담", "문의"]):
+                if "02-" in val or "02)" in val or "02." in val or "6743-3206" in val:
+                    val_cleaned = re.sub(r"^02[-.)\s]*", "+82-2-", val)
+                    if "+82" not in val_cleaned and "6743-3206" in val_cleaned:
+                        val_cleaned = "+82-2-6743-3206"
+                    item["value"] = val_cleaned
+
+        print(f"  ✅ [PASS 1 완료] 총 {len(items)}개 고시 항목 번역 완료 (국제 전화번호 +82 규격 동기화)")
+    except Exception as e:
+        print(f"  ❌ [ERROR] DOCX 번역 실패: {e}")
+        return False
+
+    # 렌더링 호출
+    print(f"  🎨 [PASS 2] 고선명 HTML 표준 헤드리스 렌더러 가동...", flush=True)
+    std_script_dir = os.path.join(PROJECT_ROOT, "00_공통자료")
+    if std_script_dir not in sys.path:
+        sys.path.insert(0, std_script_dir)
+    import render_notice_table_standard as rnts
+    success = rnts.render_notice_table_to_png(title, items, out_path, lang=lang_code)
+    
+    base_name, ext = os.path.splitext(out_path)
+    part1_path = f"{base_name}_Part1{ext}"
+    part2_path = f"{base_name}_Part2{ext}"
+
+    if success and (os.path.exists(out_path) or (os.path.exists(part1_path) and os.path.exists(part2_path))):
+        print(f"  🎉 [SUCCESS] 고시정보 표 PNG 렌더링 완료: {os.path.basename(out_path)}")
+        return True
+    else:
+        print(f"  ❌ [ERROR] 고시정보 표 PNG 렌더링 실패")
         return False
 
 
@@ -384,22 +565,31 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
 
     pass1_prompt, pass2_tmpl = build_prompts(lang_code)
 
-    # PASS 1: 텍스트 추출 및 번역 매핑
-    print(f"  🔍 [PASS 1] 텍스트 스캔 및 다국어 매핑 추출 중 ({MODEL_PRO})...", flush=True)
-    try:
-        response_p1 = client.models.generate_content(
-            model=MODEL_PRO,
-            contents=[original_image, pass1_prompt],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.1
+    # PASS 1: 텍스트 추출 및 번역 매핑 (재시도 로직 포함)
+    p1_json = None
+    for attempt in range(1, 4):
+        print(f"  🔍 [PASS 1] 텍스트 스캔 및 다국어 매핑 추출 중 ({MODEL_PRO}, 시도 {attempt}/3)...", flush=True)
+        try:
+            response_p1 = client.models.generate_content(
+                model=MODEL_PRO,
+                contents=[original_image, pass1_prompt],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1
+                )
             )
-        )
-        p1_text = response_p1.text.strip()
-        p1_json = json.loads(p1_text)
-    except Exception as e:
-        print(f"  ❌ [ERROR] PASS 1 매핑 생성 실패: {e}")
-        return False
+            p1_text = response_p1.text.strip()
+            p1_json = json.loads(p1_text)
+            break
+        except Exception as e:
+            print(f"  ⚠️ [WARN] PASS 1 시도 {attempt} 실패: {e}")
+            if attempt < 3:
+                wait_t = 15 * attempt
+                print(f"  ⏳ {wait_t}초 대기 후 재시도합니다...", flush=True)
+                time.sleep(wait_t)
+            else:
+                print(f"  ❌ [ERROR] PASS 1 최종 실패")
+                return False
 
     t_map = p1_json.get("translation_map", [])
     print(f"  ✅ [PASS 1 완료] 총 {len(t_map)}개 텍스트 블록 추출 완료")
@@ -420,137 +610,309 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
         else:
             print(f"  ⚠️ [INFO] HTML 표 렌더러 실패 -> 일반 인페인팅 모드로 폴백 진행")
 
-    # PASS 2: 신경망 인페인팅 렌더링
-    print(f"  🎨 [PASS 2] 시각적 신경망 인페인팅 렌더링 가동 ({MODEL_FLASH_IMAGE})...", flush=True)
+    # PASS 2: 신경망 인페인팅 렌더링 (지수 백오프 재시도 포함)
     clean_json_str = json.dumps(p1_json, ensure_ascii=False, indent=2)
     pass2_prompt = pass2_tmpl.format(json_data=clean_json_str)
 
-    try:
-        response_p2 = client.models.generate_content(
-            model=MODEL_FLASH_IMAGE,
-            contents=[original_image, pass2_prompt],
-            config=types.GenerateContentConfig(
-                response_modalities=["IMAGE"],
-                temperature=0.2
+    for attempt in range(1, 4):
+        print(f"  🎨 [PASS 2] 시각적 신경망 인페인팅 렌더링 가동 ({MODEL_FLASH_IMAGE}, 시도 {attempt}/3)...", flush=True)
+        try:
+            response_p2 = client.models.generate_content(
+                model=MODEL_FLASH_IMAGE,
+                contents=[original_image, pass2_prompt],
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"],
+                    temperature=0.2
+                )
             )
-        )
 
-        rendered_img_bytes = None
-        for part in response_p2.candidates[0].content.parts:
-            if part.inline_data:
-                rendered_img_bytes = part.inline_data.data
-                break
+            rendered_img_bytes = None
+            for part in response_p2.candidates[0].content.parts:
+                if part.inline_data:
+                    rendered_img_bytes = part.inline_data.data
+                    break
 
-        if not rendered_img_bytes:
-            print(f"  ❌ [ERROR] PASS 2 이미지 데이터 반환 없음")
-            return False
+            if not rendered_img_bytes:
+                raise ValueError("PASS 2 이미지 데이터 반환 없음")
 
-        img = Image.open(io.BytesIO(rendered_img_bytes))
-        if img.size != (orig_w, orig_h):
-            img = img.resize((orig_w, orig_h), Image.Resampling.LANCZOS)
+            img = Image.open(io.BytesIO(rendered_img_bytes))
+            if img.size != (orig_w, orig_h):
+                img = img.resize((orig_w, orig_h), Image.Resampling.LANCZOS)
 
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        img.save(out_path, format="PNG", optimize=True)
-        print(f"  🎉 [SUCCESS] 렌더링 완료 및 저장: {os.path.basename(out_path)} ({orig_w}x{orig_h})")
-        return True
-
-    except Exception as e:
-        print(f"  ❌ [ERROR] PASS 2 렌더링 실패: {e}")
-        return False
-
-
-def extract_product_name_from_files(file_list: List[str], folder_name: str) -> str:
-    """파일 목록이나 폴더명에서 상품 식별명을 정제 추출합니다."""
-    if folder_name and folder_name != "01_번역대상_원본" and folder_name != "input":
-        return folder_name
-
-    # 파일명 패턴에서 공통 상품명 추출 시도 (예: 1_웹상세페이지_Professional-Sun-Block-70.png -> Professional-Sun-Block-70)
-    if not file_list:
-        return "번역상품"
-
-    first_file = os.path.splitext(file_list[0])[0]
-    # 웹상세페이지_ 또는 PDP_ 등의 접두사 제거
-    cleaned = re.sub(r"^\d+[_.-]?(웹상세페이지|PDP|상세설명|상세페이지)?[_.-]?", "", first_file)
-    if cleaned:
-        return cleaned.strip("_.- ")
-    return first_file
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            img.save(out_path, format="PNG", optimize=True)
+            print(f"  🎉 [SUCCESS] 렌더링 완료 및 저장: {os.path.basename(out_path)} ({orig_w}x{orig_h})")
+            return True
+        except Exception as e:
+            print(f"  ⚠️ [WARN] PASS 2 인페인팅 렌더링 실패: {e}")
+            if retry < max_retries - 1:
+                wait_time = 15 * (retry + 1)
+                print(f"  ⏳ {wait_time}초 대기 후 PASS 2 재시도합니다... ({retry + 1}/{max_retries})")
+                time.sleep(wait_time)
+            else:
+                print("  ❌ [ERROR] PASS 2 인페인팅 최종 실패.")
+                return False
+    return False
 
 
 def run_translation_batch_for_folder(client: genai.Client, current_source_dir: str, target_lang: str, product_name: str):
+    """지정된 단일 리프 폴더(current_source_dir)에 대해 이미지 및 DOCX 번역 배치를 실행합니다."""
     config = LANG_CONFIGS[target_lang]
-    
-    # [사용자 규칙 강제 적용]: {상품명}_{번역국가언어} 서브폴더 생성
-    target_subfolder_name = f"{product_name}_{config['folder_name']}"
-    target_dir = os.path.join(DEFAULT_OUTPUT_BASE, target_subfolder_name)
+    target_dir = os.path.join(DEFAULT_OUTPUT_BASE, f"{product_name}_{config['folder_name']}")
     os.makedirs(target_dir, exist_ok=True)
 
-    print(f"\n================================================================================")
-    print(f"🚀 [{config['name']}] 일괄 번역 시작 (상품: {product_name})")
-    print(f"📁 [입력 폴더] {current_source_dir}")
-    print(f"📁 [출력 폴더] {target_dir}")
     print(f"================================================================================")
+    print(f"📂 [작업 대상 폴더] {current_source_dir}")
+    print(f"📦 [상품 식별명] {product_name}")
+    print(f"🌐 [도착 언어] {config['name']}")
+    print(f"📁 [저장 위치] {target_dir}")
+    print(f"================================================================================\n")
 
-    targets = sorted(
-        [f for f in os.listdir(current_source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))],
-        key=lambda x: [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', x)]
-    )
+    # 1. 이미지 파일 처리
+    image_files = sorted([f for f in os.listdir(current_source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')) and not f.startswith('~')])
+    docx_files = sorted([f for f in os.listdir(current_source_dir) if f.lower().endswith('.docx') and not f.startswith('~')])
 
-    if not targets:
-        print(f"⚠️ [WARNING] '{current_source_dir}' 폴더에 처리할 이미지가 없습니다.")
+    total_tasks = len(image_files) + len(docx_files)
+    if total_tasks == 0:
+        print(f"⚠️ [WARNING] '{current_source_dir}' 폴더에 처리할 이미지나 DOCX 파일이 없습니다.")
         return
 
-    total = len(targets)
+    current_idx = 0
     success_count = 0
 
-    for idx, filename in enumerate(targets, 1):
-        if config["tag"] in filename or "_Translated" in filename:
-            print(f"[{idx}/{total}] ⏭️ [SKIP] 이미 번역된 파일: {filename}")
-            continue
-
-        in_path = os.path.join(current_source_dir, filename)
-        base_name = os.path.splitext(filename)[0]
-        out_name = f"{base_name}{config['tag']}"
+    for img_name in image_files:
+        current_idx += 1
+        in_path = os.path.join(current_source_dir, img_name)
+        stem = os.path.splitext(img_name)[0]
+        out_name = f"{stem}{config['tag']}"
         out_path = os.path.join(target_dir, out_name)
 
         if os.path.exists(out_path):
-            print(f"[{idx}/{total}] ⏭️ [SKIP] 이미 결과물이 존재함: {out_name}")
+            print(f"  ⚠️ [SKIP] 이미 결과물이 존재함: {out_name}")
             success_count += 1
             continue
 
-        print(f"\n[{idx}/{total}] 작업 시작...")
-        success = process_single_image(client, in_path, out_path, target_lang)
+        print(f"\n[{current_idx}/{total_tasks}] 이미지 작업 시작: {img_name}")
+        success = process_image_pass1_pass2(client, in_path, out_path, target_lang)
         if success:
             success_count += 1
 
-        if idx < total:
+        if current_idx < total_tasks:
             print("⏳ API 쿼터 안전 대기 (12초)...", flush=True)
             time.sleep(12)
 
-    print(f"\n🏁 [{config['name']}] 번역 완료: 총 {total}개 중 {success_count}개 성공!")
+    # 2. DOCX 고시정보표 처리
+    for docx_name in docx_files:
+        current_idx += 1
+        in_path = os.path.join(current_source_dir, docx_name)
+        stem = os.path.splitext(docx_name)[0]
+        out_name = f"{stem}{config['tag']}"
+        out_path = os.path.join(target_dir, out_name)
+
+        if os.path.exists(out_path):
+            print(f"  ⚠️ [SKIP] 이미 결과물이 존재함: {out_name}")
+            success_count += 1
+            continue
+
+        print(f"\n[{current_idx}/{total_tasks}] DOCX 작업 시작...")
+        success = process_docx_notice_table(client, in_path, out_path, target_lang)
+        if success:
+            success_count += 1
+
+        if current_idx < total_tasks:
+            print("⏳ API 쿼터 안전 대기 (12초)...", flush=True)
+            time.sleep(12)
+
+    # 3. SEO / GEO / AEO 메타데이터 TXT 자동 생성
+    generate_seo_geo_aeo_txt(client, current_source_dir, target_dir, target_lang, product_name)
+
+    print(f"\n🏁 [{config['name']}] 번역 및 SEO/GEO/AEO 생성 완료: 총 {total_tasks}개 중 {success_count}개 성공!")
     print(f"📂 저장 경로: {target_dir}\n")
 
 
+def generate_seo_geo_aeo_txt(client: genai.Client, source_dir: str, target_dir: str, target_lang: str, product_name: str):
+    """번역 완료 후 해당 국가 언어에 맞춘 SEO 상품명(100자 이내), GEO 및 AEO TXT 문서를 자동 생성합니다."""
+    config = LANG_CONFIGS[target_lang]
+    txt_filename = f"{product_name}_{config['folder_name']}_SEO_GEO_AEO.txt"
+    txt_path = os.path.join(target_dir, txt_filename)
+
+    print(f"\n================================================================================")
+    print(f"📝 [SEO / GEO / AEO 생성] {txt_filename} -> [{config['name']}]")
+    print(f"================================================================================")
+
+    # 1. 소스 폴더 내 텍스트/고시표 정보 및 대표 이미지 수집
+    context_texts = []
+    docx_files = [os.path.join(source_dir, f) for f in os.listdir(source_dir) if f.lower().endswith('.docx') and not f.startswith('~')]
+    if docx_files:
+        items = parse_docx_content(docx_files[0])
+        context_texts.append("[고시정보/전성분 데이터]\n" + "\n".join([f"{k}: {v}" for k, v in items]))
+
+    # 이미지 목록 확인
+    image_files = [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+    context_texts.append(f"[상품 식별명] {product_name}")
+    context_texts.append(f"[이미지 파일 수] {len(image_files)}장 구성")
+
+    # 대표 이미지 1장 로드 (있는 경우 멀티모달 컨텍스트로 주입)
+    content_payload = []
+    if image_files:
+        first_img_path = os.path.join(source_dir, sorted(image_files)[0])
+        try:
+            sample_img = Image.open(first_img_path)
+            content_payload.append(sample_img)
+        except Exception:
+            pass
+
+    full_context = "\n\n".join(context_texts)
+
+    prompt_en = f"""
+You are an expert Global E-Commerce Product Copywriter and Search Optimization Specialist for Amazon US, Shopee, and Global Online Marketplaces.
+
+Based on the provided product details and image, generate a comprehensive, highly polished, consumer-facing product detail and search-optimized document in ENGLISH.
+
+[CRITICAL INSTRUCTION - CONSUMER-FACING PROFESSIONAL COPYWRITING & NO AI JARGON]
+- This document is intended for direct publication on product detail pages (PDP) where global consumers and buyers will read it.
+- ABSOLUTELY PROHIBIT internal AI/engineering jargon such as "Generative AI", "GEO", "AEO", "Knowledge Graph Dossier", "AI Models", "Large Language Models", "Semantic Entity Anchors", "SECTION 1/2/3", or folder names like "[05_Multi-Corrective-Eye-Cream]".
+- Every section title and subheading MUST be a clear, professional, consumer-friendly e-commerce section title that defines exactly what the section contains.
+
+[STANDARD 3-SECTOR DOCUMENT STRUCTURE]
+1. Sector 1 Header: ### 1. Official Global E-Commerce Product Title (Under 100 Characters)
+   - Strict Formula: [Brand Name] [Key Active Ingredient / Patent] [Product Type] [Core Benefit / Solution] [Volume]
+   - MUST be UNDER 100 CHARACTERS (including spaces). Provide exact character count.
+   
+2. Sector 2 Header: ### 2. Core Value & Active Ingredient Summary
+   - (CRITICAL: ULTRA-COMPACT MICRO-SUMMARY. NO PARAGRAPHS. ONLY KEYWORDS AND VERY SHORT PHRASES. Maximum 5 lines total for Sector 2.)
+   - Brand: [Brand Name] ([1-line philosophy])
+   - Core Ingredients: [List 3-4 key ingredients separated by commas]
+   - Key Benefits: [List 3-4 key benefits separated by commas]
+   - Formulation: [List 2-3 key formulation features separated by commas]
+   - Search Tags: [Comma-separated 10 keywords]
+     
+3. Sector 3 Header: ### 3. Product Usage Guide & Frequently Asked Questions (FAQ)
+   - Top 5 Consumer Q&A Pairs with clear, descriptive question headings:
+     - Q1. [Key Benefits & Visible Improvements]: What are the primary skin improvements delivered by [Product Name]?
+     - Q2. [Skincare Routine & Application Method]: How and when should [Product Name] be applied for maximum absorption?
+     - Q3. [Skin Compatibility & Hypoallergenic Safety]: Is this high-potency formula suitable for sensitive skin?
+     - Q4. [Active Ingredient Synergy]: How do [Key Active Ingredients] work together to smooth wrinkles and firm skin?
+     - Q5. [Storage Precautions & Customer Support]: How to store the product and official customer service contact (+82-2-6743-3206).
+
+[CONTEXT DATA]
+{full_context}
+
+Output format MUST be clean, well-structured plain text with Markdown headers.
+"""
+
+    prompt_cn = f"""
+你是全球顶尖的跨境电商资深文案与搜索优化专家，服务于亚马逊中国、天猫国际、京东全球购等国际电商平台。
+
+请根据提供的产品信息与图像，生成一份专业、规范、供直接展示在商品详情页（PDP）给消费者阅读的【简体中文】商品搜索与产品详情方案文档。
+
+【核心要求：面向消费者的专业电商文案，全面剔除 AI / 工程化术语】
+- 本文档将直接用于商品详情页与电商页面，供广大终端消费者与买家阅读。
+- 严禁出现“生成式 AI”、“GEO”、“AEO”、“大模型知识图谱”、“语义实体锚定”、“第一部分/第二部分/第三部分”、“SECTION 1/2/3”等任何偏向开发者或内部算法的死板术语。
+- 每一个大标题与子标题，必须是清晰定义该板块内容、兼顾高权重搜索关键词与消费者阅读体验的【专业电商详情页标题】。
+
+【标准三段式详情结构】
+1. 第一板块标题：### 1. 跨境电商官方高转化商品标题 (严格控制在100字符以内)
+   - 标准公式：[品牌名] [核心专利/核心成分] [产品正规品名] [核心功效/定位] [净含量]
+   - 必须严格控制在 100 字符以内（含空格与标点），并注明字符数。
+   
+2. 第二板块标题：### 2. 核心价值与成分科技摘要
+   - (核心要求：极简微型摘要！严禁段落！只能使用关键词和极短句！整个第二板块最多5行字。)
+   - 品牌内核: [品牌名] ([一句话哲理])
+   - 核心成分: [逗号分隔列出3-4个核心成分]
+   - 核心功效: [逗号分隔列出3-4个核心功效]
+   - 配方特点: [逗号分隔列出2-3个配方特点]
+   - 搜索标签: [10个关键词，逗号分隔]
+     
+3. 第三板块标题：### 3. 商品使用指南与消费者常见问题解答 (FAQ)
+   - 5大消费者高频关切 Q&A 问答对（问题标题必须为清晰的消费指南标题）：
+     - Q1. 【核心功效与改善效果】：【产品品名】能带来怎样的紧致淡纹与焕亮改善？
+     - Q2. 【护肤步骤与正确手法】：含有高浓度活性成分的【产品品名】早晚使用顺序与涂抹手法？
+     - Q3. 【肤质适用与温和性说明】：高浓度活性配方是否适用于敏感肌及所有肤质？
+     - Q4. 【成分协同与紧致机理】：【核心复合成分】如何协同解决眼周细纹与眼窝凹陷？
+     - Q5. 【产品保存与官方咨询】：产品保存注意事项与官方售后客服热线 (+82-2-6743-3206)。
+
+【上下文数据】
+{full_context}
+
+输出格式必须为结构清晰、排版优雅的纯文本。
+"""
+
+    prompt_jp = f"""
+日本のQoo10 Japan、楽天市場、Amazon Japan等の商品詳細ページ（PDP）にそのまま掲載できる、消費者向けに洗練された検索最適化＆製品紹介ドキュメントを作成してください。
+「生成AI」「GEO」「AEO」「ナレッジグラフ」等の開発者・AI用語は完全に排除し、消費者が読んで魅力を感じる専門的かつ分かりやすい見出しで構成してください。
+
+1. 見出し1：### 1. 公式EC検索最適化 商品タイトル（100文字以内厳格）
+2. 見出し2：### 2. ブランドストーリー＆高濃度成分サイエンス：【独自Liftderm 10%と肌構造メカニズム】（主要キーワード10選・他社比較の強み含む）
+3. 見出し3：### 3. ご使用方法＆よくあるご質問 FAQ（5大Q&A、公式サポート：+82-2-6743-3206）
+
+【製品コンテキスト】
+{full_context}
+"""
+
+    prompt_tw = f"""
+以跨境電商商品詳情頁（PDP）向終端消費者展示為核心，生成【繁體中文】商品搜尋優化與產品特色說明文件。
+全面剔除「生成式AI」、「GEO」、「AEO」、「大模型知識圖譜」等工程技術術語，採用消費者友善且具高度說服力的電商專屬章節標題。
+
+1. 標題一：### 1. 跨境電商官方高轉化商品標題（嚴格100字內）
+2. 標題二：### 2. 品牌科研故事與核心成分機制：【Liftderm 10% 專利科技與抗老科學】（含10大核心關鍵字、獨家優勢）
+3. 標題三：### 3. 商品使用指南與顧客常見問題 FAQ（5大Q&A，售後服務專線：+82-2-6743-3206）
+
+【產品上下文】
+{full_context}
+"""
+    p_map = {"EN": prompt_en, "CN": prompt_cn, "JP": prompt_jp, "TW": prompt_tw}
+    selected_prompt = p_map.get(target_lang, prompt_en)
+    content_payload.append(selected_prompt)
+
+    try:
+        print(f"  🔍 [AI 추론] {config['name']} SEO / GEO / AEO 생성 중 ({MODEL_PRO})...", flush=True)
+        response = client.models.generate_content(
+            model=MODEL_PRO,
+            contents=content_payload,
+            config=types.GenerateContentConfig(
+                temperature=0.2
+            )
+        )
+        generated_text = response.text.strip()
+
+        # 파일 저장
+        os.makedirs(target_dir, exist_ok=True)
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(generated_text)
+        print(f"  🎉 [SUCCESS] SEO / GEO / AEO TXT 저장 완료: {txt_filename}")
+        return True
+    except Exception as e:
+        print(f"  ❌ [ERROR] SEO / GEO / AEO 생성 실패: {e}")
+        return False
+
+
+def find_target_leaf_folders(base_dir: str) -> List[Tuple[str, str]]:
+    """이미지나 docx가 존재하는 실제 리프 폴더들을 탐색하여 (폴더경로, 상품명) 목록을 반환합니다."""
+    leaf_dirs = []
+    for root, dirs, files in os.walk(base_dir):
+        valid_files = [f for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.docx')) and not f.startswith('~')]
+        if valid_files:
+            rel = os.path.relpath(root, base_dir)
+            if rel == ".":
+                pname = extract_product_name_from_files(valid_files, os.path.basename(base_dir))
+            else:
+                # 최상위 서브폴더 기준 또는 현재 폴더 기준 이름 추출
+                top_part = rel.split(os.sep)[0]
+                pname = extract_product_name_from_files(valid_files, top_part)
+            leaf_dirs.append((root, pname))
+    return leaf_dirs
+
+
 def run_translation_batch(client: genai.Client, source_dir: str, target_lang: str):
-    """source_dir 내에 서브폴더가 있으면 각 상품 서브폴더별로 분기 처리하고, 파일만 있으면 파일 기반으로 처리합니다."""
-    # 1. 서브폴더 탐색
-    subdirs = [os.path.join(source_dir, d) for d in os.listdir(source_dir) if os.path.isdir(os.path.join(source_dir, d)) and not d.startswith('.')]
-    
-    # 2. 직속 이미지 파일 탐색
-    direct_images = [f for f in os.listdir(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+    """source_dir 내에 서브폴더나 중첩 폴더를 탐색하여 모든 대상 리프 폴더를 번역합니다."""
+    leaf_folders = find_target_leaf_folders(source_dir)
+    if not leaf_folders:
+        print(f"⚠️ [WARNING] '{source_dir}' 폴더에 처리할 이미지나 DOCX 파일이 없습니다.")
+        return
 
-    if subdirs:
-        # 상품별 서브폴더가 있는 경우: 각 폴더별로 순차 번역
-        for sdir in subdirs:
-            pname = os.path.basename(sdir)
-            run_translation_batch_for_folder(client, sdir, target_lang, pname)
-
-    if direct_images:
-        # 인풋 폴더에 직접 이미지가 있는 경우: 공통 상품명 추출하여 전용 폴더 생성
-        pname = extract_product_name_from_files(direct_images, os.path.basename(source_dir))
-        run_translation_batch_for_folder(client, source_dir, target_lang, pname)
-
-    if not subdirs and not direct_images:
-        print(f"⚠️ [WARNING] '{source_dir}' 폴더에 처리할 이미지나 서브폴더가 없습니다.")
+    for sdir, pname in leaf_folders:
+        run_translation_batch_for_folder(client, sdir, target_lang, pname)
 
 
 # =================================================================================
