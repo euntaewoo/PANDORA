@@ -1,29 +1,17 @@
 import os
 import sys
-import subprocess
-import shutil
-from PIL import Image
+import html
+import re
+from html2image import Html2Image
+from PIL import Image, ImageChops
 
 sys.stdout.reconfigure(encoding='utf-8')
-
-# Edge / Chrome 헤드리스 브라우저 실행 파일 경로 탐색
-EDGE_PATHS = [
-    r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-    r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-    r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-]
-
-def get_browser_path():
-    for p in EDGE_PATHS:
-        if os.path.exists(p):
-            return p
-    return None
 
 def build_notice_html(title, items, lang="EN"):
     """
     고시정보 표 표준 HTML 생성기
-    - lang: "EN" (Pretendard), "JP" (Noto Sans JP), "CN" (Noto Sans SC)
-    - title: 상단 제목 (예: PRODUCT DETAILS, 商品基本情報)
+    - lang: "EN" (Pretendard), "JP" (Noto Sans JP), "CN" (Noto Sans SC), "KO" (Pretendard)
+    - title: 상단 제목 (예: PRODUCT DETAILS, PRODUCT SPECIFICATIONS, 상품 상세 정보)
     - items: [{"label": "항목명", "value": "본문 내용"}, ...]
     """
     if lang.upper() == "JP":
@@ -32,30 +20,33 @@ def build_notice_html(title, items, lang="EN"):
         cell_size = "32px"
         cell_padding = "24px 20px"
         val_padding = "24px 26px"
-        line_height = "1.45"
+        line_height = "1.5"
         letter_spacing = "-0.2px"
+        label_width = "280px"
     elif lang.upper() in ["CN", "ZH", "SC", "TC"]:
         font_family = "'Noto Sans SC', 'NotoSansSC', 'Source Han Sans SC', '思源黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         title_size = "52px"
         cell_size = "26px"
-        cell_padding = "18px 16px"
-        val_padding = "18px 20px"
+        cell_padding = "20px 18px"
+        val_padding = "20px 22px"
         line_height = "1.65"
         letter_spacing = "0.6px"
-    else:
+        label_width = "275px"
+    else:  # EN / KO (영문 및 한국어 고시표 표준: Pretendard 64px/32px)
         font_family = "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
         title_size = "64px"
         cell_size = "32px"
         cell_padding = "24px 20px"
         val_padding = "24px 26px"
-        line_height = "1.45"
+        line_height = "1.5"
         letter_spacing = "-0.5px"
+        label_width = "295px"
 
     rows_html = ""
     for it in items:
         lbl = it.get("label", "")
         val = it.get("value", "")
-        # 줄바꿈 처리
+        # 줄바꿈 및 리스트 서식 처리
         val_formatted = val.replace("\n", "<br>")
         rows_html += f"""
         <tr>
@@ -64,41 +55,13 @@ def build_notice_html(title, items, lang="EN"):
         </tr>
         """
 
-    html = f"""<!DOCTYPE html>
+    html_content = f"""<!DOCTYPE html>
 <html lang="{lang.lower()}">
 <head>
     <meta charset="UTF-8">
     <style>
-        @font-face {{
-            font-family: 'Pretendard';
-            src: local('Pretendard-Bold'), local('Pretendard Bold');
-            font-weight: 700;
-        }}
-        @font-face {{
-            font-family: 'Pretendard';
-            src: local('Pretendard-Regular'), local('Pretendard Regular');
-            font-weight: 400;
-        }}
-        @font-face {{
-            font-family: 'Noto Sans JP';
-            src: local('Noto Sans JP Bold'), local('NotoSansJP-Bold');
-            font-weight: 700;
-        }}
-        @font-face {{
-            font-family: 'Noto Sans JP';
-            src: local('Noto Sans JP Regular'), local('NotoSansJP-Regular');
-            font-weight: 400;
-        }}
-        @font-face {{
-            font-family: 'Noto Sans SC';
-            src: local('Noto Sans SC Bold'), local('NotoSansSC-Bold'), local('Source Han Sans SC Bold'), local('思源黑体 Bold');
-            font-weight: 700;
-        }}
-        @font-face {{
-            font-family: 'Noto Sans SC';
-            src: local('Noto Sans SC Regular'), local('NotoSansSC-Regular'), local('Source Han Sans SC Regular'), local('思源黑体 Regular');
-            font-weight: 400;
-        }}
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
 
         * {{
             box-sizing: border-box;
@@ -110,13 +73,13 @@ def build_notice_html(title, items, lang="EN"):
             font-family: {font_family};
             width: 860px;
             margin: 0;
-            padding: 45px 20px;
+            padding: 45px 25px;
             color: #111111;
             -webkit-font-smoothing: antialiased;
         }}
 
         .notice-container {{
-            width: 820px;
+            width: 810px;
             margin: 0 auto;
         }}
         .title {{
@@ -131,13 +94,16 @@ def build_notice_html(title, items, lang="EN"):
             width: 100%;
             border-collapse: collapse;
             border-top: 3px solid #111111;
-            border-bottom: 2px solid #333333;
+            border-bottom: 3px solid #111111;
         }}
         tr {{
             border-bottom: 1px solid #E0E0E0;
         }}
+        tr:last-child {{
+            border-bottom: none;
+        }}
         th.label-cell {{
-            width: 275px;
+            width: {label_width};
             background-color: #F8F9FA;
             font-size: {cell_size};
             font-weight: 700;
@@ -153,7 +119,7 @@ def build_notice_html(title, items, lang="EN"):
         td.value-cell {{
             font-size: {cell_size};
             font-weight: 400;
-            color: #222222;
+            color: #333333;
             padding: {val_padding};
             text-align: left;
             vertical-align: middle;
@@ -178,105 +144,92 @@ def build_notice_html(title, items, lang="EN"):
 </body>
 </html>
 """
-    return html
+    return html_content
+
+def _render_single_html_to_image(html_content, output_path):
+    output_dir = os.path.dirname(os.path.abspath(output_path))
+    os.makedirs(output_dir, exist_ok=True)
+    filename = os.path.basename(output_path)
+    temp_html_path = os.path.join(output_dir, f"temp_{filename}.html")
+
+    with open(temp_html_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    try:
+        hti = Html2Image(size=(860, 4500))
+        hti.output_path = output_dir
+        hti.screenshot(html_file=temp_html_path, save_as=filename)
+
+        if not os.path.exists(output_path):
+            return 0
+
+        img = Image.open(output_path)
+        bg = Image.new(img.mode, img.size, (255, 255, 255))
+        diff = ImageChops.difference(img, bg)
+        bbox = diff.getbbox()
+
+        if bbox:
+            crop_bottom = min(img.size[1], bbox[3] + 45)
+            cropped_img = img.crop((0, 0, 860, crop_bottom))
+        else:
+            cropped_img = img.crop((0, 0, 860, 1000))
+
+        cropped_img.save(output_path, format="PNG")
+        return cropped_img.size[1]
+    finally:
+        if os.path.exists(temp_html_path):
+            os.remove(temp_html_path)
 
 def render_notice_table_to_png(title, items, output_path, lang="EN", max_height=2580):
     """
-    고시정보 표 렌더링 실행 함수 (전 다국어 공통 표준)
+    고시정보 표 렌더링 실행 함수 (Html2Image 기반 표준)
     - 가로 860px 고정, 세로 auto-fit (max 2,580px 이하 1장 수납 원칙)
-    - [1열 너비 기준]: 언어별 가장 긴 단일 항목(예: 중국어 '特殊用途化妆品审查')을 기준으로 1열 폭 최적화
-    - [의미단위 줄바꿈]: '제조업자 및 책임판매업자', '化妆品生产企业及责任销售商' 등 복합 항목은 의미 단위 <br> 개행
-    - 2580px 초과 시 자동으로 2페이지(Part 1, Part 2) 분할 렌더링
+    - [1열 너비 기준]: 언어별 최적화 폭 적용
+    - [의미단위 줄바꿈]: 복합 항목은 의미 단위 <br> 개행
+    - 2580px 초과 시 지능형 2페이지(Part 1, Part 2) 분할 렌더링
     """
-    browser_bin = get_browser_path()
-    if not browser_bin:
-        print("[ERROR] Headless Edge 또는 Chrome을 찾을 수 없습니다.")
-        return False
-
-    temp_html_path = output_path.replace(".png", "_temp.html")
-    temp_raw_png = output_path.replace(".png", "_raw.png")
-
-    # 1. 단일 페이지 HTML 생성 및 캡처
+    # 1. 단일 이미지로 렌더링 시도
     full_html = build_notice_html(title, items, lang=lang)
-    with open(temp_html_path, "w", encoding="utf-8") as f:
-        f.write(full_html)
+    cur_height = _render_single_html_to_image(full_html, output_path)
 
-    # 860x4000 윈도우로 넉넉하게 캡처
-    cmd = [
-        browser_bin,
-        "--headless=new",
-        f"--screenshot={temp_raw_png}",
-        "--window-size=860,4500",
-        "--hide-scrollbars",
-        f"file:///{os.path.abspath(temp_html_path).replace(os.sep, '/')}"
-    ]
-    subprocess.run(cmd, check=True)
-
-    if not os.path.exists(temp_raw_png):
-        print("[ERROR] 브라우저 스크린샷 생성 실패")
-        return False
-
-    # 2. 내용 높이(Bounding Box) 정밀 크롭
-    raw_img = Image.open(temp_raw_png)
-    bg = Image.new(raw_img.mode, raw_img.size, (255, 255, 255))
-    from PIL import ImageChops
-    diff = ImageChops.difference(raw_img, bg)
-    bbox = diff.getbbox()
-
-    if bbox:
-        # 하단 여백 50px 추가
-        crop_bottom = min(raw_img.size[1], bbox[3] + 50)
-        cropped_img = raw_img.crop((0, 0, 860, crop_bottom))
-    else:
-        cropped_img = raw_img.crop((0, 0, 860, 1000))
-
-    cur_height = cropped_img.size[1]
-    print(f"[INFO] 렌더링된 고시정보 표 크기: 860 x {cur_height} px")
-
-    # 3. 세로 2,580px 이하인 경우 -> 단일 파일 저장
-    if cur_height <= max_height:
-        cropped_img.save(output_path, format="PNG")
+    if cur_height <= max_height and cur_height > 0:
         print(f"[SUCCESS] 고시정보 표 단일 이미지 저장 완료: {output_path} (860 x {cur_height} px)")
-        
-        # 임시파일 정리
-        if os.path.exists(temp_html_path): os.remove(temp_html_path)
-        if os.path.exists(temp_raw_png): os.remove(temp_raw_png)
         return True
 
-    # 4. 세로 2,580px 초과 시 -> [2페이지 분할 룰 적용]
-    print(f"[WARNING] 세로 높이({cur_height}px)가 허용 한도({max_height}px)를 초과했습니다. 2페이지 분할 생성을 시작합니다.")
-    half_idx = len(items) // 2
-    items_p1 = items[:half_idx]
-    items_p2 = items[half_idx:]
+    # 2. 2,580px 초과 시 -> 지능형 2페이지 분할
+    print(f"[INFO] 세로 높이({cur_height}px)가 허용 한도({max_height}px)를 초과하여 지능형 2페이지 분할을 수행합니다.")
+    
+    # 전성분(Ingredients) 위치 탐색
+    split_idx = len(items) // 2
+    for idx, it in enumerate(items):
+        lbl_lower = it.get("label", "").lower()
+        if "ingredient" in lbl_lower or "전성분" in lbl_lower or "全成分" in lbl_lower or "成分" in lbl_lower:
+            # 전성분까지를 Part 1에 포함 (idx + 1)
+            split_idx = idx + 1
+            break
+
+    items_p1 = items[:split_idx]
+    items_p2 = items[split_idx:]
 
     base_name, ext = os.path.splitext(output_path)
+    # 기존에 단일로 저장되었던 파일 삭제
+    if os.path.exists(output_path):
+        os.remove(output_path)
+
     out_p1 = f"{base_name}_Part1{ext}"
     out_p2 = f"{base_name}_Part2{ext}"
 
     # Part 1 렌더링
     html_p1 = build_notice_html(f"{title} (1/2)", items_p1, lang=lang)
-    with open(temp_html_path, "w", encoding="utf-8") as f: f.write(html_p1)
-    subprocess.run(cmd, check=True)
-    img_p1 = Image.open(temp_raw_png)
-    bbox1 = ImageChops.difference(img_p1, bg).getbbox()
-    crop_b1 = min(img_p1.size[1], bbox1[3] + 50) if bbox1 else 1000
-    img_p1.crop((0, 0, 860, crop_b1)).save(out_p1, format="PNG")
-    print(f"[SUCCESS] 고시정보 표 Part 1 저장 완료: {out_p1}")
+    h1 = _render_single_html_to_image(html_p1, out_p1)
+    print(f"[SUCCESS] 고시정보 표 Part 1 저장 완료: {out_p1} (860 x {h1} px)")
 
     # Part 2 렌더링
     html_p2 = build_notice_html(f"{title} (2/2)", items_p2, lang=lang)
-    with open(temp_html_path, "w", encoding="utf-8") as f: f.write(html_p2)
-    subprocess.run(cmd, check=True)
-    img_p2 = Image.open(temp_raw_png)
-    bbox2 = ImageChops.difference(img_p2, bg).getbbox()
-    crop_b2 = min(img_p2.size[1], bbox2[3] + 50) if bbox2 else 1000
-    img_p2.crop((0, 0, 860, crop_b2)).save(out_p2, format="PNG")
-    print(f"[SUCCESS] 고시정보 표 Part 2 저장 완료: {out_p2}")
+    h2 = _render_single_html_to_image(html_p2, out_p2)
+    print(f"[SUCCESS] 고시정보 표 Part 2 저장 완료: {out_p2} (860 x {h2} px)")
 
-    # 임시파일 정리
-    if os.path.exists(temp_html_path): os.remove(temp_html_path)
-    if os.path.exists(temp_raw_png): os.remove(temp_raw_png)
     return True
 
 if __name__ == "__main__":
-    print("[TEST] 표준 고시정보 렌더러 모듈 로드 완료.")
+    print("[TEST] 표준 고시정보 렌더러 모듈 준비 완료.")
