@@ -73,6 +73,12 @@ LANG_CONFIGS = {
         "folder_name": "중국어_번체",
         "code": "TW",
         "tag": "_TW_Trad_Translated.png"
+    },
+    "KR": {
+        "name": "한국어 (한국 - 네이버/쿠팡 최적화)",
+        "folder_name": "한국어",
+        "code": "KR",
+        "tag": "_KR_Translated.png"
     }
 }
 
@@ -418,15 +424,17 @@ def process_docx_notice_table(client: genai.Client, docx_path: str, out_path: st
 
     prompt_en = """
 You are a senior regulatory affairs and e-commerce localization expert.
-Translate the following Korean cosmetic product details (specifications table) into professional English for Amazon / Shopee US.
-Standard field names must follow:
-- 내용물의 용량: Volume / Net Weight
-- 제품 주요 사양: Skin Type / Key Specifications
-- 사용기한 또는 개봉 후 사용기간: Expiration Date / Period After Opening
-- 사용방법: How to Use / Directions
-- 화장품제조업자 / 책임판매업자: Manufacturer / Distributor
+Translate the following Korean cosmetic product details (specifications table) into professional English for Amazon / Sephora US.
+
+[CRITICAL INSTRUCTION: STANDARD FIELD NAME MAPPING]
+You MUST strictly map the following Korean labels to these standardized global beauty e-commerce terms. Do not use direct translations if they deviate from this list:
+- 용량 또는 중량 (내용물의 용량): Size / Net Wt.
+- 제품 주요 사양: Skin Type
+- 사용기한 또는 개봉 후 사용기간: Shelf Life / PAO
+- 사용방법: Directions
+- 화장품제조업자 및 책임판매업자: Manufacturer / Distributed by
 - 제조국: Country of Origin
-- 전성분: Ingredients / Full Ingredients List (Use official INCI standard names)
+- 전성분: Ingredients (국제화장품원료집(INCI) 및 한국화장품성분사전(KCID) 표준 기반 미국 FDA/PCPC 표기법 및 띄어쓰기 규격 강제 적용)
 - 기능성 화장품 심사 필 유무: Functional Cosmetics Review Status
 - 사용할 때의 주의사항: Precautions for Use / Cautions
 - 품질보증기준: Quality Assurance Standard
@@ -444,14 +452,16 @@ Output MUST be a JSON object:
 
     prompt_cn = """
 你是资深化妆品法规与电商本地化专家。请将以下韩国化妆品产品详细信息（中文告示表）翻译为规范的简体中文，严格遵守中国国家药监局(NMPA)及新广告法规范。
-标准字段命名参考：
-- 내용물의 용량: 净含量 / 容量
+
+[CRITICAL INSTRUCTION: STANDARD FIELD NAME MAPPING]
+You MUST strictly map the following Korean labels to these standardized Chinese e-commerce/legal terms. Do not use direct translations if they deviate from this list:
+- 용량 또는 중량 (내용물의 용량): 净含量 / 容量
 - 제품 주요 사양: 适用肤质 / 产品规格
 - 사용기한 또는 개봉 후 사용기간: 使用期限 / 保质期
 - 사용방법: 使用方法
-- 화장품제조업자 / 책임판매업자: 化妆品生产企业 / 责任销售商
+- 화장품제조업자 및 책임판매업자: 化妆品生产企业 / 责任销售商
 - 제조국: 原产国 / 产地
-- 전성분: 全成分 (使用中国化妆品标准中文全成分名)
+- 전성분: 全成分 (INCI 및 KCID 기반 중국 국가약품감독관리국(NMPA) 표준 명칭 및 띄어쓰기 규격 강제 적용)
 - 기능성 화장품 심사 필 유무: 特殊用途化妆品审查状态 (如：已完成审查 (美白、改善皱纹双重功效))
 - 사용할 때의 주의사항: 使用注意事项
 - 품질보증기준: 质量保证标准
@@ -469,7 +479,21 @@ Output MUST be a JSON object:
 
     prompt_jp = """
 あなたは日本の化粧品薬機法およびQoo10 Japanの専門家です。以下の韓国化粧品の商品基本情報表を自然で正確な日本語に翻訳してください。
-お客様相談電話番号は必ず韓国国際国番号付き(+82-2-6743-3206)で表記してください。
+
+[CRITICAL INSTRUCTION: STANDARD FIELD NAME MAPPING]
+You MUST strictly map the following Korean labels to these standardized Japanese e-commerce/legal terms. Do not use direct translations if they deviate from this list:
+- 용량 또는 중량 (내용물의 용량): 内容量
+- 제품 주요 사양: お肌のタイプ / 対象肌
+- 사용기한 또는 개봉 후 사용기간: 使用期限
+- 사용방법: ご使用方法
+- 화장품제조업자 및 책임판매업자: 製造販売元
+- 제조국: 原産国
+- 전성분: 全成分 (INCI 및 KCID 기반 일본 화장품공업연합회(JCIA) 표준 명칭 및 띄어쓰기 규격 강제 적용)
+- 기능성 화장품 심사 필 유무: 医薬部外品承認 / 機能性化粧品審査
+- 사용할 때의 주의사항: ご使用上の注意
+- 품질보증기준: 品質保証基準
+- 소비자 상담 전화번호: お客様相談窓口 (お客様相談電話番号は必ず韓国国際国番号付き +82-2-6743-3206 で表記してください)
+
 出力は純粋なJSONオブジェクトである必要があります：
 {
   "title": "商品基本情報",
@@ -481,7 +505,21 @@ Output MUST be a JSON object:
 """
     prompt_tw = """
 你是資深化妝品法規與電商本地化專家。請將以下產品詳細資訊翻譯為規範的繁體中文（台灣/香港TFDA標準）。
-客服諮詢電話必須帶有韓國國際區號（例如：+82-2-6743-3206）。
+
+[CRITICAL INSTRUCTION: STANDARD FIELD NAME MAPPING]
+You MUST strictly map the following Korean labels to these standardized Taiwanese e-commerce/legal terms. Do not use direct translations if they deviate from this list:
+- 용량 또는 중량 (내용물의 용량): 淨含量 / 容量
+- 제품 주요 사양: 適用膚質
+- 사용기한 또는 개봉 후 사용기간: 保存期限
+- 사용방법: 使用方法
+- 화장품제조업자 및 책임판매업자: 製造商 / 責任銷售商
+- 제조국: 產地
+- 전성분: 全成分 (INCI 및 KCID 기반 대만 위생복리부(TFDA) 표준 명칭 및 띄어쓰기 규격 강제 적용)
+- 기능성 화장품 심사 필 유무: 含藥化妝品許可 / 特殊用途化妝品審查
+- 사용할 때의 주의사항: 注意事項
+- 품질보증기준: 售後服務 / 質量保證
+- 소비자 상담 전화번호: 客服專線 (客服諮詢電話必須帶有韓國國際區號，例如：+82-2-6743-3206)
+
 輸出必須為純 JSON 格式：
 {
   "title": "商品基本資訊",
@@ -491,6 +529,25 @@ Output MUST be a JSON object:
   ]
 }
 """
+    if lang_code == "KR":
+        print(f"  🎨 [한국어 원본 고시표 렌더러 가동] Gemini 3.1 Pro 지능형 정제 및 860px 렌더링...", flush=True)
+        try:
+            import render_notice_table_korean as rntk
+        except ImportError:
+            sys.path.insert(0, SCRIPT_DIR)
+            import render_notice_table_korean as rntk
+        items_kr = [{"label": lbl, "value": val} for lbl, val in raw_items if lbl != "항목"]
+        rntk.render_korean_notice_table("상품 상세 정보", items_kr, out_path, max_height=2580, use_gemini=True)
+        base_name, ext = os.path.splitext(out_path)
+        part1_path = f"{base_name}_Part1{ext}"
+        part2_path = f"{base_name}_Part2{ext}"
+        if os.path.exists(out_path) or (os.path.exists(part1_path) and os.path.exists(part2_path)):
+            print(f"  🎉 [SUCCESS] 한국어 원본 고시정보 표 PNG 렌더링 완료: {os.path.basename(out_path)}")
+            return True
+        else:
+            print(f"  ❌ [ERROR] 한국어 원본 고시정보 표 PNG 렌더링 실패")
+            return False
+
     p_map = {"EN": prompt_en, "CN": prompt_cn, "JP": prompt_jp, "TW": prompt_tw}
     selected_prompt = p_map.get(lang_code, prompt_en)
 
@@ -645,9 +702,9 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
             return True
         except Exception as e:
             print(f"  ⚠️ [WARN] PASS 2 인페인팅 렌더링 실패: {e}")
-            if retry < max_retries - 1:
-                wait_time = 15 * (retry + 1)
-                print(f"  ⏳ {wait_time}초 대기 후 PASS 2 재시도합니다... ({retry + 1}/{max_retries})")
+            if attempt < 3:
+                wait_time = 15 * attempt
+                print(f"  ⏳ {wait_time}초 대기 후 PASS 2 재시도합니다... ({attempt}/3)")
                 time.sleep(wait_time)
             else:
                 print("  ❌ [ERROR] PASS 2 인페인팅 최종 실패.")
@@ -693,7 +750,7 @@ def run_translation_batch_for_folder(client: genai.Client, current_source_dir: s
             continue
 
         print(f"\n[{current_idx}/{total_tasks}] 이미지 작업 시작: {img_name}")
-        success = process_image_pass1_pass2(client, in_path, out_path, target_lang)
+        success = process_single_image(client, in_path, out_path, target_lang)
         if success:
             success_count += 1
 
@@ -771,15 +828,16 @@ Based on the provided product details and image, generate a comprehensive, highl
 
 [CRITICAL INSTRUCTION - CONSUMER-FACING PROFESSIONAL COPYWRITING & NO AI JARGON]
 - This document is intended for direct publication on product detail pages (PDP) where global consumers and buyers will read it.
+- NO MARKDOWN SYMBOLS ALLOWED: E-commerce platforms block special characters. Do NOT use **, ##, ###, or -. Use standard Arabic numerals (1., 2., 3.) for main sections, and use closing parenthesis numbers (1), 2), 3), 4), 5)) exclusively for all sub-items and lists.
 - ABSOLUTELY PROHIBIT internal AI/engineering jargon such as "Generative AI", "GEO", "AEO", "Knowledge Graph Dossier", "AI Models", "Large Language Models", "Semantic Entity Anchors", "SECTION 1/2/3", or folder names like "[05_Multi-Corrective-Eye-Cream]".
 - Every section title and subheading MUST be a clear, professional, consumer-friendly e-commerce section title that defines exactly what the section contains.
 
 [STANDARD 3-SECTOR DOCUMENT STRUCTURE]
-1. Sector 1 Header: ### 1. Official Global E-Commerce Product Title (Under 100 Characters)
+1. Sector 1 Header: 1. Official Global E-Commerce Product Title (Under 100 Characters)
    - Strict Formula: [Brand Name] [Key Active Ingredient / Patent] [Product Type] [Core Benefit / Solution] [Volume]
    - MUST be UNDER 100 CHARACTERS (including spaces). Provide exact character count.
    
-2. Sector 2 Header: ### 2. Core Value & Active Ingredient Summary
+2. Sector 2 Header: 2. Core Value & Active Ingredient Summary
    - (CRITICAL: ULTRA-COMPACT MICRO-SUMMARY. NO PARAGRAPHS. ONLY KEYWORDS AND VERY SHORT PHRASES. Maximum 5 lines total for Sector 2.)
    - Brand: [Brand Name] ([1-line philosophy])
    - Core Ingredients: [List 3-4 key ingredients separated by commas]
@@ -787,7 +845,7 @@ Based on the provided product details and image, generate a comprehensive, highl
    - Formulation: [List 2-3 key formulation features separated by commas]
    - Search Tags: [Comma-separated 10 keywords]
      
-3. Sector 3 Header: ### 3. Product Usage Guide & Frequently Asked Questions (FAQ)
+3. Sector 3 Header: 3. Product Usage Guide & Frequently Asked Questions (FAQ)
    - Top 5 Consumer Q&A Pairs with clear, descriptive question headings:
      - Q1. [Key Benefits & Visible Improvements]: What are the primary skin improvements delivered by [Product Name]?
      - Q2. [Skincare Routine & Application Method]: How and when should [Product Name] be applied for maximum absorption?
@@ -808,15 +866,16 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
 
 【核心要求：面向消费者的专业电商文案，全面剔除 AI / 工程化术语】
 - 本文档将直接用于商品详情页与电商页面，供广大终端消费者与买家阅读。
+- 严禁使用 Markdown 特殊符号（如 **, ##, ###, - 等）。电商平台不支持这些符号。主标题必须仅使用阿拉伯数字（1., 2., 3.），而所有下级特征、成分及列表项必须使用带右括号的数字（1), 2), 3), 4), 5)）进行标记。
 - 严禁出现“生成式 AI”、“GEO”、“AEO”、“大模型知识图谱”、“语义实体锚定”、“第一部分/第二部分/第三部分”、“SECTION 1/2/3”等任何偏向开发者或内部算法的死板术语。
 - 每一个大标题与子标题，必须是清晰定义该板块内容、兼顾高权重搜索关键词与消费者阅读体验的【专业电商详情页标题】。
 
 【标准三段式详情结构】
-1. 第一板块标题：### 1. 跨境电商官方高转化商品标题 (严格控制在100字符以内)
+1. 第一板块标题：1. 跨境电商官方高转化商品标题 (严格控制在100字符以内)
    - 标准公式：[品牌名] [核心专利/核心成分] [产品正规品名] [核心功效/定位] [净含量]
    - 必须严格控制在 100 字符以内（含空格与标点），并注明字符数。
    
-2. 第二板块标题：### 2. 核心价值与成分科技摘要
+2. 第二板块标题：2. 核心价值与成分科技摘要
    - (核心要求：极简微型摘要！严禁段落！只能使用关键词和极短句！整个第二板块最多5行字。)
    - 品牌内核: [品牌名] ([一句话哲理])
    - 核心成分: [逗号分隔列出3-4个核心成分]
@@ -824,7 +883,7 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
    - 配方特点: [逗号分隔列出2-3个配方特点]
    - 搜索标签: [10个关键词，逗号分隔]
      
-3. 第三板块标题：### 3. 商品使用指南与消费者常见问题解答 (FAQ)
+3. 第三板块标题：3. 商品使用指南与消费者常见问题解答 (FAQ)
    - 5大消费者高频关切 Q&A 问答对（问题标题必须为清晰的消费指南标题）：
      - Q1. 【核心功效与改善效果】：【产品品名】能带来怎样的紧致淡纹与焕亮改善？
      - Q2. 【护肤步骤与正确手法】：含有高浓度活性成分的【产品品名】早晚使用顺序与涂抹手法？
@@ -841,10 +900,11 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
     prompt_jp = f"""
 日本のQoo10 Japan、楽天市場、Amazon Japan等の商品詳細ページ（PDP）にそのまま掲載できる、消費者向けに洗練された検索最適化＆製品紹介ドキュメントを作成してください。
 「生成AI」「GEO」「AEO」「ナレッジグラフ」等の開発者・AI用語は完全に排除し、消費者が読んで魅力を感じる専門的かつ分かりやすい見出しで構成してください。
+- Markdown記号（**, ##, ###, - 等）は使用禁止です。ECサイトのシステムでエラーになるため、大項目はアラビア数字（1., 2., 3.）を使用し、下位の特性や成分リスト等には必ず片括弧付きの数字（1), 2), 3), 4), 5)）を使用してください。
 
-1. 見出し1：### 1. 公式EC検索最適化 商品タイトル（100文字以内厳格）
-2. 見出し2：### 2. ブランドストーリー＆高濃度成分サイエンス：【独自Liftderm 10%と肌構造メカニズム】（主要キーワード10選・他社比較の強み含む）
-3. 見出し3：### 3. ご使用方法＆よくあるご質問 FAQ（5大Q&A、公式サポート：+82-2-6743-3206）
+1. 見出し1：1. 公式EC検索最適化 商品タイトル（100文字以内厳格）
+2. 見出し2：2. ブランドストーリー＆高濃度成分サイエンス：【独自Liftderm 10%と肌構造メカニズム】（主要キーワード10選・他社比較の強み含む）
+3. 見出し3：3. ご使用方法＆よくあるご質問 FAQ（5大Q&A、公式サポート：+82-2-6743-3206）
 
 【製品コンテキスト】
 {full_context}
@@ -853,15 +913,31 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
     prompt_tw = f"""
 以跨境電商商品詳情頁（PDP）向終端消費者展示為核心，生成【繁體中文】商品搜尋優化與產品特色說明文件。
 全面剔除「生成式AI」、「GEO」、「AEO」、「大模型知識圖譜」等工程技術術語，採用消費者友善且具高度說服力的電商專屬章節標題。
+- 嚴禁使用 Markdown 特殊符號（如 **, ##, ###, - 等），避免電商平台系統錯誤。只能使用阿拉伯數字（1., 2., 3.）及純文字排版。
 
-1. 標題一：### 1. 跨境電商官方高轉化商品標題（嚴格100字內）
-2. 標題二：### 2. 品牌科研故事與核心成分機制：【Liftderm 10% 專利科技與抗老科學】（含10大核心關鍵字、獨家優勢）
-3. 標題三：### 3. 商品使用指南與顧客常見問題 FAQ（5大Q&A，售後服務專線：+82-2-6743-3206）
+1. 標題一：1. 跨境電商官方高轉化商品標題（嚴格100字內）
+2. 標題二：2. 品牌科研故事與核心成分機制：【Liftderm 10% 專利科技與抗老科學】（含10大核心關鍵字、獨家優勢）
+3. 標題三：3. 商品使用指南與顧客常見問題 FAQ（5大Q&A，售後服務專線：+82-2-6743-3206）
 
 【產品上下文】
 {full_context}
 """
     p_map = {"EN": prompt_en, "CN": prompt_cn, "JP": prompt_jp, "TW": prompt_tw}
+    
+    prompt_kr = f"""
+대한민국 국내 이커머스(네이버 스마트스토어, 쿠팡, 올리브영 등) 상품 상세페이지(PDP)에 전시될 소비자용 제품 안내 및 검색 최적화(SEO) 문서를 [한국어]로 작성해주세요.
+개발자나 AI를 의미하는 용어(생성형 AI, GEO, AEO, 지식그래프 등)는 절대 배제하고, 소비자가 읽었을 때 매력적이고 전문적인 이커머스 전용 문안으로 작성해야 합니다.
+- 마크다운 특수기호(**, ##, ###, - 등) 사용을 절대 금지합니다. (쇼핑몰 플랫폼 등록 시 오류 발생 방지). 메인 섹션 제목은 1., 2., 3. 으로 표기하되, 2번 핵심 가치나 3번 FAQ의 하위 특성 정보(리스트)들은 반드시 1), 2), 3), 4), 5) 와 같이 닫는 괄호를 사용하여 순번을 마킹하세요.
+
+1. 섹션 1: 1. 공식 이커머스 최적화 상품명 (100자 이내)
+2. 섹션 2: 2. 핵심 가치 및 성분 사이언스 마이크로 요약 (문단 금지, 단어/짧은 구 형식으로 5줄 이내 핵심만 요약)
+3. 섹션 3: 3. 사용 가이드 및 자주 묻는 질문 FAQ (고객센터 번호: 02-6743-3206 포함 5개 Q&A)
+
+[제품 데이터]
+{full_context}
+"""
+    p_map["KR"] = prompt_kr
+
     selected_prompt = p_map.get(target_lang, prompt_en)
     content_payload.append(selected_prompt)
 
