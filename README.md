@@ -38,14 +38,14 @@ flowchart TD
     end
 
     subgraph S4["4. 하이브리드 투패스 렌더링 엔진"]
-        P1["🔍 Pass 1: gemini-3.1-pro-preview<br/>(텍스트 전수 스캔, 번역, 법률 필터링, 표 감지)"]
-        DECIDE{"이미지 속성 판별"}
+        P1["🔍 Pass 1: gemini-3.1-pro-preview<br/>(텍스트 전수 스캔, 번역, 법률 필터링, 표/DOCX 감지)"]
+        DECIDE{"입력 속성 판별"}
         
-        HTML["📊 고시정보표 (테이블)<br/>Headless HTML 표준 렌더러<br/>(860px 고정, 100% 벡터 선명도)"]
-        P2["🎨 일반 상세페이지 (인페인팅)<br/>Pass 2: gemini-3.1-flash-image<br/>(배경 텍스처 복원, 1:1 종횡비 잠금)"]
+        HTML["📊 고시정보표 (테이블/DOCX)<br/>Headless HTML 표준 렌더러<br/>(860px 고정, 100% 벡터 선명도)"]
+        P2["🎨 일반 상세페이지 (인페인팅)<br/>Pass 2: gemini-3.1-flash-image<br/>(지수 백오프 자동 복구, 1:1 종횡비 잠금)"]
         
         P1 --> DECIDE
-        DECIDE -->|고시표 / 성분표| HTML
+        DECIDE -->|고시표 / 성분표 / DOCX| HTML
         DECIDE -->|일반 디자인 이미지| P2
     end
 
@@ -57,6 +57,11 @@ flowchart TD
         OUT4["📁 [상품명]_중국어_번체/"]
         
         OUT --> OUT1 & OUT2 & OUT3 & OUT4
+    end
+
+    subgraph S6["6. 웹검색 최적화 메타데이터 생성 (SEO / GEO / AEO)"]
+        TXT["📝 [상품명]_[언어]_SEO_GEO_AEO.txt<br/>• SEO 상품명 (공백 포함 100자 이내 엄격)<br/>• GEO (생성형 AI 모델 인용 최적화 브랜드/엔티티 서사)<br/>• AEO (AI Overviews/음성검색 5대 핵심 FAQ)"]
+        OUT1 & OUT2 & OUT3 & OUT4 --> TXT
     end
 
     IN --> AGENT & P_MAIN & BAT_SUB
