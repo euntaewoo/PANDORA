@@ -75,11 +75,13 @@ def build_notice_html(title, items, lang="EN"):
     for it in items:
         lbl = it.get("label", "")
         val = it.get("value", "")
-        
         # 💡 업데이트: 2열 의미단위 보호 및 순번 강제 줄바꿈
         val_str = str(val)
         if "성분" in lbl or "Ingredients" in lbl or "成分" in lbl:
             val_str = _smart_ingredient_hyphenator(val_str)
+        # 💡 기능성/특수용도 심사 항목의 괄호 효능 부가설명 앞 강제 줄바꿈 (KO/CN/TW/JP/EN 전 언어 공통)
+        if any(k in lbl for k in ["기능성", "심사", "审查", "審查", "審査", "Functional", "Review", "含藥"]):
+            val_str = re.sub(r'(?<!<br>)\s*([（(])', r'<br>\1', val_str)
         val_str = val_str.replace('식품의약품안전처 심사 필 완료 (', '식품의약품안전처 심사 필 완료<br>(')
         val_str = val_str.replace('식품의약품안전처 심사 필 무 (', '식품의약품안전처 심사 필 무<br>(')
         val_str = val_str.replace('붉은 반점', '붉은&nbsp;반점')
