@@ -30,11 +30,11 @@ flowchart TD
         BAT_SUB -.->|대화형 질의응답| PROMPT
     end
 
-    subgraph S3["3. 국가별 규정 및 톤앤매너 자동 분기"]
-        EN["🇺🇸 영어 (EN)<br/>• Amazon/Shopee US 초월번역<br/>• Montserrat 단일 서체 강제"]
-        JP["🇯🇵 일본어 (JP)<br/>• 후생노동성 56종 약기법 포지티브 리스트<br/>• Noto Sans JP 서체"]
-        CN["🇨🇳 중국어 간체 (CN)<br/>• 중국 신광고법 8대 절대화 금지어 순화<br/>• Noto Sans SC (思源黑体) 서체"]
-        TW["🇹🇼 중국어 번체 (TW)<br/>• 대만/홍콩 TFDA 규정 준수<br/>• Noto Sans TC 서체"]
+    subgraph S3["3. 국가별 럭셔리 뷰티 규정 및 톤앤매너 자동 분기 (Transcreation)"]
+        EN["🇺🇸 영어 (EN)<br/>• 에스티로더/세포라급 럭셔리 뷰티 초월번역<br/>• Montserrat 단일 서체 강제"]
+        JP["🇯🇵 일본어 (JP)<br/>• 후생노동성 56종 약기법 + @cosme 감성 카피<br/>• Noto Sans JP 서체"]
+        CN["🇨🇳 중국어 간체 (CN)<br/>• 중국 신광고법 8대 절대화 금지어 순화 + 하이테크 바이오 서사<br/>• Noto Sans SC (思源黑体) 서체"]
+        TW["🇹🇼 중국어 번체 (TW)<br/>• 대만/홍콩 TFDA 규정 + 메디컬 더마 프리미엄 톤<br/>• Noto Sans TC 서체 및 養/對/護 번체자 글리프 잠금"]
     end
 
     subgraph S4["4. 하이브리드 투패스 렌더링 엔진"]
