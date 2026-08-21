@@ -24,8 +24,8 @@
      └─ 대만/홍콩 (TW/HK): 번체자(zh-TW/HK) + 대만/홍콩 현지 뷰티 용어(鎖水, 爽膚水 등)
      │
      ▼
-[Pass 2: Gemini 3.1 Flash Image] ➔ 한글 완벽 제거 및 알리바바 푸후이체 식자 인페인팅
-     │
+[Pass 2: Gemini 3.1 Flash Image] ➔ 한글 완벽 제거 및 Noto Sans TC / 알리바바 푸후이체 식자 인페인팅
+     │                                 (대만/홍콩 모드 시 養/對/護 등 번체자 글리프 잠금 강제)
      ▼
 [후처리: Pillow LANCZOS] ➔ 원본 해상도 및 종횡비(Aspect Ratio) 1:1 보존 복원
 ```
