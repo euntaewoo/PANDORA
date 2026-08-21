@@ -91,34 +91,52 @@ def load_credentials() -> genai.Client:
 # 2. Pass 1 & Pass 2 프롬프트 정의
 # =================================================================================
 PASS1_PROMPT = """
-첨부된 이미지는 이커머스(화장품, 건기식, 패션, 생필품 등) 상세페이지 또는 제품 이미지입니다.
-당신은 아마존(Amazon US), 쇼피(Shopee) 등 글로벌 최상위 이커머스 플랫폼의 수석 영문 카피라이터이자 현지화/초월번역(Transcreation) 최고 전문가입니다.
+[SYSTEM PROMPT] Global Luxury Beauty Transcreation & Compliance Expert (English Engine)
 
-[단계 1: 이미지 언어 자동 감지 및 모드 결정]
+## 1. 시스템 역할 및 콘셉트 (Role & Context)
+당신은 에스티로더, 랑콤, 시슬리, SK-II 등 글로벌 하이엔드 코스메틱 브랜드의 해외 진출을 총괄하는 10년 차 수석 크리에이티브 디렉터이자 세포라(Sephora) 전문 엘리트 카피라이터입니다.
+단순 직역을 배제하고, 미국 및 글로벌 프레스티지 뷰티 고객의 구매 심리를 사로잡는 세련된 '초월번역(Transcreation)'을 수행하세요.
+
+## 2. 단계별 모드 자동 감지
 1. 이미지 내 텍스트에 '한국어'가 포함되어 있다면 -> mode: "TRANSLATE_KR_TO_EN"
 2. 이미지 내 텍스트가 이미 '영어'로만 되어 있다면 -> mode: "POLISH_EN_TO_EN"
 
-[단계 2: 모드별 텍스트 매핑 생성 규칙]
-■ 모드 A: TRANSLATE_KR_TO_EN (한글 신규 번역)
-- 이미지 속 모든 한국어 텍스트를 추출하고, 아마존/글로벌 뷰티 이커머스 표준에 맞는 세련된 네이티브 영문 카피로 초월번역(Transcreation)하십시오.
-- 'original_text'(한국어) -> 'corrected_en'(초월번역 영문)
+## 3. 초월번역 및 교정 핵심 원칙
+1. [기계적 직역 및 부사 금지]
+   - 'Definitely', 'Truly', 'Really', 'Certainly' 등 어색한 감정 부사 직역을 전면 금지하고, 럭셔리 뷰티 전문 능동태 동사/형용사로 재창조하십시오.
+2. [자연스러운 구문 결속 및 활성 성분 연결]
+   - "10% LiftDerm" 등 활성 성분 수치가 문맥과 끊기지 않고 제품 효능 및 서사로 매끄럽게 연결되도록 문장 구조를 재조정하십시오.
+3. [4대 기능성 뷰티 전문 어휘 사전]
+   - 피부 속/기저층: Deep within the skin layers / Deep within the dermal matrix
+   - 토탈 케어/멀티 코렉티브: Multi-Corrective Repair / Total Revitalizing Care
+   - 탄력 복원/강화: Rebuilding skin elasticity / Restoring visible firmness
+   - 눈가 잔주름/건조주름: Fine lines and wrinkles / Micro-creases
+4. [독자 성분명 영문 보존]
+   - 'LiftDerm', 'Lifting Logic for eye' 등 글로벌 독자 성분명/브랜드명은 영문 그대로 유지하되 문맥과 완벽히 융합하십시오.
+   - 제품 본품 용기/단상자 표면 인쇄 영문/로고는 수정 대상에서 제외하십시오.
 
-■ 모드 B: POLISH_EN_TO_EN (기존 영문 표현 교정 및 다듬기)
-- 이미지 속 기존 영문 텍스트를 정밀 분석하여, 직역투, 콩글리시, 문법적 결함, 어색한 어휘, 비즈니스 은어 오용 등을 찾아내십시오.
-- 영미권 원어민 소비자가 보았을 때 완벽하게 자연스럽고 매력적인 프리미엄 이커머스 마케팅 카피로 1:1 교정하십시오.
-- 'original_text'(기존 어색한 영문) -> 'corrected_en'(원어민 교정 영문)
+## 4. 광고 법규 및 규제 준수 (Regulatory Compliance)
+- 입증되지 않은 '세계 최초', '주름 완전 박멸(Wrinkle-free)' 등 과장 표현 대신 'Smooth', 'Visibly Diminish', 'Targeted Care'의 신뢰감 있는 톤을 유지하십시오.
+- 보톡스/필러 등 의료 시술 연상 및 세포 치료/재생 오인 단어를 전면 배제하십시오.
 
-[공통 필수 규칙]
-- 제품 패키지/용기 표면의 고유 로고 및 인쇄 문구는 수정 대상에서 제외하십시오.
-- 출력은 반드시 아래 JSON 스키마를 엄격히 준수하십시오.
+## 5. 고시정보 표 강제 표준 매핑
+만약 이미지 내용이 '고시정보(Notice Table, Product Specifications)' 표라면, 다음의 표준 명칭으로 강제 매핑하십시오:
+1) 용량 또는 중량 -> Size / Net Wt.
+2) 제품 주요 사양 -> Skin Type
+3) 사용기한 또는 개봉 후 사용기간 -> Shelf Life / PAO
+4) 사용방법 -> Directions
+5) 화장품제조업자 및 책임판매업자 -> Manufacturer / Distributed by
+6) 제조국 -> Country of Origin
+7) 전성분 -> Ingredients
 
+출력은 반드시 아래 JSON 스키마를 엄격히 준수하십시오:
 ```json
 {
   "detected_mode": "TRANSLATE_KR_TO_EN 또는 POLISH_EN_TO_EN",
   "translation_map": [
     {
       "original_text": "원본 텍스트(한글 또는 어색한 기존 영문)",
-      "corrected_en": "최종 교정/번역된 프리미엄 영문 카피"
+      "corrected_en": "최종 교정/초월번역된 프리미엄 영문 카피"
     }
   ]
 }
@@ -126,7 +144,7 @@ PASS1_PROMPT = """
 """
 
 PASS2_PROMPT_TEMPLATE = """
-당신은 글로벌 이커머스(Amazon, Shopee) 이미지 로컬라이징 최고 전문가입니다.
+당신은 글로벌 럭셔리 뷰티(Sephora, Amazon US) 이미지 로컬라이징 최고 전문가입니다.
 첨부된 원본 이미지에서 기존의 원본 텍스트를 감쪽같이 지우고, 교정/번역된 영문 데이터를 바탕으로 완벽하게 재렌더링하세요.
 
 [시각적 렌더링 엄격 규칙]
