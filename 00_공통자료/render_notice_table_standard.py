@@ -165,8 +165,39 @@ def build_notice_html(title, items, lang="EN"):
         lbl_formatted = _format_label_semantic_break(lbl, lang)
         # 💡 업데이트: 2열 의미단위 보호 및 순번 강제 줄바꿈
         val_str = str(val)
+        
+        # 💡 [회사 단위 분리]: 제조업자/책임판매업자/생산기업/판매상 각 회사명 단위로 <br> 분리 및 Co., Ltd. 결속
+        if any(k in lbl for k in ["제조업자", "책임판매업자", "생산기업", "판매상", "生产企业", "责任销售商", "Manufacturer", "Distributor", "製造販売元", "発売元"]):
+            val_str = re.sub(r'(Co\.,?\s*Ltd\.?|Inc\.?|Corp\.?|\(주\)|주식회사|회사)\s*[,，/]\s*', r'\1<br>', val_str, flags=re.IGNORECASE)
+            val_str = val_str.replace("Co., Ltd.", "Co.,&nbsp;Ltd.").replace("Co.,Ltd.", "Co.,&nbsp;Ltd.")
+
+        # 💡 [전성분 단어 결속]: 쉼표를 성분명 뒤에 일체화하여 span으로 래핑 (단어 중간 분리 및 외톨이 쉼표 원천 차단)
         if "성분" in lbl or "Ingredients" in lbl or "成分" in lbl:
             val_str = _smart_ingredient_hyphenator(val_str)
+            # 성분 단위로 분리 (쉼표 포함)
+            raw_tokens = re.split(r'([,，、]\s*)', val_str)
+            wrapped_tokens = []
+            current_token = ""
+            for tok in raw_tokens:
+                if re.match(r'^[,，、]\s*$', tok):
+                    current_token += tok.strip() + " "
+                    wrapped_tokens.append(current_token)
+                    current_token = ""
+                elif tok.strip():
+                    if current_token:
+                        wrapped_tokens.append(current_token)
+                    current_token = tok.strip()
+            if current_token:
+                wrapped_tokens.append(current_token)
+
+            html_tokens = []
+            for t in wrapped_tokens:
+                if "(" in t or "（" in t:
+                    html_tokens.append(f'<span style="display:inline-block;">{t}</span>')
+                else:
+                    html_tokens.append(f'<span style="display:inline-block; white-space:nowrap;">{t}</span>')
+            val_str = "".join(html_tokens)
+
         # 💡 기능성/특수용도 심사 항목의 괄호 효능 부가설명 앞 강제 줄바꿈 (KO/CN/TW/JP/EN 전 언어 공통)
         if any(k in lbl for k in ["기능성", "심사", "审查", "審查", "審査", "Functional", "Review", "含藥"]):
             val_str = re.sub(r'(?<!<br>)\s*([（(])', r'<br>\1', val_str)
