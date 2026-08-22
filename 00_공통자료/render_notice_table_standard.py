@@ -138,7 +138,7 @@ def build_notice_html(title, items, lang="EN"):
         val_padding = "20px 15px"
         line_height = "1.65"
         letter_spacing = "0px"
-        label_width = "300px"
+        label_width = "270px"
     elif lang.upper() in ["CN", "ZH", "SC"]:
         font_family = "'Noto Sans SC', 'NotoSansSC', 'Source Han Sans SC', '思源黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         title_size = "52px"
