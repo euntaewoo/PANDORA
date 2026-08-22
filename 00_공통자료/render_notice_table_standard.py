@@ -108,15 +108,15 @@ def _format_label_semantic_break(lbl: str, lang: str) -> str:
         lbl_str = lbl_str.replace("소비자상담관련 전화번호", "소비자상담관련<br>전화번호")
 
     # ==========================================
-    # [공통 2차 Fallback] 기호 및 구분자 기준 자동 개행 (10자 이상 긴 라벨 대상)
+    # [공통 2차 Fallback] 기호 및 다국어 접속사 기준 자동 개행 (10자 이상 미등록 긴 라벨)
     # ==========================================
     if "<br>" not in lbl_str and len(lbl_str) >= 10:
-        if "/" in lbl_str:
-            lbl_str = lbl_str.replace("/", " /<br>")
-        elif " 및 " in lbl_str:
-            lbl_str = lbl_str.replace(" 및 ", " 및<br>")
-        elif " 또는 " in lbl_str:
-            lbl_str = lbl_str.replace(" 또는 ", " 또는<br>")
+        # 1) 슬래시, 앰퍼샌드, 덧셈 기호 (공백 유무 무관)
+        if re.search(r'[/／&＆+＋]', lbl_str):
+            lbl_str = re.sub(r'\s*([/／&＆+＋])\s*', r' \1<br>', lbl_str, count=1)
+        # 2) 다국어 접속사 (한국어, 중국어, 일본어, 영어)
+        elif re.search(r'(\s*(?:및|또는|혹은|或|及|以及|又は|または|and|or)\s*)', lbl_str, flags=re.IGNORECASE):
+            lbl_str = re.sub(r'(\s*(?:및|또는|혹은|或|及|以及|又は|または|and|or)\s*)', r' \1<br>', lbl_str, count=1, flags=re.IGNORECASE)
 
     return lbl_str
 
