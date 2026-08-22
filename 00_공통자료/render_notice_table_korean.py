@@ -214,7 +214,7 @@ def _build_html(title: str, items: list, line_height: float = 1.45, cell_pad_v: 
             }}
             th, td {{ border-bottom: 1px solid #E0E0E0; }}
             th {{
-                width: 295px; word-break: keep-all; 
+                width: 295px; word-break: break-word; overflow-wrap: break-word; 
                 font-size: 30px; font-weight: bold; background-color: #F8F9FA; 
                 color: #333333; padding: {cell_pad_v}px 20px; border-right: 1px solid #EAEAEA; 
                 text-align: left; vertical-align: middle;
@@ -222,10 +222,11 @@ def _build_html(title: str, items: list, line_height: float = 1.45, cell_pad_v: 
             td {{
                 font-size: 30px; font-weight: normal; background-color: #FFFFFF; 
                 color: #222222; padding: {cell_pad_v}px 26px; vertical-align: middle; white-space: pre-line; 
-                word-break: keep-all; overflow-wrap: break-word;
+                word-break: break-word; overflow-wrap: break-word;
             }}
             td.ingredients {{
-                word-break: keep-all;
+                word-break: break-word;
+                overflow-wrap: break-word;
                 text-align: left;
                 line-height: 1.55;
             }}

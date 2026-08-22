@@ -174,11 +174,13 @@ def build_notice_html(title, items, lang="EN"):
             vertical-align: middle;
             line-height: {line_height};
             letter-spacing: {letter_spacing};
-            word-break: keep-all;
+            word-break: break-word;
+            overflow-wrap: break-word;
             border-right: 1px solid #EAEAEA;
         }}
         td.value-cell.ingredients {{
-            word-break: keep-all;
+            word-break: break-word;
+            overflow-wrap: break-word;
             text-align: left;
             line-height: 1.55;
         }}
@@ -191,7 +193,8 @@ def build_notice_html(title, items, lang="EN"):
             vertical-align: middle;
             line-height: {line_height};
             letter-spacing: {letter_spacing};
-            word-break: keep-all;
+            word-break: break-word;
+            overflow-wrap: break-word;
             background-color: #FFFFFF;
         }}
 
