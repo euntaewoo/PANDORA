@@ -472,38 +472,97 @@ def parse_docx_content(docx_path: str) -> List[Tuple[str, str]]:
     return items
 
 
-def render_notice_table(mapping_data: Dict[str, Any], lang_code: str, out_path: str, orig_width: int = 860) -> bool:
-    """render_notice_table_standard.py 모듈을 활용하여 고선명 표 이미지를 렌더링합니다."""
+def render_notice_table(client: genai.Client, mapping_data: Dict[str, Any], lang_code: str, out_path: str, orig_width: int = 860) -> bool:
+    """render_notice_table_standard.py 모듈을 활용하여 1열(번역 라벨) 및 2열(번역 값) 고선명 표 이미지를 렌더링합니다."""
     std_script_dir = os.path.join(PROJECT_ROOT, "00_공통자료")
     if std_script_dir not in sys.path:
         sys.path.insert(0, std_script_dir)
 
     try:
         import render_notice_table_standard as rnts
-        items = []
-        for row in mapping_data.get("translation_map", []):
-            kor = row.get("kor", "")
-            tgt = row.get("target_text", "")
-            if ":" in tgt or "：" in tgt:
-                parts = re.split(r"[:：]", tgt, 1)
-                lbl = parts[0].strip()
-                val = parts[1].strip() if len(parts) > 1 else ""
-            elif ":" in kor or "：" in kor:
-                parts = re.split(r"[:：]", kor, 1)
-                lbl = parts[0].strip()
-                val = tgt
-            else:
-                lbl = kor
-                val = tgt
-            items.append({"label": lbl, "value": val})
+        
+        prompt_en = """
+You are a senior regulatory affairs and e-commerce localization expert.
+Format the following cosmetic product details into structured table items for Amazon / Sephora US.
+Map standard labels: Volume -> Size/Net Wt., Skin Type, Shelf Life, Directions, Manufacturer/Distributed by, Country of Origin, Ingredients, Functional Cosmetics Review Status, Precautions for Use, Quality Assurance Standard, Customer Service (+82-2-6743-3206).
+Output MUST be a JSON object: {"title": "PRODUCT DETAILS", "items": [{"label": "Size / Net Wt.", "value": "..."}, ...]}
+"""
+        prompt_cn = """
+你是资深化妆品法规与电商本地化专家。请将以下韩国化妆品产品详细信息（中文告示表）整理并翻译为规范的简体中文告示表格（严禁将韩文原标签作为第1列，第1列必须是规范的中文项目名，第2列是对应的中文内容值）。
+严格对照标准项目名：
+- 净含量 / 容量
+- 适用肤质
+- 使用期限 / 保质期
+- 使用方法
+- 化妆品生产企业 / 责任销售商
+- 原产国
+- 全成分 (INCI/NMPA 标准全成分名称)
+- 特殊用途化妆品审查状态 (如：已完成审查 (美白、改善皱纹双重功效) / 不适用)
+- 使用注意事项
+- 质量保证标准
+- 消费者咨询电话 (格式为：+82-2-6743-3206)
 
-        title_map = {
-            "EN": "PRODUCT DETAILS",
-            "JP": "商品基本情報",
-            "CN": "商品基本信息",
-            "TW": "商品基本資訊"
-        }
-        title = title_map.get(lang_code, "PRODUCT DETAILS")
+输出必须为纯 JSON 格式：
+{
+  "title": "商品基本信息",
+  "items": [
+    {"label": "净含量", "value": "25g x 3片"},
+    {"label": "适用肤质", "value": "适合所有肤质"},
+    ...
+  ]
+}
+"""
+        prompt_jp = """
+あなたは日本の化粧品薬機法およびQoo10 Japanの専門家です。以下の商品情報を整理し、規範的な日本語の告示表項目にマッピングしてください（第1列は日本語の項目名、第2列は対応する値）。
+標準項目名：内容量、お肌のタイプ、使用期限、ご使用方法、製造販売元、原産国、全成分、医薬部外品承認/機能性化粧品審査、ご使用上の注意、品質保証基準、お客様相談窓口 (+82-2-6743-3206)。
+出力形式：{"title": "商品基本情報", "items": [{"label": "内容量", "value": "..."}, ...]}
+"""
+        prompt_tw = """
+你是資深化妝品法規與電商本地化專家。請將以下產品詳細資訊整理為規範的繁體中文告示表格（第1列為規範的繁體中文項目名，第2列為對應的值）。
+標準項目名：淨含量 / 容量、適用膚質、保存期限、使用方法、製造商 / 責任銷售商、產地、全成分、特殊用途化妝品審查、注意事項、質量保證、客服專線 (+82-2-6743-3206)。
+輸出格式：{"title": "商品基本資訊", "items": [{"label": "淨含量", "value": "..."}, ...]}
+"""
+        p_map = {"EN": prompt_en, "CN": prompt_cn, "JP": prompt_jp, "TW": prompt_tw}
+        selected_prompt = p_map.get(lang_code, prompt_cn)
+
+        t_map = mapping_data.get("translation_map", [])
+        input_lines = []
+        for row in t_map:
+            k = row.get("kor", "").strip()
+            t = row.get("target_text", "").strip()
+            if k and t:
+                input_lines.append(f"[{k}] {t}")
+            elif t:
+                input_lines.append(t)
+            elif k:
+                input_lines.append(k)
+
+        full_prompt = f"{selected_prompt}\n\n[입력된 고시정보 표 원문 및 번역 텍스트 목록]\n" + "\n".join(input_lines)
+        
+        print(f"  🔍 [표 구조 정제] Gemini 3.1 Pro로 항목 라벨과 값을 2열 구조화 중 ({MODEL_PRO})...", flush=True)
+        resp = client.models.generate_content(
+            model=MODEL_PRO,
+            contents=[full_prompt],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.3,
+                max_output_tokens=8192
+            )
+        )
+        res_json = json.loads(resp.text.strip())
+        items = res_json.get("items", [])
+        title = res_json.get("title", "商品基本信息")
+
+        for item in items:
+            lbl = item.get("label", "")
+            val = item.get("value", "")
+            if any(k in lbl.lower() for k in ["customer", "contact", "phone", "电话", "電話", "상담", "문의"]):
+                if "02-" in val or "02)" in val or "02." in val or "6743-3206" in val:
+                    val_cleaned = re.sub(r"^02[-.)\s]*", "+82-2-", val)
+                    if "+82" not in val_cleaned and "6743-3206" in val_cleaned:
+                        val_cleaned = "+82-2-6743-3206"
+                    item["value"] = val_cleaned
+
         return rnts.render_notice_table_to_png(title, items, out_path, lang=lang_code)
     except Exception as e:
         print(f"  -> [TABLE RENDER FAIL] 표 렌더러 예외: {e}")
@@ -735,7 +794,7 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
                     response_mime_type="application/json",
                     temperature=0.6,
                     top_p=0.9,
-                    max_output_tokens=2048
+                    max_output_tokens=8192
                 )
             )
             p1_text = response_p1.text.strip()
@@ -763,7 +822,7 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
     fname_lower = os.path.basename(in_path).lower()
     if is_table or "notice" in fname_lower or "상세정보" in fname_lower or "spec" in fname_lower or "details" in fname_lower:
         print(f"  📊 [TABLE DETECTED] 고시정보표 레이아웃 감지 -> HTML 표준 렌더러 분기 가동")
-        rendered = render_notice_table(p1_json, lang_code, out_path, orig_width=orig_w)
+        rendered = render_notice_table(client, p1_json, lang_code, out_path, orig_width=orig_w)
         if rendered:
             print(f"  🎉 [SUCCESS] 고선명 표 이미지 생성 완료: {os.path.basename(out_path)}")
             return True
@@ -1263,6 +1322,8 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
             )
         )
         generated_text = response.text.strip()
+        if target_lang in ["EN", "CN", "TW", "JP"]:
+            generated_text = re.sub(r"(?<!\+82-)02[-.)\s]*6743[-.)\s]*3206", "+82-2-6743-3206", generated_text)
 
         # 파일 저장 (1. 서식형 TXT 저장 - CRLF 개행 보존)
         os.makedirs(target_dir, exist_ok=True)
@@ -1344,6 +1405,15 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
     except Exception as e:
         print(f"  ❌ [ERROR] SEO / GEO / AEO 생성 실패: {e}")
         return False
+
+
+def extract_product_name_from_files(files: List[str], fallback_name: str) -> str:
+    """파일명 목록이나 폴더명에서 상품 식별명을 깔끔하게 정제합니다."""
+    clean_name = fallback_name
+    clean_name = re.sub(r'^\(한국어\)[\s_-]*', '', clean_name)
+    clean_name = re.sub(r'^썸네일[\s_-]*', '', clean_name)
+    clean_name = clean_name.strip()
+    return clean_name if clean_name else fallback_name
 
 
 def find_target_leaf_folders(base_dir: str) -> List[Tuple[str, str]]:
