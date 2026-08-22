@@ -171,32 +171,20 @@ def build_notice_html(title, items, lang="EN"):
             val_str = re.sub(r'(Co\.,?\s*Ltd\.?|Inc\.?|Corp\.?|\(주\)|주식회사|회사)\s*[,，/]\s*', r'\1<br>', val_str, flags=re.IGNORECASE)
             val_str = val_str.replace("Co., Ltd.", "Co.,&nbsp;Ltd.").replace("Co.,Ltd.", "Co.,&nbsp;Ltd.")
 
-        # 💡 [전성분 단어 결속]: 쉼표를 성분명 뒤에 일체화하여 span으로 래핑 (단어 중간 분리 및 외톨이 쉼표 원천 차단)
+        # 💡 [전성분 표준 텍스트 플로우 및 가독성 최적화]
         if "성분" in lbl or "Ingredients" in lbl or "成分" in lbl:
             val_str = _smart_ingredient_hyphenator(val_str)
-            # 성분 단위로 분리 (쉼표 포함)
-            raw_tokens = re.split(r'([,，、]\s*)', val_str)
-            wrapped_tokens = []
-            current_token = ""
-            for tok in raw_tokens:
-                if re.match(r'^[,，、]\s*$', tok):
-                    current_token += tok.strip() + " "
-                    wrapped_tokens.append(current_token)
-                    current_token = ""
-                elif tok.strip():
-                    if current_token:
-                        wrapped_tokens.append(current_token)
-                    current_token = tok.strip()
-            if current_token:
-                wrapped_tokens.append(current_token)
-
-            html_tokens = []
-            for t in wrapped_tokens:
-                if "(" in t or "（" in t:
-                    html_tokens.append(f'<span style="display:inline-block;">{t}</span>')
-                else:
-                    html_tokens.append(f'<span style="display:inline-block; white-space:nowrap;">{t}</span>')
-            val_str = "".join(html_tokens)
+            # 중국/대만은 표준 모점(、)으로 정규화하여 글자 간격 벌어짐 방지 및 자연스러운 플로우 유지
+            if lang in ["CN", "TW"]:
+                val_str = re.sub(r'[,，、]\s*', '、', val_str)
+                val_str = re.sub(r'、+', '、', val_str).strip()
+                if val_str.endswith('、'):
+                    val_str = val_str[:-1]
+            else:
+                val_str = re.sub(r'[,，、]\s*', ', ', val_str)
+                val_str = re.sub(r'(,\s*)+', ', ', val_str).strip()
+                if val_str.endswith(','):
+                    val_str = val_str[:-1]
 
         # 💡 기능성/특수용도 심사 항목의 괄호 효능 부가설명 앞 강제 줄바꿈 (KO/CN/TW/JP/EN 전 언어 공통)
         if any(k in lbl for k in ["기능성", "심사", "审查", "審查", "審査", "Functional", "Review", "含藥"]):
@@ -231,10 +219,13 @@ def build_notice_html(title, items, lang="EN"):
         val_formatted = re.sub(r'(<br>\s*)+', '<br>', val_formatted).strip()
         if val_formatted.startswith("<br>"):
             val_formatted = val_formatted[4:]
+        
+        is_ingredient = any(k in lbl for k in ["성분", "Ingredients", "成分"])
+        cell_class = "value-cell ingredients" if is_ingredient else "value-cell"
         rows_html += f"""
         <tr>
             <th class="label-cell">{lbl_formatted}</th>
-            <td class="value-cell">{val_formatted}</td>
+            <td class="{cell_class}">{val_formatted}</td>
         </tr>
         """
 
@@ -305,10 +296,16 @@ def build_notice_html(title, items, lang="EN"):
             border-right: 1px solid #EAEAEA;
         }}
         td.value-cell.ingredients {{
-            word-break: break-word;
-            overflow-wrap: break-word;
+            font-size: 24px;
+            font-weight: 400;
+            color: #333333;
+            padding: {val_padding};
             text-align: left;
-            line-height: 1.55;
+            word-break: normal;
+            overflow-wrap: break-word;
+            line-height: 1.65;
+            letter-spacing: 0px;
+            background-color: #FFFFFF;
         }}
         td.value-cell {{
             font-size: {cell_size};
