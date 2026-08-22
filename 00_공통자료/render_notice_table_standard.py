@@ -192,6 +192,18 @@ def build_notice_html(title, items, lang="EN"):
         val_str = val_str.replace('2중 기능성', '2중&nbsp;기능성')
         val_str = val_str.replace('분쟁해결 규정에', '분쟁해결&nbsp;규정에')
         val_str = val_str.replace('분쟁해결 기준에', '분쟁해결&nbsp;기준에')
+
+        # 💡 [중국어 간체/번체 2열 주의사항 및 전문의 상담 문맥 의미단위 개행/결속]
+        val_str = val_str.replace('异常症状或副作用时，请咨询专业医生', '异常症状或副作用时，<br>请咨询专业医生')
+        val_str = val_str.replace('异常症状或副作用时，请咨询专业医师', '异常症状或副作用时，<br>请咨询专业医师')
+        val_str = val_str.replace('异常症状或副作用时，请向专业医生咨询', '异常症状或副作用时，<br>请向专业医生咨询')
+        val_str = val_str.replace('異常症狀或副作用時，請諮詢專業醫師', '異常症狀或副作用時，<br>請諮詢專業醫師')
+        val_str = val_str.replace('異常症狀或副作用時，請諮詢專業醫生', '異常症狀或副作用時，<br>請諮詢專業醫生')
+        val_str = val_str.replace('请咨询专业医生', '<span style="white-space: nowrap">请咨询专业医生</span>')
+        val_str = val_str.replace('请咨询专业医师', '<span style="white-space: nowrap">请咨询专业医师</span>')
+        val_str = val_str.replace('請諮詢專業醫師', '<span style="white-space: nowrap">請諮詢專業醫師</span>')
+        val_str = val_str.replace('請諮詢專業醫生', '<span style="white-space: nowrap">請諮詢專業醫生</span>')
+
         val = re.sub(r'(?<!^)(?<!<br>)(?<!\n)\s*(\(\d+\)|\d+\)|[①-⑳]|\([가나다라마바사아자차카타파하甲乙丙丁a-zA-Z]\)|[㈎-㈛])', r'<br>\1', val_str)
         # 줄바꿈 및 리스트 서식 처리
         val_formatted = val.replace("\n", "<br>")
