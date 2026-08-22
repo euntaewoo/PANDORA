@@ -115,9 +115,13 @@ PASS1_PROMPT = """
    - 'LiftDerm', 'Lifting Logic for eye' 등 글로벌 독자 성분명/브랜드명은 영문 그대로 유지하되 문맥과 완벽히 융합하십시오.
    - 제품 본품 용기/단상자 표면 인쇄 영문/로고는 수정 대상에서 제외하십시오.
 
-## 4. 광고 법규 및 규제 준수 (Regulatory Compliance)
-- 입증되지 않은 '세계 최초', '주름 완전 박멸(Wrinkle-free)' 등 과장 표현 대신 'Smooth', 'Visibly Diminish', 'Targeted Care'의 신뢰감 있는 톤을 유지하십시오.
-- 보톡스/필러 등 의료 시술 연상 및 세포 치료/재생 오인 단어를 전면 배제하십시오.
+## 4. 광고 법규 및 규제 준수 (Regulatory Compliance & Guardrails)
+1. [절대적/과대 표현 전면 금지 (Ban on Absolute Claims)]
+   - 'World's First', 'No.1', 'Best', 'The Ultimate' 등 입증되지 않은 절대적 표현 사용 전면 금지.
+   - 반드시 'Innovative formula engineered for delicate eye areas', 'Advanced Multi-Corrective Solution', 'Targeted Precision Care' 등 프리미엄 혁신 표현으로 순화하십시오.
+2. [의료 시술 오인 금지 및 4대 안전 동사 (Compliance-Safe Verbs)]
+   - '주름 완전 박멸(Wrinkle-free)', '보톡스/필러 효과' 등 의료 시술 연상 및 세포 치료/재생 오인 단어 전면 배제.
+   - 반드시 **`Smooth` (抚平/撫平)**, **`Diminish` (淡化)**, **`Alleviate` (舒缓/舒緩)**, **`Care / Repair` (修护/修護)** 4대 컴플라이언스 안전 동사를 사용하여 표현하십시오.
 
 ## 5. 고시정보 표 강제 표준 매핑
 만약 이미지 내용이 '고시정보(Notice Table, Product Specifications)' 표라면, 다음의 표준 명칭으로 강제 매핑하십시오:

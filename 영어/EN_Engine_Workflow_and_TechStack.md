@@ -115,7 +115,8 @@ graph TD
      * 토탈 케어/멀티 코렉티브: `Multi-Corrective Repair / Total Revitalizing Care`
      * 탄력 복원/강화: `Rebuilding skin elasticity / Restoring visible firmness`
      * 눈가 잔주름/건조주름: `Fine lines and wrinkles / Micro-creases`
-   - **규제 준수**: 보톡스/필러 등 의료 시술 연상 표현 및 '세계 최초', '주름 완전 박멸(Wrinkle-free)' 과장 표현 전면 배제 ➔ `Smooth`, `Visibly Diminish`, `Targeted Care` 등 신뢰감 있는 톤 유지.
+   - **절대적/과대 표현 전면 금지 (Ban on Absolute Claims)**: 'World's First', 'No.1', 'Best', 'The Ultimate' 등 검증 불가능한 과장 표현 전면 금지 ➔ `Innovative formula engineered for delicate eye areas`, `Advanced Multi-Corrective Solution`, `Targeted Precision Care` 등 프리미엄 혁신 표현으로 순화.
+   - **의료 시술 오인 금지 및 4대 안전 동사 (Compliance-Safe Verbs)**: 보톡스/필러 등 의료 시술 연상 및 '주름 완전 박멸(Wrinkle-free)' 표현 전면 배제 ➔ 반드시 **`Smooth` (抚平/撫平)**, **`Diminish` (淡化)**, **`Alleviate` (舒缓/舒緩)**, **`Care / Repair` (修护/修護)** 4대 안전 동사 사용.
    - **세포라/백화점 톤앤매너**: 세포라(Sephora) 및 최고급 백화점 프레스티지 뷰티 톤 적용.
 
 
