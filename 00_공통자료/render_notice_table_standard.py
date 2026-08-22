@@ -27,6 +27,37 @@ from PIL import Image, ImageChops
 
 sys.stdout.reconfigure(encoding='utf-8')
 
+def _format_label_semantic_break(lbl: str, lang: str) -> str:
+    lbl_str = str(lbl).strip()
+    if "<br>" in lbl_str:
+        return lbl_str
+    
+    # 1. 중국어 간체 / 번체 표준 의미단위 개행
+    if any(k in lbl_str for k in ["特殊用途", "특수용도", "含藥", "含药"]):
+        lbl_str = re.sub(r'(特殊用途化妆品|特殊用途化妝品|特殊用途|含药化妆品|含藥化粧品)\s*(审查状态|審查狀態|审查|審查)', r'\1<br>\2', lbl_str)
+    
+    if any(k in lbl_str for k in ["生产企业", "生產企業", "제조업자", "제조업체"]):
+        lbl_str = re.sub(r'(化妆品生产企业|化妝品生產企業|화장품제조업자)\s*([/＆& 및\s]+)\s*(责任销售商|責任銷售商|책임판매업자)', r'\1 \2<br>\3', lbl_str)
+        
+    if any(k in lbl_str for k in ["使用期限", "保质期", "保存期限", "사용기한"]):
+        lbl_str = re.sub(r'(使用期限|保存期限|사용기한)\s*(或|또는|及|및)\s*(开封后|開封後|개봉 후)', r'\1 \2<br>\3', lbl_str)
+        
+    # 2. 한국어 표준 의미단위 개행
+    lbl_str = lbl_str.replace("기능성 화장품 심사 필 유무", "기능성 화장품<br>심사 필 유무")
+    lbl_str = lbl_str.replace("기능성 화장품의 경우", "기능성 화장품의<br>경우")
+    lbl_str = lbl_str.replace("화장품제조업자 및 책임판매업자", "화장품제조업자 및<br>책임판매업자")
+    lbl_str = lbl_str.replace("화장품제조업자/책임판매업자", "화장품제조업자/<br>책임판매업자")
+    lbl_str = lbl_str.replace("사용기한 또는 개봉 후 사용기간", "사용기한 또는<br>개봉 후 사용기간")
+    lbl_str = lbl_str.replace("사용할 때의 주의사항", "사용할 때의<br>주의사항")
+    lbl_str = lbl_str.replace("소비자 상담 전화번호", "소비자 상담<br>전화번호")
+    lbl_str = lbl_str.replace("소비자상담관련 전화번호", "소비자상담관련<br>전화번호")
+
+    # 3. 중국어 일반 긴 라벨 fallback (기호 기준 분할)
+    if "/" in lbl_str and "<br>" not in lbl_str:
+        lbl_str = lbl_str.replace("/", "/<br>")
+
+    return lbl_str
+
 def build_notice_html(title, items, lang="EN"):
     """
     고시정보 표 표준 HTML 생성기
@@ -75,6 +106,7 @@ def build_notice_html(title, items, lang="EN"):
     for it in items:
         lbl = it.get("label", "")
         val = it.get("value", "")
+        lbl_formatted = _format_label_semantic_break(lbl, lang)
         # 💡 업데이트: 2열 의미단위 보호 및 순번 강제 줄바꿈
         val_str = str(val)
         if "성분" in lbl or "Ingredients" in lbl or "成分" in lbl:
@@ -107,7 +139,7 @@ def build_notice_html(title, items, lang="EN"):
             val_formatted = val_formatted[4:]
         rows_html += f"""
         <tr>
-            <th class="label-cell">{lbl}</th>
+            <th class="label-cell">{lbl_formatted}</th>
             <td class="value-cell">{val_formatted}</td>
         </tr>
         """
