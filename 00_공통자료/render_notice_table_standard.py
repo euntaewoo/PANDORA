@@ -35,34 +35,28 @@ def _format_label_semantic_break(lbl: str, lang: str) -> str:
     lang_upper = str(lang).upper()
 
     # ==========================================
-    # [SANDBOX 1] 중국어 간체 (CN / ZH / SC) 전용 샌드박스
+    # [SANDBOX 1] 중국어 간체 (CN / ZH / SC) 전용 샌드박스 (10자 이상 긴 라벨만 개행)
     # ==========================================
     if lang_upper in ["CN", "ZH", "SC"]:
-        if any(k in lbl_str for k in ["特殊用途", "含药", "审查", "特证"]):
-            lbl_str = re.sub(r'(特殊用途化妆品|特殊用途|含药化妆品)\s*(审查状态|审查|备案状态)', r'\1<br>\2', lbl_str)
-        if any(k in lbl_str for k in ["生产企业", "责任销售商", "生产者"]):
-            lbl_str = re.sub(r'(化妆品生产企业|生产企业|生产商)\s*([/＆& 및\s]+)\s*(责任销售商|境内责任人|销售商)', r'\1 \2<br>\3', lbl_str)
-        if any(k in lbl_str for k in ["使用期限", "保质期", "有效期"]):
-            lbl_str = re.sub(r'(使用期限|保质期|有效期)\s*(或|及|或开封后)\s*(开封后|开盖后)?', r'\1 \2<br>\3', lbl_str)
-        if any(k in lbl_str for k in ["注意事项", "安全警告"]):
-            lbl_str = re.sub(r'(使用时的|使用|保管)\s*(注意事项|警告)', r'\1<br>\2', lbl_str)
-        if any(k in lbl_str for k in ["咨询电话", "客服电话", "联系电话"]):
-            lbl_str = re.sub(r'(消费者|客户|售后)\s*(咨询电话|客服热线|联系方式)', r'\1<br>\2', lbl_str)
+        if len(lbl_str) >= 10:
+            if any(k in lbl_str for k in ["特殊用途", "含药", "审查", "特证"]):
+                lbl_str = re.sub(r'(特殊用途化妆品|特殊用途|含药化妆品)\s*(审查状态|审查|备案状态)', r'\1<br>\2', lbl_str)
+            if any(k in lbl_str for k in ["生产企业", "责任销售商", "生产者"]):
+                lbl_str = re.sub(r'(化妆品生产企业|生产企业|生产商)\s*([/＆& 및\s]+)\s*(责任销售商|境内责任人|销售商)', r'\1 \2<br>\3', lbl_str)
+            if any(k in lbl_str for k in ["使用期限", "保质期", "有效期"]):
+                lbl_str = re.sub(r'(使用期限|保质期|有效期)\s*(或|及|或开封后)\s*(开封后|开盖后)?', r'\1 \2<br>\3', lbl_str)
 
     # ==========================================
-    # [SANDBOX 2] 중국어 번체 (TW / HK / TC) 전용 샌드박스
+    # [SANDBOX 2] 중국어 번체 (TW / HK / TC) 전용 샌드박스 (10자 이상 긴 라벨만 개행)
     # ==========================================
     elif lang_upper in ["TW", "HK", "TC"]:
-        if any(k in lbl_str for k in ["特殊用途", "含藥", "審查", "許可證"]):
-            lbl_str = re.sub(r'(特殊用途化妝品|特殊用途|含藥化粧品|特定用途化粧品)\s*(審查狀態|審查|許可字號)', r'\1<br>\2', lbl_str)
-        if any(k in lbl_str for k in ["生產企業", "責任銷售商", "製造廠", "進口商"]):
-            lbl_str = re.sub(r'(化妝品生產企業|製造廠|生產商)\s*([/＆& 及\s]+)\s*(責任銷售商|進口商|總代理)', r'\1 \2<br>\3', lbl_str)
-        if any(k in lbl_str for k in ["保存期限", "有效期間", "使用期限"]):
-            lbl_str = re.sub(r'(保存期限|有效期間|使用期限)\s*(或|及)\s*(開封後|開蓋後)?', r'\1 \2<br>\3', lbl_str)
-        if any(k in lbl_str for k in ["注意事項", "安全警語"]):
-            lbl_str = re.sub(r'(使用時的|使用|保管)\s*(注意事項|安全事項)', r'\1<br>\2', lbl_str)
-        if any(k in lbl_str for k in ["諮詢專線", "客服專線", "聯絡電話"]):
-            lbl_str = re.sub(r'(消費者|客戶|售後)\s*(諮詢專線|客服專線|服務電話)', r'\1<br>\2', lbl_str)
+        if len(lbl_str) >= 10:
+            if any(k in lbl_str for k in ["特殊用途", "含藥", "審查", "許可證"]):
+                lbl_str = re.sub(r'(特殊用途化妝品|特殊用途|含藥化粧品|特定用途化粧品)\s*(審查狀態|審查|許可字號)', r'\1<br>\2', lbl_str)
+            if any(k in lbl_str for k in ["生產企業", "責任銷售商", "製造廠", "進口商"]):
+                lbl_str = re.sub(r'(化妝品生產企業|製造廠|生產商)\s*([/＆& 及\s]+)\s*(責任銷售商|進口商|總代理)', r'\1 \2<br>\3', lbl_str)
+            if any(k in lbl_str for k in ["保存期限", "有效期間", "使用期限"]):
+                lbl_str = re.sub(r'(保存期限|有效期間|使用期限)\s*(或|及)\s*(開封後|開蓋後)?', r'\1 \2<br>\3', lbl_str)
 
     # ==========================================
     # [SANDBOX 3] 일본어 (JP) 전용 샌드박스
@@ -141,18 +135,18 @@ def build_notice_html(title, items, lang="EN"):
         title_size = "52px"
         cell_size = "26px"
         cell_padding = "20px 15px"
-        val_padding = "20px 22px"
+        val_padding = "20px 15px"
         line_height = "1.65"
-        letter_spacing = "0.6px"
+        letter_spacing = "0px"
         label_width = "300px"
     elif lang.upper() in ["CN", "ZH", "SC"]:
         font_family = "'Noto Sans SC', 'NotoSansSC', 'Source Han Sans SC', '思源黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         title_size = "52px"
         cell_size = "26px"
         cell_padding = "20px 15px"
-        val_padding = "20px 22px"
+        val_padding = "20px 15px"
         line_height = "1.65"
-        letter_spacing = "0.6px"
+        letter_spacing = "0px"
         label_width = "300px"
     else:  # EN / KO (영문 및 한국어 고시표 표준: Pretendard 64px/32px)
         font_family = "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
@@ -193,16 +187,11 @@ def build_notice_html(title, items, lang="EN"):
         val_str = val_str.replace('분쟁해결 규정에', '분쟁해결&nbsp;규정에')
         val_str = val_str.replace('분쟁해결 기준에', '분쟁해결&nbsp;기준에')
 
-        # 💡 [중국어 간체/번체 2열 주의사항 및 전문의 상담 문맥 의미단위 개행/결속]
-        val_str = val_str.replace('异常症状或副作用时，请咨询专业医生', '异常症状或副作用时，<br>请咨询专业医生')
-        val_str = val_str.replace('异常症状或副作用时，请咨询专业医师', '异常症状或副作用时，<br>请咨询专业医师')
-        val_str = val_str.replace('异常症状或副作用时，请向专业医生咨询', '异常症状或副作用时，<br>请向专业医生咨询')
-        val_str = val_str.replace('異常症狀或副作用時，請諮詢專業醫師', '異常症狀或副作用時，<br>請諮詢專業醫師')
-        val_str = val_str.replace('異常症狀或副作用時，請諮詢專業醫生', '異常症狀或副作用時，<br>請諮詢專業醫生')
-        val_str = val_str.replace('请咨询专业医生', '<span style="white-space: nowrap">请咨询专业医生</span>')
-        val_str = val_str.replace('请咨询专业医师', '<span style="white-space: nowrap">请咨询专业医师</span>')
-        val_str = val_str.replace('請諮詢專業醫師', '<span style="white-space: nowrap">請諮詢專業醫師</span>')
-        val_str = val_str.replace('請諮詢專業醫生', '<span style="white-space: nowrap">請諮詢專業醫生</span>')
+        # 💡 [중국어 간체/번체 2열 전문의 상담 단어 결속 (외톨이 글자 방지)]
+        val_str = val_str.replace('专业医生', '<span style="white-space: nowrap">专业医生</span>')
+        val_str = val_str.replace('专业医师', '<span style="white-space: nowrap">专业医师</span>')
+        val_str = val_str.replace('專業醫師', '<span style="white-space: nowrap">專業醫師</span>')
+        val_str = val_str.replace('專業醫生', '<span style="white-space: nowrap">專業醫生</span>')
 
         val = re.sub(r'(?<!^)(?<!<br>)(?<!\n)\s*(\(\d+\)|\d+\)|[①-⑳]|\([가나다라마바사아자차카타파하甲乙丙丁a-zA-Z]\)|[㈎-㈛])', r'<br>\1', val_str)
         # 줄바꿈 및 리스트 서식 처리
