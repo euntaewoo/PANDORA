@@ -1098,24 +1098,27 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
                     run_h.font.size = Pt(13)
                     run_h.font.bold = True
                     run_h.font.color.rgb = RGBColor(18, 52, 102)
-                elif line.startswith(("Q1", "Q2", "Q3", "Q4", "Q5", "Q.", "1)", "2)", "3)", "4)", "5)", "브랜드", "Brand", "品牌", "核心", "Core", "配方", "搜索", "Search")):
+                elif line.startswith(("Q1", "Q2", "Q3", "Q4", "Q5", "Q.", "1)", "2)", "3)", "4)", "5)", "브랜드", "Brand", "品牌", "核心", "Core", "配方", "搜索", "Search", "搜尋")):
                     q_p = doc.add_paragraph()
-                    q_p.paragraph_format.space_before = Pt(6)
-                    q_p.paragraph_format.space_after = Pt(2)
+                    q_p.paragraph_format.space_before = Pt(8)
+                    q_p.paragraph_format.space_after = Pt(3)
                     run_q = q_p.add_run(line)
                     run_q.font.name = "Malgun Gothic"
                     run_q.font.size = Pt(10.5)
                     run_q.font.bold = True
                     run_q.font.color.rgb = RGBColor(33, 37, 41)
                 else:
-                    a_p = doc.add_paragraph()
-                    a_p.paragraph_format.space_before = Pt(2)
-                    a_p.paragraph_format.space_after = Pt(6)
-                    a_p.paragraph_format.line_spacing = 1.25
-                    run_a = a_p.add_run(line)
-                    run_a.font.name = "Malgun Gothic"
-                    run_a.font.size = Pt(10)
-                    run_a.font.color.rgb = RGBColor(55, 65, 81)
+                    # 💡 중국어/다국어 본문 문장 마침표(。) 기준 자동 개행 분할 처리
+                    sentences = [s.strip() for s in re.split(r'(?<=[。！？\.\?!])\s*', line) if s.strip()]
+                    for s in sentences:
+                        a_p = doc.add_paragraph()
+                        a_p.paragraph_format.space_before = Pt(2)
+                        a_p.paragraph_format.space_after = Pt(4)
+                        a_p.paragraph_format.line_spacing = 1.25
+                        run_a = a_p.add_run(s)
+                        run_a.font.name = "Malgun Gothic"
+                        run_a.font.size = Pt(10)
+                        run_a.font.color.rgb = RGBColor(55, 65, 81)
 
             doc.save(docx_path)
             print(f"  🎉 [SUCCESS] SEO / GEO / AEO DOCX 서식 문서 저장 완료: {docx_filename}")
