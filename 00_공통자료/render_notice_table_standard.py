@@ -147,7 +147,7 @@ def build_notice_html(title, items, lang="EN"):
         val_padding = "20px 15px"
         line_height = "1.65"
         letter_spacing = "0px"
-        label_width = "270px"
+        label_width = "250px"
     else:  # EN / KO (영문 및 한국어 고시표 표준: Pretendard 64px/32px)
         font_family = "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
         title_size = "60px"
