@@ -32,29 +32,91 @@ def _format_label_semantic_break(lbl: str, lang: str) -> str:
     if "<br>" in lbl_str:
         return lbl_str
     
-    # 1. 중국어 간체 / 번체 표준 의미단위 개행
-    if any(k in lbl_str for k in ["特殊用途", "특수용도", "含藥", "含药"]):
-        lbl_str = re.sub(r'(特殊用途化妆品|特殊用途化妝品|特殊用途|含药化妆品|含藥化粧品)\s*(审查状态|審查狀態|审查|審查)', r'\1<br>\2', lbl_str)
-    
-    if any(k in lbl_str for k in ["生产企业", "生產企業", "제조업자", "제조업체"]):
-        lbl_str = re.sub(r'(化妆品生产企业|化妝品生產企業|화장품제조업자)\s*([/＆& 및\s]+)\s*(责任销售商|責任銷售商|책임판매업자)', r'\1 \2<br>\3', lbl_str)
-        
-    if any(k in lbl_str for k in ["使用期限", "保质期", "保存期限", "사용기한"]):
-        lbl_str = re.sub(r'(使用期限|保存期限|사용기한)\s*(或|또는|及|및)\s*(开封后|開封後|개봉 후)', r'\1 \2<br>\3', lbl_str)
-        
-    # 2. 한국어 표준 의미단위 개행
-    lbl_str = lbl_str.replace("기능성 화장품 심사 필 유무", "기능성 화장품<br>심사 필 유무")
-    lbl_str = lbl_str.replace("기능성 화장품의 경우", "기능성 화장품의<br>경우")
-    lbl_str = lbl_str.replace("화장품제조업자 및 책임판매업자", "화장품제조업자 및<br>책임판매업자")
-    lbl_str = lbl_str.replace("화장품제조업자/책임판매업자", "화장품제조업자/<br>책임판매업자")
-    lbl_str = lbl_str.replace("사용기한 또는 개봉 후 사용기간", "사용기한 또는<br>개봉 후 사용기간")
-    lbl_str = lbl_str.replace("사용할 때의 주의사항", "사용할 때의<br>주의사항")
-    lbl_str = lbl_str.replace("소비자 상담 전화번호", "소비자 상담<br>전화번호")
-    lbl_str = lbl_str.replace("소비자상담관련 전화번호", "소비자상담관련<br>전화번호")
+    lang_upper = str(lang).upper()
 
-    # 3. 중국어 일반 긴 라벨 fallback (기호 기준 분할)
-    if "/" in lbl_str and "<br>" not in lbl_str:
-        lbl_str = lbl_str.replace("/", "/<br>")
+    # ==========================================
+    # [SANDBOX 1] 중국어 간체 (CN / ZH / SC) 전용 샌드박스
+    # ==========================================
+    if lang_upper in ["CN", "ZH", "SC"]:
+        if any(k in lbl_str for k in ["特殊用途", "含药", "审查", "特证"]):
+            lbl_str = re.sub(r'(特殊用途化妆品|特殊用途|含药化妆品)\s*(审查状态|审查|备案状态)', r'\1<br>\2', lbl_str)
+        if any(k in lbl_str for k in ["生产企业", "责任销售商", "生产者"]):
+            lbl_str = re.sub(r'(化妆品生产企业|生产企业|生产商)\s*([/＆& 및\s]+)\s*(责任销售商|境内责任人|销售商)', r'\1 \2<br>\3', lbl_str)
+        if any(k in lbl_str for k in ["使用期限", "保质期", "有效期"]):
+            lbl_str = re.sub(r'(使用期限|保质期|有效期)\s*(或|及|或开封后)\s*(开封后|开盖后)?', r'\1 \2<br>\3', lbl_str)
+        if any(k in lbl_str for k in ["注意事项", "安全警告"]):
+            lbl_str = re.sub(r'(使用时的|使用|保管)\s*(注意事项|警告)', r'\1<br>\2', lbl_str)
+        if any(k in lbl_str for k in ["咨询电话", "客服电话", "联系电话"]):
+            lbl_str = re.sub(r'(消费者|客户|售后)\s*(咨询电话|客服热线|联系方式)', r'\1<br>\2', lbl_str)
+
+    # ==========================================
+    # [SANDBOX 2] 중국어 번체 (TW / HK / TC) 전용 샌드박스
+    # ==========================================
+    elif lang_upper in ["TW", "HK", "TC"]:
+        if any(k in lbl_str for k in ["特殊用途", "含藥", "審查", "許可證"]):
+            lbl_str = re.sub(r'(特殊用途化妝品|特殊用途|含藥化粧品|特定用途化粧品)\s*(審查狀態|審查|許可字號)', r'\1<br>\2', lbl_str)
+        if any(k in lbl_str for k in ["生產企業", "責任銷售商", "製造廠", "進口商"]):
+            lbl_str = re.sub(r'(化妝品生產企業|製造廠|生產商)\s*([/＆& 及\s]+)\s*(責任銷售商|進口商|總代理)', r'\1 \2<br>\3', lbl_str)
+        if any(k in lbl_str for k in ["保存期限", "有效期間", "使用期限"]):
+            lbl_str = re.sub(r'(保存期限|有效期間|使用期限)\s*(或|及)\s*(開封後|開蓋後)?', r'\1 \2<br>\3', lbl_str)
+        if any(k in lbl_str for k in ["注意事項", "安全警語"]):
+            lbl_str = re.sub(r'(使用時的|使用|保管)\s*(注意事項|安全事項)', r'\1<br>\2', lbl_str)
+        if any(k in lbl_str for k in ["諮詢專線", "客服專線", "聯絡電話"]):
+            lbl_str = re.sub(r'(消費者|客戶|售後)\s*(諮詢專線|客服專線|服務電話)', r'\1<br>\2', lbl_str)
+
+    # ==========================================
+    # [SANDBOX 3] 일본어 (JP) 전용 샌드박스
+    # ==========================================
+    elif lang_upper == "JP":
+        if any(k in lbl_str for k in ["製造販売業者", "製造業者", "発売元", "製造元"]):
+            lbl_str = re.sub(r'(製造販売業者|発売元)\s*(及び|／|/|&)\s*(製造業者|製造元)', r'\1<br>\2 \3', lbl_str)
+        if any(k in lbl_str for k in ["使用期限", "使用期間"]):
+            lbl_str = re.sub(r'(使用期限)\s*(又は|または|及び)\s*(開封後の使用期間|開封後)', r'\1<br>\2 \3', lbl_str)
+        if any(k in lbl_str for k in ["医薬部外品", "審査", "承認"]):
+            lbl_str = re.sub(r'(医薬部外品|機能性化粧品)\s*(審査区分|承認有無|審査)', r'\1<br>\2', lbl_str)
+        if any(k in lbl_str for k in ["使用上の注意"]):
+            lbl_str = lbl_str.replace("ご使用上の注意", "ご使用上の<br>注意").replace("使用上の注意", "使用上の<br>注意")
+        if any(k in lbl_str for k in ["お客様相談室", "問い合わせ", "電話番号"]):
+            lbl_str = re.sub(r'(お客様|消費者)\s*(相談室|窓口|お問い合わせ)', r'\1<br>\2', lbl_str)
+
+    # ==========================================
+    # [SANDBOX 4] 영어 (EN) 전용 샌드박스
+    # ==========================================
+    elif lang_upper == "EN":
+        if any(k in lbl_str for k in ["Manufacturer", "Distributor"]):
+            lbl_str = re.sub(r'(Cosmetics? Manufacturer)\s*([/&]|and)\s*(Responsible Distributor|Distributor)', r'\1 \2<br>\3', lbl_str, flags=re.IGNORECASE)
+        if any(k in lbl_str for k in ["Expiration", "Period After"]):
+            lbl_str = re.sub(r'(Expiration Date)\s*(or|and)\s*(Period After Opening|PAO)', r'\1 \2<br>\3', lbl_str, flags=re.IGNORECASE)
+        if any(k in lbl_str for k in ["Functional", "Evaluation", "Review"]):
+            lbl_str = re.sub(r'(Functional Cosmetics?)\s*(Review Status|Evaluation)', r'\1<br>\2', lbl_str, flags=re.IGNORECASE)
+        if any(k in lbl_str for k in ["Precautions"]):
+            lbl_str = re.sub(r'(Precautions)\s*(for Use|in Use)', r'\1<br>\2', lbl_str, flags=re.IGNORECASE)
+        if any(k in lbl_str for k in ["Customer"]):
+            lbl_str = re.sub(r'(Customer)\s*(Service|Care Center|Inquiry)', r'\1<br>\2', lbl_str, flags=re.IGNORECASE)
+
+    # ==========================================
+    # [SANDBOX 5] 한국어 (KO) 전용 샌드박스
+    # ==========================================
+    else:
+        lbl_str = lbl_str.replace("기능성 화장품 심사 필 유무", "기능성 화장품<br>심사 필 유무")
+        lbl_str = lbl_str.replace("기능성 화장품의 경우", "기능성 화장품의<br>경우")
+        lbl_str = lbl_str.replace("화장품제조업자 및 책임판매업자", "화장품제조업자 및<br>책임판매업자")
+        lbl_str = lbl_str.replace("화장품제조업자/책임판매업자", "화장품제조업자/<br>책임판매업자")
+        lbl_str = lbl_str.replace("사용기한 또는 개봉 후 사용기간", "사용기한 또는<br>개봉 후 사용기간")
+        lbl_str = lbl_str.replace("사용할 때의 주의사항", "사용할 때의<br>주의사항")
+        lbl_str = lbl_str.replace("소비자 상담 전화번호", "소비자 상담<br>전화번호")
+        lbl_str = lbl_str.replace("소비자상담관련 전화번호", "소비자상담관련<br>전화번호")
+
+    # ==========================================
+    # [공통 2차 Fallback] 기호 및 구분자 기준 자동 개행 (10자 이상 긴 라벨 대상)
+    # ==========================================
+    if "<br>" not in lbl_str and len(lbl_str) >= 10:
+        if "/" in lbl_str:
+            lbl_str = lbl_str.replace("/", " /<br>")
+        elif " 및 " in lbl_str:
+            lbl_str = lbl_str.replace(" 및 ", " 및<br>")
+        elif " 또는 " in lbl_str:
+            lbl_str = lbl_str.replace(" 또는 ", " 또는<br>")
 
     return lbl_str
 

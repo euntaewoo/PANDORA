@@ -69,7 +69,7 @@ graph TD
 | **3. Retry** | 통신 안정성 | **Exponential Backoff Algorithm** | 429 Resource Exhausted (분당 쿼터 제한) 발생 시 25초~ 점진적 대기 후 자동 재시도 |
 | **4. Post-Proc**| 해상도 보존 | **Python Pillow (LANCZOS)** | 원본 픽셀 종횡비(Aspect Ratio) 및 가로/세로 해상도 1:1 강제 일치 복원 (크롭/찌그러짐 방지) |
 | **5. DevOps** | 형상 관리 | **Git / GitHub Repository (PANDORA)** | 소스코드 및 기술 문서 변경 시 원격 저장소(`main` 브랜치) 실시간 자동 커밋 및 푸시 |
-| **6. Notice Spec** | 고시정보 표 렌더링 | **Headless Edge + Pretendard** | 가로 860px 고정, 세로 Auto-Fit (최대 2,580px 이하, 초과 시 1차 행간 유동 압축(Squeeze), 실패 시 2페이지 분할), 타이틀 64px, 본문 32px, 1열 좌측 중앙정렬 및 유동폭 적용, 2열 스마트 레이아웃 적용 |
+| **6. Notice Spec** | 고시정보 표 렌더링 | **Headless Edge + Pretendard** | 가로 860px (컨테이너 820px) 고정, 세로 Auto-Fit (최대 2,580px 이하, 초과 시 1차 행간 유동 압축(Squeeze), 실패 시 2페이지 분할), 타이틀 60px, 본문 30px, 1열 295px 좌측 중앙정렬 및 `Cosmetics Manufacturer /<br>Responsible Distributor`, `Functional Cosmetics<br>Review Status` 등 영문 전용 샌드박스 개행 적용 |
 
 ---
 
