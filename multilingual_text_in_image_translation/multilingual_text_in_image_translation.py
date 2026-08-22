@@ -660,7 +660,9 @@ You MUST strictly map the following Korean labels to these standardized Taiwanes
             contents=[full_prompt],
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                temperature=0.1
+                temperature=0.6,
+                top_p=0.9,
+                max_output_tokens=1024
             )
         )
         res_json = json.loads(resp.text.strip())
@@ -731,7 +733,9 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
                 contents=[original_image, pass1_prompt],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
-                    temperature=0.1
+                    temperature=0.6,
+                    top_p=0.9,
+                    max_output_tokens=1024
                 )
             )
             p1_text = response_p1.text.strip()

@@ -229,6 +229,9 @@ for filename in targets:
             contents=[original_image, pass1_prompt],
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
+                temperature=0.6,
+                top_p=0.9,
+                max_output_tokens=1024
             )
         )
         mapping_data_str = response_p1.text

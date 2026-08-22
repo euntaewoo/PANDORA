@@ -261,7 +261,12 @@ def run_engine():
             response_p1 = client.models.generate_content(
                 model=MODEL_PRO,
                 contents=[original_image, PASS1_PROMPT],
-                config=types.GenerateContentConfig(response_mime_type="application/json"),
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.6,
+                    top_p=0.9,
+                    max_output_tokens=1024
+                ),
             )
             mapping_data_str = response_p1.text.strip()
             parsed_json = json.loads(mapping_data_str)
