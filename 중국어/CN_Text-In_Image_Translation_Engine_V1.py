@@ -16,6 +16,9 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ==========================================
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(script_dir, ".."))
+common_dir = os.path.join(project_root, "00_공통자료")
+if common_dir not in sys.path:
+    sys.path.insert(0, common_dir)
 
 # .env 탐색
 env_path = os.path.join(project_root, ".env")
@@ -320,10 +323,77 @@ for filename in targets:
         continue
 
     # 고시정보 표 이미지 별도 처리 (HTML 렌더러 연동)
-    if '고시' in filename or 'KR' in filename or '상세정보' in filename:
+    if '고시' in filename or 'KR' in filename or '상세정보' in filename or 'spec' in filename.lower():
         print(f"\n[NOTICE TABLE DETECTED] 고시정보 표 감지: {filename}", flush=True)
-        # 고시정보 표는 Pass 1에서 텍스트 추출 후 표준 HTML 렌더러로 처리
-        continue
+        in_path = os.path.join(source_dir, filename)
+        out_name = f"{os.path.splitext(filename)[0]}_CN_{target_region}_v1.png"
+        out_path = os.path.join(target_dir, out_name)
+        if os.path.exists(out_path):
+            print(f"  -> [SKIP] 이미 번역 완료된 고시표 파일입니다: {filename}")
+            continue
+        try:
+            import render_notice_table_standard as rnts
+            from google.cloud import vision
+            v_client = vision.ImageAnnotatorClient()
+            with open(in_path, "rb") as f_img:
+                c_data = f_img.read()
+            v_img = vision.Image(content=c_data)
+            v_res = v_client.document_text_detection(image=v_img)
+            ocr_t = v_res.full_text_annotation.text if v_res.full_text_annotation else ""
+
+            t_prompt = f"""
+你是中国国家药监局(NMPA)及新广告法合规专家。
+请将以下韩国化妆品告示表OCR文本翻译并规范化为符合中国法规的简体中文告示表JSON。
+
+[필수 표준 레이블 매핑 규격]
+- 용량 또는 중량 -> 净含量
+- 제품 주요 사양 -> 适用肤质
+- 사용기한 또는 개봉 후 사용기간 -> 使用期限
+- 사용방법 -> 使用方法
+- 화장품제조업자 및 책임판매업자 -> 化妆品生产企业 / 责任销售商
+- 제조국 -> 原产国
+- 전성분 -> 全成分 (INCI 및 KCID 기반 중국 NMPA 표준 명칭 적용)
+- 기능성 화장품 심사 필 유무 -> 特殊用途化妆品审查状态
+- 사용할 때의 주의사항 -> 使用注意事项
+- 소비자 상담 전화번호 -> 消费者咨询电话 (+82-2-6743-3206)
+
+[OCR 텍스트 원본]
+{ocr_t}
+
+반드시 순수 JSON 객체로만 출력하십시오:
+{{
+  "title": "商品基本信息",
+  "items": [
+    {{"label": "净含量", "value": "25ml"}}
+  ]
+}}
+"""
+            t_res = client.models.generate_content(
+                model=MODEL_PRO,
+                contents=[t_prompt],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.6,
+                    top_p=0.9,
+                    max_output_tokens=2048
+                )
+            )
+            raw_t = t_res.text.strip()
+            if raw_t.startswith("```"):
+                raw_t = re.sub(r"^```(?:json)?\s*", "", raw_t)
+                raw_t = re.sub(r"\s*```$", "", raw_t)
+            t_data = json.loads(raw_t)
+            n_items = t_data.get("items", [])
+            n_title = t_data.get("title", "商品基本信息")
+            for itm in n_items:
+                if any(k in itm.get("label", "").lower() for k in ["电话", "咨询", "customer", "contact"]):
+                    itm["value"] = "+82-2-6743-3206"
+            rnts.render_notice_table_to_png(n_title, n_items, out_path, lang=target_region)
+            print(f"  -> [NOTICE TABLE SUCCESS] 고시표 렌더링 완료: {out_name}")
+            continue
+        except Exception as te:
+            print(f"  -> [NOTICE TABLE ERROR] 고시표 렌더링 실패 ({filename}): {te}")
+            continue
 
     in_path = os.path.join(source_dir, filename)
     out_name = f"{os.path.splitext(filename)[0]}_CN_{target_region}_v1.png"
