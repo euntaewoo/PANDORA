@@ -115,13 +115,13 @@
 ## 11. 다국어 고시정보표(Notice Table) 타이포그래피 및 레이아웃 표준 규격
 - **1. 1열 라벨 너비 (Width)**:
   - **한국어(KO) / 영어(EN)**: `width: 295px` (전체 폭 820px 중 36% 점유. Pretendard 30px 기준 긴 한국어 라벨 '화장품제조업자 및 책임판매업자'의 2줄 황금비율 레이아웃 보장).
-  - **중화권(CN/TW)**: `width: 275px` (Alibaba PuHuiTi / Noto Sans SC/TC 26px 기준, 방괴자 특성 고려).
+  - **중화권(CN/TW)**: `width: 300px` (Alibaba PuHuiTi / Noto Sans SC/TC 26px 기준, 좌우 여백 총 30px(15px+15px), 11자 복합 라벨 완벽 수용).
   - **일본어(JA)**: `width: 280px` (Noto Sans JP 32px 기준).
 - **2. 줄바꿈 및 오버플로우 방지 (Word Break & Overflow Wrap)**:
   - **필수 속성**: **`word-break: break-word; overflow-wrap: break-word;`** (기존 `keep-all`의 CJK 텍스트 2열 침범 결함 원천 차단).
   - **동작 원리**: 띄어쓰기(공백)가 없는 CJK 복합 명사(`特殊用途化妆品审查状态`)라도 셀 너비를 초과하면 글자 단위로 자연스럽게 다음 줄로 자동 개행되어 2열 본문 침범을 100% 방지.
 - **3. 정렬 및 가독성 (Alignment & Padding)**:
-  - **필수 속성**: **`text-align: left; vertical-align: middle; padding: 20~24px 18~20px;`**
+  - **필수 속성**: **`text-align: left; vertical-align: middle; padding: 20~24px 15~20px;`** (중화권: `padding: 20px 15px`)
   - **동작 원리**: 1줄 라벨('용량')과 2줄 라벨('제조업자/책임판매업자')이 혼재되어도 좌측 기준선이 일직선으로 정렬되어 시선 이동 피로도를 최소화하고 쇼핑몰 공식 고시표로서의 신뢰성 극대화.
 
 
