@@ -115,7 +115,8 @@
 ## 11. 다국어 고시정보표(Notice Table) 타이포그래피 및 레이아웃 표준 규격
 - **1. 1열 라벨 너비 (Width)**:
   - **한국어(KO) / 영어(EN)**: `width: 295px` (전체 폭 820px 중 36% 점유. Pretendard 30px 기준 긴 한국어 라벨 '화장품제조업자 및 책임판매업자'의 2줄 황금비율 레이아웃 보장).
-  - **중화권(CN/TW)**: `width: 300px` (Alibaba PuHuiTi / Noto Sans SC/TC 26px 기준, 좌우 여백 총 30px(15px+15px), 11자 복합 라벨 완벽 수용).
+  - **중국어 간체(CN)**: `width: 270px` (Noto Sans SC 26px 기준, 좌우 여백 총 30px(15px+15px), 2열 순수 본문 폭 520px 극대화 황금비율).
+  - **중국어 번체(TW/HK)**: `width: 300px` (Noto Sans TC 26px 기준, 좌우 여백 총 30px(15px+15px)).
   - **일본어(JA)**: `width: 280px` (Noto Sans JP 32px 기준).
 - **2. 줄바꿈 및 오버플로우 방지 (Word Break & Overflow Wrap)**:
   - **필수 속성**: **`word-break: break-word; overflow-wrap: break-word;`** (기존 `keep-all`의 CJK 텍스트 2열 침범 결함 원천 차단).

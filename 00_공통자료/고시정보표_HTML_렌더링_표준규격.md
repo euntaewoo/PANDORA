@@ -58,14 +58,15 @@
 1열 항목 라벨과 2열 본문 내용의 자연스러운 비율 유지를 위해 **언어별 최적화 너비**와 지능형 샌드박스 줄바꿈을 적용합니다.
 
 1. **1열 라벨(th) 최적 너비 및 텍스트 정렬**:
-   - **중화권(CN/TW)**: `width: 300px; padding: 20px 15px;` (좌우 여백 30px, 방괴자 11자 복합 라벨 완벽 수용)
+   - **중국어 간체(CN)**: `width: 270px; padding: 20px 15px;` (좌우 여백 30px, 2열 순수 본문 폭 520px 극대화 황금비율)
+   - **중국어 번체(TW/HK)**: `width: 300px; padding: 20px 15px;` (좌우 여백 30px, 방괴자 11자 복합 라벨 완벽 수용)
    - **한국어/영문(KO/EN)**: `width: 295px; padding: 24px 20px;` (Pretendard 긴 라벨 2줄 황금분할)
    - **일본어(JP)**: `width: 280px; padding: 24px 20px;` (Noto Sans JP 32px 기준)
    - **정렬 기준**: `text-align: left; vertical-align: middle; word-break: break-word; overflow-wrap: break-word;`
    - **단문 라벨 1줄 유지 원칙**: 10자 미만 라벨(`使用注意事项` 6자, `消费者咨询电话` 7자, `使用方法` 4자)은 절대 2줄로 쪼개지 않고 **100% 1줄 유지**.
    - **10자 이상 긴 라벨 분할**: `特殊用途化妆品<br>审查状态`, `化妆品生产企业 /<br>责任销售商` 등 의미 단위 2줄 황금 분할.
 2. **2열 본문(td) 폭 확장 및 단어 결속 보호**:
-   - 중화권 기준 2열 순수 본문 폭을 **`490px`**로 확장 (`val_padding: 20px 15px`, `letter-spacing: 0px`).
+   - 중국어 간체 기준 2열 순수 본문 폭을 **`520px`**로 확장 (`val_padding: 20px 15px`, `letter-spacing: 0px`).
    - 주의사항 1번 문단 등 장문 텍스트가 억지 개행 없이 정확히 3줄로 자연스럽게 안착.
    - 전문의 상담 어휘(`专业医生`, `专业医师`, `전문의 등과 상담할 것`) 등 문장 끝 핵심 구문은 `<span style="white-space: nowrap">` 또는 `&nbsp;`로 묶어 외톨이 글자(Orphan) 원천 차단.
 3. **법인명 약칭 `(주)` 보존**:
