@@ -890,6 +890,154 @@ def run_translation_batch_for_folder(client: genai.Client, current_source_dir: s
     print(f"📂 저장 경로: {target_dir}\n")
 
 
+def _generate_web_copier_html_file(title: str, text_content: str, out_html_path: str):
+    """지마켓/스마트스토어/쿠팡/타오바오 등 오픈마켓에 원클릭으로 완벽하게 복사-붙여넣기할 수 있는 HTML 뷰어를 생성합니다."""
+    lines = [l.strip() for l in text_content.splitlines() if l.strip()]
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>{title}</title>
+<style>
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; padding: 30px; margin: 0; line-height: 1.6; }}
+  .container {{ max-width: 860px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 40px; border: 1px solid #e2e8f0; }}
+  h1 {{ font-size: 24px; color: #0f172a; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-top: 0; }}
+  .guide-box {{ background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 6px; margin-bottom: 25px; font-size: 14px; color: #1e40af; }}
+  .card {{ background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 25px; position: relative; }}
+  .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }}
+  .card-title {{ font-size: 16px; font-weight: bold; color: #1e3a8a; }}
+  .btn-group {{ display: flex; gap: 8px; }}
+  .copy-btn {{ background: #2563eb; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }}
+  .copy-btn:hover {{ background: #1d4ed8; }}
+  .copy-btn.html-btn {{ background: #059669; }}
+  .copy-btn.html-btn:hover {{ background: #047857; }}
+  .text-box {{ background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; font-size: 14px; white-space: pre-wrap; word-break: break-word; color: #334155; line-height: 1.7; }}
+  .toast {{ position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🛒 {title}</h1>
+  
+  <div class="guide-box">
+    💡 <strong>오픈마켓(지마켓, 옥션, 스마트스토어, 쿠팡, 타오바오) 등록 안내:</strong><br>
+    - <strong>[일반 텍스트 복사]</strong>: 텍스트 줄바꿈이 100% 보존된 상태로 복사됩니다. (일반 텍스트 입력란용)<br>
+    - <strong>[지마켓/HTML 복사]</strong>: 지마켓 HTML 모드에서 줄바꿈(&lt;p&gt;, &lt;br&gt;) 및 굵은 글씨가 완벽하게 나오도록 복사됩니다.
+  </div>
+"""
+    s1_text = ""
+    s2_text = ""
+    s3_text = ""
+    cur_sec = 0
+    for l in lines:
+        if l.startswith("1."):
+            cur_sec = 1
+            s1_text += l + "\n"
+        elif l.startswith("2."):
+            cur_sec = 2
+            s2_text += l + "\n"
+        elif l.startswith("3."):
+            cur_sec = 3
+            s3_text += l + "\n"
+        else:
+            if cur_sec == 1:
+                s1_text += l + "\n"
+            elif cur_sec == 2:
+                s2_text += l + "\n"
+            elif cur_sec == 3:
+                s3_text += l + "\n"
+
+    s1_clean = "\n".join([l for l in s1_text.splitlines() if not l.startswith("1.")]).strip()
+    s2_clean = "\n".join([l for l in s2_text.splitlines() if not l.startswith("2.")]).strip()
+    s2_html_lines = []
+    for l in s2_clean.splitlines():
+        if ":" in l or "：" in l:
+            k, v = re.split(r'[:：]', l, 1)
+            s2_html_lines.append(f"<p style='margin:4px 0;'><strong style='color:#1e3a8a;'>{k.strip()}:</strong> {v.strip()}</p>")
+        else:
+            s2_html_lines.append(f"<p style='margin:4px 0;'>{l.strip()}</p>")
+    s2_html = "\n".join(s2_html_lines)
+
+    s3_clean = "\n".join([l for l in s3_text.splitlines() if not l.startswith("3.")]).strip()
+    s3_html_lines = []
+    for l in s3_clean.splitlines():
+        if l.startswith(("Q1", "Q2", "Q3", "Q4", "Q5", "Q.")):
+            s3_html_lines.append(f"<p style='font-weight:bold; font-size:15px; color:#1e3a8a; margin-top:16px; margin-bottom:4px;'>{l.strip()}</p>")
+        else:
+            sentences = [s.strip() for s in re.split(r'(?<=[。！？\.\?!])\s*', l) if s.strip()]
+            for s in sentences:
+                s3_html_lines.append(f"<p style='color:#374151; font-size:14px; margin:2px 0 6px 0; line-height:1.6;'>{s}</p>")
+    s3_html = "\n".join(s3_html_lines)
+
+    html_content += f"""
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📌 1. 공식 상품명 (Title)</div>
+      <div class="btn-group">
+        <button class="copy-btn" onclick="copyText('sec1-text')">📋 상품명 텍스트 복사</button>
+      </div>
+    </div>
+    <div class="text-box" id="sec1-text">{s1_clean}</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🔬 2. 핵심 가치 및 5줄 마이크로 요약</div>
+      <div class="btn-group">
+        <button class="copy-btn" onclick="copyText('sec2-text')">📋 일반 텍스트 복사</button>
+        <button class="copy-btn html-btn" onclick="copyHtml('sec2-html')">🌐 지마켓/HTML 복사</button>
+      </div>
+    </div>
+    <div class="text-box" id="sec2-text">{s2_clean}</div>
+    <div id="sec2-html" style="display:none;">{s2_html}</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">💬 3. 5대 핵심 FAQ & 상세 가이드</div>
+      <div class="btn-group">
+        <button class="copy-btn" onclick="copyText('sec3-text')">📋 일반 텍스트 복사</button>
+        <button class="copy-btn html-btn" onclick="copyHtml('sec3-html')">🌐 지마켓/HTML 복사</button>
+      </div>
+    </div>
+    <div class="text-box" id="sec3-text">{s3_clean}</div>
+    <div id="sec3-html" style="display:none;">{s3_html}</div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ 클립보드에 복사되었습니다! 지마켓에 붙여넣기(Ctrl+V) 하세요.</div>
+
+<script>
+function showToast(msg) {{
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.style.display = 'block';
+  setTimeout(() => {{ t.style.display = 'none'; }}, 2500);
+}}
+
+function copyText(id) {{
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => {{
+    showToast('✅ 텍스트 줄바꿈이 완벽하게 복사되었습니다!');
+  }});
+}}
+
+function copyHtml(id) {{
+  const html = document.getElementById(id).innerHTML;
+  navigator.clipboard.writeText(html).then(() => {{
+    showToast('🌐 지마켓/오픈마켓용 HTML이 복사되었습니다! HTML 모드에 붙여넣으세요.');
+  }});
+}}
+</script>
+</body>
+</html>
+"""
+    with open(out_html_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+
 def generate_seo_geo_aeo_txt(client: genai.Client, source_dir: str, target_dir: str, target_lang: str, product_name: str):
     """번역 완료 후 해당 국가 언어에 맞춘 SEO 상품명(100자 이내), GEO 및 AEO TXT 문서를 자동 생성합니다."""
     config = LANG_CONFIGS[target_lang]
@@ -1124,6 +1272,15 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
             print(f"  🎉 [SUCCESS] SEO / GEO / AEO DOCX 서식 문서 저장 완료: {docx_filename}")
         except Exception as e_docx:
             print(f"  ⚠️ [WARN] DOCX 생성 중 경고: {e_docx}")
+
+        # 파일 저장 (3. 지마켓/오픈마켓 원클릭 복사 HTML 뷰어 3중 저장)
+        html_filename = f"{product_name}_{config['folder_name']}_SEO_GEO_AEO_VIEWER.html"
+        html_path = os.path.join(target_dir, html_filename)
+        try:
+            _generate_web_copier_html_file(f"{product_name} - {config['name']} E-Commerce PDP & SEO/GEO/AEO", generated_text, html_path)
+            print(f"  🎉 [SUCCESS] 지마켓/오픈마켓 원클릭 HTML 뷰어 저장 완료: {html_filename}")
+        except Exception as e_html:
+            print(f"  ⚠️ [WARN] HTML 뷰어 생성 중 경고: {e_html}")
 
         return True
     except Exception as e:

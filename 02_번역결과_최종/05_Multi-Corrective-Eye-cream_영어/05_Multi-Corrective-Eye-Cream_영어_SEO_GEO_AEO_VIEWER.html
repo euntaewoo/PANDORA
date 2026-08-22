@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>글로벌 영문 (Global English) 오픈마켓 원클릭 등록기</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; padding: 30px; margin: 0; line-height: 1.6; }
+  .container { max-width: 860px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 40px; border: 1px solid #e2e8f0; }
+  h1 { font-size: 24px; color: #0f172a; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-top: 0; }
+  .guide-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 6px; margin-bottom: 25px; font-size: 14px; color: #1e40af; }
+  .card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 25px; position: relative; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+  .card-title { font-size: 16px; font-weight: bold; color: #1e3a8a; }
+  .btn-group { display: flex; gap: 8px; }
+  .copy-btn { background: #2563eb; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .copy-btn:hover { background: #1d4ed8; }
+  .copy-btn.html-btn { background: #059669; }
+  .copy-btn.html-btn:hover { background: #047857; }
+  .text-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; font-size: 14px; white-space: pre-wrap; word-break: break-word; color: #334155; line-height: 1.7; }
+  .faq-q { font-weight: bold; color: #0f172a; margin-top: 10px; }
+  .faq-a { color: #475569; margin-bottom: 14px; padding-left: 8px; border-left: 2px solid #cbd5e1; }
+  .toast { position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🛒 글로벌 영문 (Global English) 오픈마켓 원클릭 등록기</h1>
+  
+  <div class="guide-box">
+    💡 <strong>오픈마켓(지마켓, 옥션, 스마트스토어, 쿠팡, 타오바오) 등록 안내:</strong><br>
+    - <strong>[일반 텍스트 복사]</strong>: 텍스트 줄바꿈이 100% 보존된 상태로 복사됩니다. (일반 텍스트 입력란용)<br>
+    - <strong>[지마켓/HTML 복사]</strong>: 지마켓 HTML 모드에서 줄바꿈(&lt;p&gt;, &lt;br&gt;) 및 굵은 글씨가 완벽하게 나오도록 복사됩니다.
+  </div>
+
+  <!-- Section 1 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📌 1. 공식 상품명 (Title)</div>
+      <div class="btn-group">
+        <button class="copy-btn" onclick="copyText('sec1-text')">📋 상품명 텍스트 복사</button>
+      </div>
+    </div>
+    <div class="text-box" id="sec1-text"></div>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🔬 2. 핵심 가치 및 5줄 마이크로 요약</div>
+      <div class="btn-group">
+        <button class="copy-btn" onclick="copyText('sec2-text')">📋 일반 텍스트 복사</button>
+        <button class="copy-btn html-btn" onclick="copyHtml('sec2-html')">🌐 지마켓/HTML 복사</button>
+      </div>
+    </div>
+    <div class="text-box" id="sec2-text"></div>
+    <div id="sec2-html" style="display:none;"></div>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">💬 3. 5대 핵심 FAQ & 상세 가이드</div>
+      <div class="btn-group">
+        <button class="copy-btn" onclick="copyText('sec3-text')">📋 일반 텍스트 복사</button>
+        <button class="copy-btn html-btn" onclick="copyHtml('sec3-html')">🌐 지마켓/HTML 복사</button>
+      </div>
+    </div>
+    <div class="text-box" id="sec3-text"></div>
+    <div id="sec3-html" style="display:none;"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✅ 클립보드에 복사되었습니다! 지마켓에 붙여넣기(Ctrl+V) 하세요.</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+function copyText(id) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✅ 텍스트 줄바꿈이 완벽하게 복사되었습니다!');
+  });
+}
+
+function copyHtml(id) {
+  const html = document.getElementById(id).innerHTML;
+  navigator.clipboard.writeText(html).then(() => {
+    showToast('🌐 지마켓/오픈마켓용 HTML이 복사되었습니다! HTML 모드에 붙여넣으세요.');
+  });
+}
+</script>
+
+</body>
+</html>
