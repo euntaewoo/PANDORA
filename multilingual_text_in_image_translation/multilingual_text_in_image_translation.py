@@ -891,7 +891,7 @@ def run_translation_batch_for_folder(client: genai.Client, current_source_dir: s
 
 
 def _generate_web_copier_html_file(title: str, text_content: str, out_html_path: str):
-    """지마켓 ESM 에디터(편집화면) 및 전 쇼핑몰 에디터에 줄바꿈/서식이 100% 보존되는 DOM 리치 복사 뷰어를 생성합니다."""
+    """지마켓/스마트스토어/쿠팡 등 전 이커머스 플랫폼에 맞춘 '에디터에 붙여넣을 텍스트 복사' 및 'HTML로 텍스트 복사' 뷰어를 생성합니다."""
     lines = [l.strip() for l in text_content.splitlines() if l.strip()]
     
     s1_lines = []
@@ -921,27 +921,36 @@ def _generate_web_copier_html_file(title: str, text_content: str, out_html_path:
 
     # 2. Section 2 (Summary)
     s2_clean_items = [l for l in s2_lines if not l.startswith("2.")]
-    s2_html_items = []
+    s2_text_formatted = "\n\n".join(s2_clean_items)
+    
+    s2_html_items = ["<div style='margin-bottom:20px; padding:16px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px;'>"]
+    s2_html_items.append("<h3 style='font-size:15px; color:#1e3a8a; margin:0 0 10px 0; border-bottom:1px solid #cbd5e1; padding-bottom:6px;'>🔬 핵심 가치 및 성분 요약</h3>")
     for l in s2_clean_items:
         if ":" in l or "：" in l:
             k, v = re.split(r'[:：]', l, 1)
-            s2_html_items.append(f"<p style='margin: 6px 0; font-size: 14.5px; color: #1e293b; line-height: 1.6;'><strong style='color: #1e3a8a; font-weight: bold;'>{k.strip()}:</strong> {v.strip()}</p>")
+            s2_html_items.append(f"<p style='margin:6px 0; font-size:14px; color:#334155; line-height:1.6;'><strong style='color:#1e3a8a;'>{k.strip()}:</strong> {v.strip()}</p>")
         else:
-            s2_html_items.append(f"<p style='margin: 6px 0; font-size: 14.5px; color: #1e293b; line-height: 1.6;'>{l.strip()}</p>")
+            s2_html_items.append(f"<p style='margin:6px 0; font-size:14px; color:#334155; line-height:1.6;'>{l.strip()}</p>")
+    s2_html_items.append("</div>")
     s2_html = "\n".join(s2_html_items)
 
     # 3. Section 3 (FAQ)
     s3_clean_items = [l for l in s3_lines if not l.startswith("3.")]
-    s3_html_blocks = []
+    s3_text_blocks = []
+    s3_html_blocks = ["<div style='margin-bottom:20px; padding:16px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px;'>"]
+    s3_html_blocks.append("<h3 style='font-size:15px; color:#1e3a8a; margin:0 0 12px 0; border-bottom:1px solid #cbd5e1; padding-bottom:6px;'>💬 소비자 주요 FAQ & 사용 가이드</h3>")
     
     cur_q = ""
     cur_answers = []
     for l in s3_clean_items:
         if l.startswith(("Q1", "Q2", "Q3", "Q4", "Q5", "Q.")):
             if cur_q:
-                s3_html_blocks.append(f"<p style='font-weight: bold; font-size: 15px; color: #1e3a8a; margin: 18px 0 6px 0; line-height: 1.5;'>{cur_q}</p>")
+                q_text = cur_q
+                a_text = "\n".join(cur_answers)
+                s3_text_blocks.append(f"{q_text}\n{a_text}")
+                s3_html_blocks.append(f"<p style='font-weight:bold; font-size:14.5px; color:#1e3a8a; margin:14px 0 4px 0;'>{cur_q}</p>")
                 for ans in cur_answers:
-                    s3_html_blocks.append(f"<p style='font-size: 14px; color: #334155; margin: 4px 0 6px 0; line-height: 1.65;'>{ans}</p>")
+                    s3_html_blocks.append(f"<p style='font-size:14px; color:#475569; margin:2px 0 4px 0; line-height:1.65;'>{ans}</p>")
             cur_q = l.strip()
             cur_answers = []
         else:
@@ -950,11 +959,22 @@ def _generate_web_copier_html_file(title: str, text_content: str, out_html_path:
                 cur_answers.append(s)
                 
     if cur_q:
-        s3_html_blocks.append(f"<p style='font-weight: bold; font-size: 15px; color: #1e3a8a; margin: 18px 0 6px 0; line-height: 1.5;'>{cur_q}</p>")
+        q_text = cur_q
+        a_text = "\n".join(cur_answers)
+        s3_text_blocks.append(f"{q_text}\n{a_text}")
+        s3_html_blocks.append(f"<p style='font-weight:bold; font-size:14.5px; color:#1e3a8a; margin:14px 0 4px 0;'>{cur_q}</p>")
         for ans in cur_answers:
-            s3_html_blocks.append(f"<p style='font-size: 14px; color: #334155; margin: 4px 0 6px 0; line-height: 1.65;'>{ans}</p>")
+            s3_html_blocks.append(f"<p style='font-size:14px; color:#475569; margin:2px 0 4px 0; line-height:1.65;'>{ans}</p>")
+    s3_html_blocks.append("</div>")
 
+    s3_text_formatted = "\n\n".join(s3_text_blocks)
     s3_html = "\n".join(s3_html_blocks)
+
+    full_html_code = f"""<!-- 다국어 E-Commerce 상세페이지 마이크로-써머리 & FAQ -->
+<div style="font-family:'Malgun Gothic', 'Segoe UI', Roboto, sans-serif; max-width:860px; margin:0 auto; padding:10px 0; color:#1e293b;">
+{s2_html}
+{s3_html}
+</div>"""
 
     html_content = f"""<!DOCTYPE html>
 <html lang="ko">
@@ -965,17 +985,20 @@ def _generate_web_copier_html_file(title: str, text_content: str, out_html_path:
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', 'Segoe UI', Roboto, sans-serif; background: #f1f5f9; color: #0f172a; padding: 25px; margin: 0; line-height: 1.6; }}
   .container {{ max-width: 960px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 35px; border: 1px solid #cbd5e1; }}
   h1 {{ font-size: 22px; color: #0f172a; border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-top: 0; display: flex; align-items: center; gap: 8px; }}
-  .guide-box {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 18px 20px; border-radius: 8px; margin-bottom: 25px; font-size: 14px; color: #166534; line-height: 1.8; }}
-  .guide-box strong {{ color: #14532d; }}
+  .guide-box {{ background: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid #2563eb; padding: 18px 20px; border-radius: 8px; margin-bottom: 25px; font-size: 14px; color: #1e40af; line-height: 1.8; }}
+  .guide-box strong {{ color: #1e3a8a; }}
   .card {{ background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 22px; margin-bottom: 25px; }}
   .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }}
   .card-title {{ font-size: 16px; font-weight: bold; color: #1e3a8a; }}
   .btn-group {{ display: flex; gap: 8px; }}
-  .copy-btn {{ background: #16a34a; color: #ffffff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: 700; transition: all 0.2s; box-shadow: 0 2px 5px rgba(22,163,74,0.25); display: inline-flex; align-items: center; gap: 6px; }}
-  .copy-btn:hover {{ background: #15803d; transform: translateY(-1px); }}
-  .copy-btn.title-btn {{ background: #2563eb; box-shadow: 0 2px 5px rgba(37,99,235,0.25); }}
-  .copy-btn.title-btn:hover {{ background: #1d4ed8; }}
-  .rich-box {{ background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 18px 20px; user-select: text; }}
+  .copy-btn {{ background: #2563eb; color: #ffffff; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s; box-shadow: 0 2px 4px rgba(37,99,235,0.2); display: inline-flex; align-items: center; gap: 6px; }}
+  .copy-btn:hover {{ background: #1d4ed8; transform: translateY(-1px); }}
+  .copy-btn.html-mode-btn {{ background: #059669; box-shadow: 0 2px 4px rgba(5,150,105,0.25); }}
+  .copy-btn.html-mode-btn:hover {{ background: #047857; }}
+  .full-btn {{ background: #7c3aed; padding: 12px 24px; font-size: 15px; width: 100%; justify-content: center; margin-bottom: 20px; box-shadow: 0 3px 6px rgba(124,58,237,0.25); }}
+  .full-btn:hover {{ background: #6d28d9; }}
+  .text-area {{ width: 100%; box-sizing: border-box; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px 16px; font-size: 13.5px; line-height: 1.75; color: #1e293b; font-family: 'Malgun Gothic', 'Segoe UI', monospace; resize: vertical; outline: none; }}
+  .text-area:focus {{ border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }}
   .toast {{ position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: #ffffff; padding: 14px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; display: none; z-index: 1000; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }}
 </style>
 </head>
@@ -985,51 +1008,51 @@ def _generate_web_copier_html_file(title: str, text_content: str, out_html_path:
   <h1>🌐 {title}</h1>
   
   <div class="guide-box">
-    💡 <strong>지마켓 ESM 에디터(편집화면) 100% 줄바꿈 보존 복사 가이드:</strong><br>
-    • 지마켓 <strong>'에디터 작성' 화면</strong>(이미지가 업로드된 화면)을 그대로 유지한 상태에서 텍스트를 넣으실 수 있습니다.<br>
-    • 아래 초록색 <strong>[⚡ 에디터 서식 원클릭 복사]</strong> 버튼을 누르고, 지마켓 에디터 본문 원하는 위치에 <code>Ctrl+V</code>(붙여넣기) 하시면 <strong>질문 굵게, 문장별 엔터 줄바꿈, 문단 여백이 100% 완벽하게 적용</strong>되어 들어갑니다!<br>
-    • (또는 아래 흰색 상자 안의 텍스트를 마우스로 직접 드래그해서 <code>Ctrl+C</code> 하셔도 줄바꿈이 완벽하게 복사됩니다.)
+    📢 <strong>쇼핑몰 등록 방식별 2대 원클릭 복사 기능 안내:</strong><br>
+    • <strong>1. [📋 에디터에 붙여넣을 텍스트 복사] (파란색 버튼)</strong>: 지마켓/스마트스토어/쿠팡 <strong>'에디터 작성'</strong> 화면에 붙여넣을 때 사용합니다.<br>
+    • <strong>2. [🌐 HTML로 텍스트 복사] (초록색 버튼)</strong>: 지마켓 <strong>'HTML 작성'</strong> 탭이나 HTML 직접 입력 모드에 붙여넣을 때 사용합니다.
   </div>
+
+  <button class="copy-btn full-btn html-mode-btn" onclick="copyFromTextarea('full-html-ta', '🎉 전체 HTML 소스코드가 복사되었습니다! [HTML 작성] 탭에 붙여넣기 하세요.')">🚀 [HTML로 전체 일괄 복사] 5줄 요약 + FAQ 전체 소스코드 복사</button>
+  <textarea id="full-html-ta" style="display:none;">{full_html_code}</textarea>
 
   <div class="card">
     <div class="card-header">
       <div class="card-title">📌 1. 공식 상품명 (Title)</div>
       <div class="btn-group">
-        <button class="copy-btn title-btn" onclick="copyRichElement('sec1-box')">📋 상품명 복사</button>
+        <button class="copy-btn" onclick="copyFromTextarea('sec1-ta', '✅ 상품명이 복사되었습니다!')">📋 상품명 텍스트 복사</button>
       </div>
     </div>
-    <div class="rich-box" id="sec1-box">
-      <p style="margin: 0; font-size: 15px; font-weight: bold; color: #0f172a; line-height: 1.5;">{s1_clean}</p>
-    </div>
+    <textarea class="text-area" id="sec1-ta" rows="2" readonly>{s1_clean}</textarea>
   </div>
 
   <div class="card">
     <div class="card-header">
-      <div class="card-title">🔬 2. 핵심 가치 및 5줄 마이크로 요약 (문장별 줄바꿈 완료)</div>
+      <div class="card-title">🔬 2. 핵심 가치 및 5줄 마이크로 요약</div>
       <div class="btn-group">
-        <button class="copy-btn" onclick="copyRichElement('sec2-box')">⚡ 5줄 요약 서식 복사 (에디터 붙여넣기용)</button>
+        <button class="copy-btn" onclick="copyFromTextarea('sec2-ta', '✅ 5줄 요약 텍스트가 복사되었습니다! 에디터에 붙여넣기(Ctrl+V) 하세요.')">📋 에디터에 붙여넣을 텍스트 복사</button>
+        <button class="copy-btn html-mode-btn" onclick="copyFromTextarea('sec2-html-ta', '🌐 5줄 요약 HTML 코드가 복사되었습니다! [HTML 작성] 탭에 붙여넣기 하세요.')">🌐 HTML로 텍스트 복사</button>
       </div>
     </div>
-    <div class="rich-box" id="sec2-box">
-{s2_html}
-    </div>
+    <textarea class="text-area" id="sec2-ta" rows="6" readonly>{s2_text_formatted}</textarea>
+    <textarea id="sec2-html-ta" style="display:none;">{s2_html}</textarea>
   </div>
 
   <div class="card">
     <div class="card-header">
       <div class="card-title">💬 3. 5대 핵심 FAQ & 상세 가이드 (문장별 줄바꿈 완료)</div>
       <div class="btn-group">
-        <button class="copy-btn" onclick="copyRichElement('sec3-box')">⚡ FAQ 전체 서식 복사 (에디터 붙여넣기용)</button>
+        <button class="copy-btn" onclick="copyFromTextarea('sec3-ta', '✅ FAQ 텍스트가 복사되었습니다! 에디터에 붙여넣기(Ctrl+V) 하세요.')">📋 에디터에 붙여넣을 텍스트 복사</button>
+        <button class="copy-btn html-mode-btn" onclick="copyFromTextarea('sec3-html-ta', '🌐 FAQ HTML 코드가 복사되었습니다! [HTML 작성] 탭에 붙여넣기 하세요.')">🌐 HTML로 텍스트 복사</button>
       </div>
     </div>
-    <div class="rich-box" id="sec3-box">
-{s3_html}
-    </div>
+    <textarea class="text-area" id="sec3-ta" rows="18" readonly>{s3_text_formatted}</textarea>
+    <textarea id="sec3-html-ta" style="display:none;">{s3_html}</textarea>
   </div>
 
 </div>
 
-<div class="toast" id="toast">✅ 서식과 줄바꿈이 완벽하게 복사되었습니다! 지마켓 에디터에 Ctrl+V 하세요.</div>
+<div class="toast" id="toast">✅ 클립보드에 복사되었습니다! 쇼핑몰 에디터에 붙여넣기(Ctrl+V) 하세요.</div>
 
 <script>
 function showToast(msg) {{
@@ -1039,32 +1062,29 @@ function showToast(msg) {{
   setTimeout(() => {{ t.style.display = 'none'; }}, 3000);
 }}
 
-function copyRichElement(elementId) {{
-  const el = document.getElementById(elementId);
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
+function copyFromTextarea(id, customMsg) {{
+  const ta = document.getElementById(id);
+  const text = ta.value;
+  
+  const temp = document.createElement('textarea');
+  temp.value = text;
+  temp.style.position = 'fixed';
+  temp.style.left = '-9999px';
+  document.body.appendChild(temp);
+  temp.select();
+  temp.setSelectionRange(0, 99999);
   
   try {{
-    const successful = document.execCommand('copy');
-    if (successful) {{
-      showToast('🎉 줄바꿈과 서식이 복사되었습니다! 지마켓 에디터에 Ctrl+V 하세요.');
-    }} else {{
-      throw new Error('execCommand failed');
-    }}
+    document.execCommand('copy');
+    showToast(customMsg || '✅ 클립보드에 완벽하게 복사되었습니다! (Ctrl+V)');
   }} catch (err) {{
-    if (navigator.clipboard && window.ClipboardItem) {{
-      const blobHtml = new Blob([el.innerHTML], {{ type: 'text/html' }});
-      const blobText = new Blob([el.innerText], {{ type: 'text/plain' }});
-      const item = new ClipboardItem({{ 'text/html': blobHtml, 'text/plain': blobText }});
-      navigator.clipboard.write([item]).then(() => {{
-        showToast('🎉 줄바꿈과 서식이 복사되었습니다! 지마켓 에디터에 Ctrl+V 하세요.');
+    if (navigator.clipboard) {{
+      navigator.clipboard.writeText(text).then(() => {{
+        showToast(customMsg || '✅ 클립보드에 완벽하게 복사되었습니다! (Ctrl+V)');
       }});
     }}
   }} finally {{
-    selection.removeAllRanges();
+    document.body.removeChild(temp);
   }}
 }}
 </script>
