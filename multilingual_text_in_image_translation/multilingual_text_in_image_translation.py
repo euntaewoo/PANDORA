@@ -938,7 +938,7 @@ Based on the provided product details and image, generate a comprehensive, highl
 [STANDARD 3-SECTOR DOCUMENT STRUCTURE]
 1. Sector 1 Header: 1. Official Global E-Commerce Product Title (Under 100 Characters)
    - Strict Formula: [Brand Name] [Key Active Ingredient / Patent] [Product Type] [Core Benefit / Solution] [Volume]
-   - MUST be UNDER 100 CHARACTERS (including spaces). Provide exact character count.
+   - MUST be UNDER 100 CHARACTERS (including spaces). Do NOT output character count annotations or notes (e.g. do NOT write '*(Character Count: 85)*'). Output only the pure, ready-to-copy title string.
    
 2. Sector 2 Header: 2. Core Value & Active Ingredient Summary
    - (CRITICAL: ULTRA-COMPACT MICRO-SUMMARY. NO PARAGRAPHS. ONLY KEYWORDS AND VERY SHORT PHRASES. Maximum 5 lines total for Sector 2.)
@@ -976,7 +976,7 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
 【标准三段式详情结构】
 1. 第一板块标题：1. 跨境电商官方高转化商品标题 (严格控制在100字符以内)
    - 标准公式：[品牌名] [核心专利/核心成分] [产品正规品名] [核心功效/定位] [净含量]
-   - 必须严格控制在 100 字符以内（含空格与标点），并注明字符数。
+   - 必须严格控制在 100 字符以内（含空格与标点）。严禁输出任何字符数统计注解（如“注：本标题共计xx字符...”）、严禁出现虚假功效/违规认证宣传词（如将海外机能性审查写为“食药处认证”等违规词）。输出内容必须是可以100%直接无缝复制粘贴至电商详情页与商品上架后台的纯净文案。
    
 2. 第二板块标题：2. 核心价值与成分科技摘要
    - (核心要求：极简微型摘要！严禁段落！只能使用关键词和极短句！整个第二板块最多5行字。)
