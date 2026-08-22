@@ -891,9 +891,80 @@ def run_translation_batch_for_folder(client: genai.Client, current_source_dir: s
 
 
 def _generate_web_copier_html_file(title: str, text_content: str, out_html_path: str):
-    """지마켓/스마트스토어/쿠팡/타오바오 등 오픈마켓에 원클릭으로 완벽하게 복사-붙여넣기할 수 있는 HTML 뷰어를 생성합니다."""
+    """지마켓(ESM Plus)/스마트스토어/쿠팡/타오바오 등 오픈마켓에 원클릭으로 완벽하게 복사-붙여넣기할 수 있는 HTML 뷰어를 생성합니다."""
     lines = [l.strip() for l in text_content.splitlines() if l.strip()]
     
+    s1_lines = []
+    s2_lines = []
+    s3_lines = []
+    
+    cur_sec = 0
+    for l in lines:
+        if l.startswith("1."):
+            cur_sec = 1
+            s1_lines.append(l)
+        elif l.startswith("2."):
+            cur_sec = 2
+            s2_lines.append(l)
+        elif l.startswith("3."):
+            cur_sec = 3
+            s3_lines.append(l)
+        else:
+            if cur_sec == 1:
+                s1_lines.append(l)
+            elif cur_sec == 2:
+                s2_lines.append(l)
+            elif cur_sec == 3:
+                s3_lines.append(l)
+
+    s1_clean = "\n".join([l for l in s1_lines if not l.startswith("1.")]).strip()
+
+    s2_clean_items = [l for l in s2_lines if not l.startswith("2.")]
+    s2_text_formatted = "\n".join(s2_clean_items)
+    s2_html_items = []
+    for l in s2_clean_items:
+        if ":" in l or "：" in l:
+            k, v = re.split(r'[:：]', l, 1)
+            s2_html_items.append(f"<div style='margin-bottom:6px; font-size:14px; color:#1e293b;'><strong style='color:#1e3a8a;'>{k.strip()}:</strong> {v.strip()}</div>")
+        else:
+            s2_html_items.append(f"<div style='margin-bottom:6px; font-size:14px; color:#1e293b;'>{l.strip()}</div>")
+    s2_html = "\n".join(s2_html_items)
+
+    s3_clean_items = [l for l in s3_lines if not l.startswith("3.")]
+    s3_text_blocks = []
+    s3_html_blocks = []
+    cur_q = ""
+    cur_answers = []
+    
+    for l in s3_clean_items:
+        if l.startswith(("Q1", "Q2", "Q3", "Q4", "Q5", "Q.")):
+            if cur_q:
+                q_text = cur_q
+                a_text = "\n".join(cur_answers)
+                s3_text_blocks.append(f"{q_text}\n{a_text}")
+                h_lines = [f"<div style='font-weight:bold; font-size:15px; color:#1e3a8a; margin-top:16px; margin-bottom:6px;'>{cur_q}</div>"]
+                for ans in cur_answers:
+                    h_lines.append(f"<div style='font-size:14px; color:#334155; line-height:1.65; margin-bottom:4px;'>{ans}</div>")
+                s3_html_blocks.append("".join(h_lines))
+            cur_q = l.strip()
+            cur_answers = []
+        else:
+            sentences = [s.strip() for s in re.split(r'(?<=[。！？\.\?!])\s*', l) if s.strip()]
+            for s in sentences:
+                cur_answers.append(s)
+                
+    if cur_q:
+        q_text = cur_q
+        a_text = "\n".join(cur_answers)
+        s3_text_blocks.append(f"{q_text}\n{a_text}")
+        h_lines = [f"<div style='font-weight:bold; font-size:15px; color:#1e3a8a; margin-top:16px; margin-bottom:6px;'>{cur_q}</div>"]
+        for ans in cur_answers:
+            h_lines.append(f"<div style='font-size:14px; color:#334155; line-height:1.65; margin-bottom:4px;'>{ans}</div>")
+        s3_html_blocks.append("".join(h_lines))
+
+    s3_text_formatted = "\n\n".join(s3_text_blocks)
+    s3_html = "<br>".join(s3_html_blocks)
+
     html_content = f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -901,19 +972,19 @@ def _generate_web_copier_html_file(title: str, text_content: str, out_html_path:
 <title>{title}</title>
 <style>
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; padding: 30px; margin: 0; line-height: 1.6; }}
-  .container {{ max-width: 860px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 40px; border: 1px solid #e2e8f0; }}
-  h1 {{ font-size: 24px; color: #0f172a; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-top: 0; }}
-  .guide-box {{ background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 6px; margin-bottom: 25px; font-size: 14px; color: #1e40af; }}
-  .card {{ background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 25px; position: relative; }}
-  .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }}
+  .container {{ max-width: 900px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 40px; border: 1px solid #e2e8f0; }}
+  h1 {{ font-size: 22px; color: #0f172a; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-top: 0; }}
+  .guide-box {{ background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 6px; margin-bottom: 25px; font-size: 14px; color: #1e40af; line-height: 1.7; }}
+  .card {{ background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 22px; margin-bottom: 25px; position: relative; }}
+  .card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }}
   .card-title {{ font-size: 16px; font-weight: bold; color: #1e3a8a; }}
   .btn-group {{ display: flex; gap: 8px; }}
-  .copy-btn {{ background: #2563eb; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }}
+  .copy-btn {{ background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }}
   .copy-btn:hover {{ background: #1d4ed8; }}
-  .copy-btn.html-btn {{ background: #059669; }}
-  .copy-btn.html-btn:hover {{ background: #047857; }}
-  .text-box {{ background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; font-size: 14px; white-space: pre-wrap; word-break: break-word; color: #334155; line-height: 1.7; }}
-  .toast {{ position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }}
+  .copy-btn.esm-btn {{ background: #059669; box-shadow: 0 2px 4px rgba(5,150,105,0.2); }}
+  .copy-btn.esm-btn:hover {{ background: #047857; }}
+  .display-box {{ background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 18px; font-size: 14px; line-height: 1.7; color: #334155; }}
+  .toast {{ position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: #fff; padding: 14px 28px; border-radius: 8px; font-size: 14px; display: none; z-index: 1000; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }}
 </style>
 </head>
 <body>
@@ -922,113 +993,106 @@ def _generate_web_copier_html_file(title: str, text_content: str, out_html_path:
   <h1>🛒 {title}</h1>
   
   <div class="guide-box">
-    💡 <strong>오픈마켓(지마켓, 옥션, 스마트스토어, 쿠팡, 타오바오) 등록 안내:</strong><br>
-    - <strong>[일반 텍스트 복사]</strong>: 텍스트 줄바꿈이 100% 보존된 상태로 복사됩니다. (일반 텍스트 입력란용)<br>
-    - <strong>[지마켓/HTML 복사]</strong>: 지마켓 HTML 모드에서 줄바꿈(&lt;p&gt;, &lt;br&gt;) 및 굵은 글씨가 완벽하게 나오도록 복사됩니다.
+    💡 <strong>지마켓(ESM Plus) / 스마트스토어 / 쿠팡 에디터 등록 완벽 가이드:</strong><br>
+    - <strong>[⚡ ESM 에디터 서식 원클릭 복사] (초록색 버튼)</strong>: 지마켓 ESM 에디터(편집화면)에 붙여넣었을 때 <strong>질문 굵게, 문장별 엔터 줄바꿈, 문단 간격이 100% 완벽한 서식으로 쏙 들어갑니다!</strong><br>
+    - <strong>[📋 일반 텍스트 복사] (파란색 버튼)</strong>: 빈 줄 2칸 분리가 적용된 순수 텍스트로 복사됩니다.
   </div>
-"""
-    s1_text = ""
-    s2_text = ""
-    s3_text = ""
-    cur_sec = 0
-    for l in lines:
-        if l.startswith("1."):
-            cur_sec = 1
-            s1_text += l + "\n"
-        elif l.startswith("2."):
-            cur_sec = 2
-            s2_text += l + "\n"
-        elif l.startswith("3."):
-            cur_sec = 3
-            s3_text += l + "\n"
-        else:
-            if cur_sec == 1:
-                s1_text += l + "\n"
-            elif cur_sec == 2:
-                s2_text += l + "\n"
-            elif cur_sec == 3:
-                s3_text += l + "\n"
 
-    s1_clean = "\n".join([l for l in s1_text.splitlines() if not l.startswith("1.")]).strip()
-    s2_clean = "\n".join([l for l in s2_text.splitlines() if not l.startswith("2.")]).strip()
-    s2_html_lines = []
-    for l in s2_clean.splitlines():
-        if ":" in l or "：" in l:
-            k, v = re.split(r'[:：]', l, 1)
-            s2_html_lines.append(f"<p style='margin:4px 0;'><strong style='color:#1e3a8a;'>{k.strip()}:</strong> {v.strip()}</p>")
-        else:
-            s2_html_lines.append(f"<p style='margin:4px 0;'>{l.strip()}</p>")
-    s2_html = "\n".join(s2_html_lines)
-
-    s3_clean = "\n".join([l for l in s3_text.splitlines() if not l.startswith("3.")]).strip()
-    s3_html_lines = []
-    for l in s3_clean.splitlines():
-        if l.startswith(("Q1", "Q2", "Q3", "Q4", "Q5", "Q.")):
-            s3_html_lines.append(f"<p style='font-weight:bold; font-size:15px; color:#1e3a8a; margin-top:16px; margin-bottom:4px;'>{l.strip()}</p>")
-        else:
-            sentences = [s.strip() for s in re.split(r'(?<=[。！？\.\?!])\s*', l) if s.strip()]
-            for s in sentences:
-                s3_html_lines.append(f"<p style='color:#374151; font-size:14px; margin:2px 0 6px 0; line-height:1.6;'>{s}</p>")
-    s3_html = "\n".join(s3_html_lines)
-
-    html_content += f"""
   <div class="card">
     <div class="card-header">
       <div class="card-title">📌 1. 공식 상품명 (Title)</div>
       <div class="btn-group">
-        <button class="copy-btn" onclick="copyText('sec1-text')">📋 상품명 텍스트 복사</button>
+        <button class="copy-btn" onclick="copyPlainText('sec1-content')">📋 상품명 복사</button>
       </div>
     </div>
-    <div class="text-box" id="sec1-text">{s1_clean}</div>
+    <div class="display-box" id="sec1-content">{s1_clean}</div>
   </div>
 
   <div class="card">
     <div class="card-header">
       <div class="card-title">🔬 2. 핵심 가치 및 5줄 마이크로 요약</div>
       <div class="btn-group">
-        <button class="copy-btn" onclick="copyText('sec2-text')">📋 일반 텍스트 복사</button>
-        <button class="copy-btn html-btn" onclick="copyHtml('sec2-html')">🌐 지마켓/HTML 복사</button>
+        <button class="copy-btn esm-btn" onclick="copyRichContainer('sec2-rich', 'sec2-plain')">⚡ ESM 에디터 서식 복사</button>
+        <button class="copy-btn" onclick="copyPlainText('sec2-plain')">📋 일반 텍스트 복사</button>
       </div>
     </div>
-    <div class="text-box" id="sec2-text">{s2_clean}</div>
-    <div id="sec2-html" style="display:none;">{s2_html}</div>
+    <div class="display-box" id="sec2-rich">{s2_html}</div>
+    <div id="sec2-plain" style="display:none;">{s2_text_formatted}</div>
   </div>
 
   <div class="card">
     <div class="card-header">
       <div class="card-title">💬 3. 5대 핵심 FAQ & 상세 가이드</div>
       <div class="btn-group">
-        <button class="copy-btn" onclick="copyText('sec3-text')">📋 일반 텍스트 복사</button>
-        <button class="copy-btn html-btn" onclick="copyHtml('sec3-html')">🌐 지마켓/HTML 복사</button>
+        <button class="copy-btn esm-btn" onclick="copyRichContainer('sec3-rich', 'sec3-plain')">⚡ ESM 에디터 서식 복사</button>
+        <button class="copy-btn" onclick="copyPlainText('sec3-plain')">📋 일반 텍스트 복사</button>
       </div>
     </div>
-    <div class="text-box" id="sec3-text">{s3_clean}</div>
-    <div id="sec3-html" style="display:none;">{s3_html}</div>
+    <div class="display-box" id="sec3-rich">{s3_html}</div>
+    <div id="sec3-plain" style="display:none;">{s3_text_formatted}</div>
   </div>
 </div>
 
-<div class="toast" id="toast">✅ 클립보드에 복사되었습니다! 지마켓에 붙여넣기(Ctrl+V) 하세요.</div>
+<div class="toast" id="toast">✅ 클립보드에 복사되었습니다! 지마켓 에디터에 붙여넣기(Ctrl+V) 하세요.</div>
 
 <script>
 function showToast(msg) {{
   const t = document.getElementById('toast');
   t.innerText = msg;
   t.style.display = 'block';
-  setTimeout(() => {{ t.style.display = 'none'; }}, 2500);
+  setTimeout(() => {{ t.style.display = 'none'; }}, 3000);
 }}
 
-function copyText(id) {{
-  const text = document.getElementById(id).innerText;
+function copyPlainText(id) {{
+  const el = document.getElementById(id);
+  const text = el.innerText || el.textContent;
   navigator.clipboard.writeText(text).then(() => {{
-    showToast('✅ 텍스트 줄바꿈이 완벽하게 복사되었습니다!');
+    showToast('✅ 텍스트 줄바꿈이 완벽하게 복사되었습니다! (Ctrl+V)');
+  }}).catch(() => {{
+    fallbackCopy(text);
   }});
 }}
 
-function copyHtml(id) {{
-  const html = document.getElementById(id).innerHTML;
-  navigator.clipboard.writeText(html).then(() => {{
-    showToast('🌐 지마켓/오픈마켓용 HTML이 복사되었습니다! HTML 모드에 붙여넣으세요.');
-  }});
+function copyRichContainer(richId, plainId) {{
+  const richEl = document.getElementById(richId);
+  const plainEl = document.getElementById(plainId);
+  const html = richEl.innerHTML;
+  const text = plainEl.innerText || plainEl.textContent;
+
+  if (navigator.clipboard && window.ClipboardItem) {{
+    const blobHtml = new Blob([html], {{ type: 'text/html' }});
+    const blobText = new Blob([text], {{ type: 'text/plain' }});
+    const item = new ClipboardItem({{ 'text/html': blobHtml, 'text/plain': blobText }});
+    
+    navigator.clipboard.write([item]).then(() => {{
+      showToast('🎉 지마켓 ESM 에디터용 서식이 복사되었습니다! 편집화면에 Ctrl+V 하세요.');
+    }}).catch(() => {{
+      selectAndCopy(richEl);
+    }});
+  }} else {{
+    selectAndCopy(richEl);
+  }}
+}}
+
+function selectAndCopy(el) {{
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  document.execCommand('copy');
+  sel.removeAllRanges();
+  showToast('🎉 서식이 복사되었습니다! 지마켓 에디터에 Ctrl+V 하세요.');
+}}
+
+function fallbackCopy(text) {{
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast('✅ 복사되었습니다! (Ctrl+V)');
 }}
 </script>
 </body>
