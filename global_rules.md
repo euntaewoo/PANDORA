@@ -109,7 +109,7 @@
   - **ZH-CN**: 중국 신광고법 8대 절대화 금지어 차단, NMPA 준수, 간체자
   - **ZH-TW**: 대만/홍콩 우아한 메디컬 더마 톤, TFDA 규정 준수, 절대표현 순화, 대만 정체자 및 23개 한자 글리프 잠금
 - **9. 생성 AI 하이퍼파라미터 표준**:
-  - `temperature`: 0.6, `topP`: 0.9, `maxOutputTokens`: 1024.
+  - `temperature`: 0.6, `topP`: 0.9, `maxOutputTokens`: 2048 (JSON 무결성 및 전수 텍스트 블록 보호).
   - 📖 **상세 기술 규격서**: [`00_공통자료/제미나이_AI_번역_안전장치_안티그래비티2.0_Gemini_GenerationConfig_기술규격서.md`](file:///c:/Users/euntaewoo/Desktop/다국어_이미지_번역/00_공통자료/제미나이_AI_번역_안전장치_안티그래비티2.0_Gemini_GenerationConfig_기술규격서.md) 참조.
 
 

@@ -357,7 +357,7 @@ for filename in targets:
                     response_mime_type="application/json",
                     temperature=0.6,
                     top_p=0.9,
-                    max_output_tokens=1024
+                    max_output_tokens=2048
                 )
             )
             mapping_data_str = response_p1.text

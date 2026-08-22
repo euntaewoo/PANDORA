@@ -662,7 +662,7 @@ You MUST strictly map the following Korean labels to these standardized Taiwanes
                 response_mime_type="application/json",
                 temperature=0.6,
                 top_p=0.9,
-                max_output_tokens=1024
+                max_output_tokens=2048
             )
         )
         res_json = json.loads(resp.text.strip())
@@ -735,7 +735,7 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
                     response_mime_type="application/json",
                     temperature=0.6,
                     top_p=0.9,
-                    max_output_tokens=1024
+                    max_output_tokens=2048
                 )
             )
             p1_text = response_p1.text.strip()
