@@ -188,7 +188,11 @@ def build_notice_html(title, items, lang="EN"):
 
         # 💡 기능성/특수용도 심사 항목의 괄호 효능 부가설명 앞 강제 줄바꿈 (KO/CN/TW/JP/EN 전 언어 공통)
         if any(k in lbl for k in ["기능성", "심사", "审查", "審查", "審査", "Functional", "Review", "含藥"]):
-            val_str = re.sub(r'(?<!<br>)\s*([（(])', r'<br>\1', val_str)
+            # （或报告） 또는 (또는 보고) 등의 불필요한 행정 문구는 제거하여 1줄 단일행 유지
+            val_str = re.sub(r'[\(（]\s*(?:또는\s*보고|或报告)\s*[\)）]', '', val_str)
+            # 효능 부가설명 괄호 앞 개행 처리 (이미 개행된 경우는 보존)
+            if "<br>" not in val_str:
+                val_str = re.sub(r'\s*([（(])', r'<br>\1', val_str, count=1)
         val_str = val_str.replace('식품의약품안전처 심사 필 완료 (', '식품의약품안전처 심사 필 완료<br>(')
         val_str = val_str.replace('식품의약품안전처 심사 필 무 (', '식품의약품안전처 심사 필 무<br>(')
         val_str = val_str.replace('붉은 반점', '붉은&nbsp;반점')
