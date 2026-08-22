@@ -1058,11 +1058,70 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
         )
         generated_text = response.text.strip()
 
-        # 파일 저장
+        # 파일 저장 (1. 서식형 TXT 저장 - CRLF 개행 보존)
         os.makedirs(target_dir, exist_ok=True)
+        formatted_txt = generated_text.replace("\r\n", "\n").replace("\n", "\r\n")
         with open(txt_path, "w", encoding="utf-8") as f:
-            f.write(generated_text)
+            f.write(formatted_txt)
         print(f"  🎉 [SUCCESS] SEO / GEO / AEO TXT 저장 완료: {txt_filename}")
+
+        # 파일 저장 (2. MS Word .docx 서식 문서 2중 저장)
+        docx_filename = f"{product_name}_{config['folder_name']}_SEO_GEO_AEO.docx"
+        docx_path = os.path.join(target_dir, docx_filename)
+        try:
+            import docx
+            from docx.shared import Pt, RGBColor, Inches
+            doc = docx.Document()
+            for section in doc.sections:
+                section.top_margin = Inches(0.8)
+                section.bottom_margin = Inches(0.8)
+                section.left_margin = Inches(0.9)
+                section.right_margin = Inches(0.9)
+
+            title_p = doc.add_paragraph()
+            title_p.paragraph_format.space_before = Pt(0)
+            title_p.paragraph_format.space_after = Pt(14)
+            run_t = title_p.add_run(f"{product_name} - {config['name']} E-Commerce PDP & SEO/GEO/AEO")
+            run_t.font.name = "Malgun Gothic"
+            run_t.font.size = Pt(16)
+            run_t.font.bold = True
+            run_t.font.color.rgb = RGBColor(24, 43, 73)
+
+            lines = [l.strip() for l in generated_text.splitlines() if l.strip()]
+            for line in lines:
+                if line.startswith(("1.", "2.", "3.", "### 1", "### 2", "### 3")):
+                    h_p = doc.add_paragraph()
+                    h_p.paragraph_format.space_before = Pt(14)
+                    h_p.paragraph_format.space_after = Pt(6)
+                    run_h = h_p.add_run(line.replace("#", "").strip())
+                    run_h.font.name = "Malgun Gothic"
+                    run_h.font.size = Pt(13)
+                    run_h.font.bold = True
+                    run_h.font.color.rgb = RGBColor(18, 52, 102)
+                elif line.startswith(("Q1", "Q2", "Q3", "Q4", "Q5", "Q.", "1)", "2)", "3)", "4)", "5)", "브랜드", "Brand", "品牌", "核心", "Core", "配方", "搜索", "Search")):
+                    q_p = doc.add_paragraph()
+                    q_p.paragraph_format.space_before = Pt(6)
+                    q_p.paragraph_format.space_after = Pt(2)
+                    run_q = q_p.add_run(line)
+                    run_q.font.name = "Malgun Gothic"
+                    run_q.font.size = Pt(10.5)
+                    run_q.font.bold = True
+                    run_q.font.color.rgb = RGBColor(33, 37, 41)
+                else:
+                    a_p = doc.add_paragraph()
+                    a_p.paragraph_format.space_before = Pt(2)
+                    a_p.paragraph_format.space_after = Pt(6)
+                    a_p.paragraph_format.line_spacing = 1.25
+                    run_a = a_p.add_run(line)
+                    run_a.font.name = "Malgun Gothic"
+                    run_a.font.size = Pt(10)
+                    run_a.font.color.rgb = RGBColor(55, 65, 81)
+
+            doc.save(docx_path)
+            print(f"  🎉 [SUCCESS] SEO / GEO / AEO DOCX 서식 문서 저장 완료: {docx_filename}")
+        except Exception as e_docx:
+            print(f"  ⚠️ [WARN] DOCX 생성 중 경고: {e_docx}")
+
         return True
     except Exception as e:
         print(f"  ❌ [ERROR] SEO / GEO / AEO 생성 실패: {e}")
