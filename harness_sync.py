@@ -17,15 +17,15 @@ from datetime import datetime
 GITHUB_OWNER = "euntaewoo"
 GITHUB_REPO  = "PANDORA"
 GITHUB_BRANCH = "main"
-LOCAL_AGENT_ROOT = r"C:\Users\euntaewoo\.agent"
-LOG_FILE = r"C:\Users\euntaewoo\.agent\harness\sync_log.txt"
+LOCAL_AGENT_ROOT = r"C:\Users\euntaewoo\.agents"
+LOG_FILE = r"C:\Users\euntaewoo\.agents\harness\sync_log.txt"
 
 # 동기화할 파일 목록 (GitHub 경로 → 로컬 경로)
 SYNC_FILES = {
-    ".agent/harness/HARNESS.md":                    r"harness\HARNESS.md",
-    ".agent/harness/verification/lint_rules.md":     r"harness\verification\lint_rules.md",
-    ".agent/harness/verification/test_checklist.md": r"harness\verification\test_checklist.md",
-    ".agent/rules/global_rules.md":                  r"rules\global_rules.md",
+    ".agents/harness/HARNESS.md":                    r"harness\HARNESS.md",
+    ".agents/harness/verification/lint_rules.md":     r"harness\verification\lint_rules.md",
+    ".agents/harness/verification/test_checklist.md": r"harness\verification\test_checklist.md",
+    ".agents/rules/global_rules.md":                  r"rules\global_rules.md",
 }
 
 RAW_BASE = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/{GITHUB_BRANCH}"

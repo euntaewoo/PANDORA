@@ -1,4 +1,4 @@
-﻿# 글로벌 크로스보더 SEO/GEO/AEO 다국어 자동 생성 파이프라인 설계서
+# 글로벌 크로스보더 SEO/GEO/AEO 다국어 자동 생성 파이프라인 설계서
 
 > **작성일**: 2026-08-20  
 > **목적**: 상품 상세페이지(PDP) 인페인팅 렌더링 후, 이커머스 상품 관리자(Seller Center) 등록용 검색 최적화(SEO/GEO/AEO) 텍스트를 다국어(한국어, 영어, 중국어, 일본어 등)로 자동 생성하는 시스템의 아키텍처 및 템플릿 표준 정의서. 향후 에이전트 및 개발자가 재사용 및 유지보수 시 본 문서를 기준으로 구동 원리를 파악함.
@@ -48,14 +48,15 @@ sequenceDiagram
 
 ### Sector 1. 공식 글로벌 이커머스 상품 타이틀 (Official E-Commerce Product Title)
 - **제약 사항**: 공백 포함 100자 이내 엄수.
-- **표준 공식**: `[브랜드명] + [핵심 특허/성분] + [상품 정규명] + [핵심 효능] + [용량]`
+- **표준 공식**: `[브랜드명 Logicall Skin] + [핵심 특허/성분 (예: 阿夸肽 (Aquatide))] + [상품 정규명 (예: 阿夸肽修护精华液 (Aquatide Resurface Serum))] + [핵심 효능] + [용량]`
+- **브랜드/용어집 규칙**: 브랜드명은 고유 영문 명칭 **`Logicall Skin`**을 100% 유지하며, `Aquatide` 및 `Serum` 등은 중화권에서 중·영문 병기(`阿夸肽 (Aquatide)`, `精华液 (Serum)`) 적용.
 - **특징**: 내부 개발자 용어("Generative AI Search" 등) 배제. B2C 고객 지향적 타이틀 노출.
 
 ### Sector 2. 핵심 가치 및 성분 마이크로-써머리 (Core Value & Active Ingredient Summary)
 - **제약 사항**: 서술형 문장/단락 절대 금지. 5줄 이내의 단답형 키워드 리스트 강제.
 - **포맷 구조 (Key-Value 매핑)**:
-  - **Brand**: (1줄 철학)
-  - **Core Ingredients**: (콤마 구분된 3~4개 핵심 성분)
+  - **Brand**: Logicall Skin (1줄 철학)
+  - **Core Ingredients**: (콤마 구분된 3~4개 핵심 성분, 예: 阿夸肽 (Aquatide) 4% 등)
   - **Key Benefits**: (콤마 구분된 3~4개 핵심 효능)
   - **Formulation**: (콤마 구분된 2~3개 제형/배합 특징)
   - **Search Tags**: (SEO 노출용 10대 해시태그/검색어)

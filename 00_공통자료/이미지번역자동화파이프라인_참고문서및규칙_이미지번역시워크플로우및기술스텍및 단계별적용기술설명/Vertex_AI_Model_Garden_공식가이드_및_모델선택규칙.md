@@ -13,14 +13,14 @@ Google Cloud Vertex AI (Gemini Enterprise Agent Platform)의 **Model Garden**은
 * **해당 모델**: `gemini-3.1-pro-preview`, `gemini-3.1-flash-image` (별도 엔드포인트 배포 없이 기본 API 호출 시)
 * **특징**: 구글이 직접 전 세계 인프라에서 서버리스로 제공하는 방식입니다.
 * **리전 규칙**: 프리뷰 파운데이션 API 호출 시 **`location="global"`**을 지정합니다. (`us-central1` 지정 시 404 NOT_FOUND 발생)
+* **⛔ [HARD STOP] 직접 `genai.Client()` 작성 절대 금지**: 에이전트가 작성하는 모든 스크립트(임시 스크래치 포함)에서 `genai.Client(vertexai=True, project=..., location=...)` 를 직접 기입하는 행위를 전면 금지합니다. 반드시 아래 유일한 허용 패턴을 사용할 것:
 
 ```python
-# [Serverless 관리형 API 호출 기본 규격]
-client = genai.Client(
-    vertexai=True,
-    project=project_id,
-    location="global"  # 관리형 Serverless 호출 시 global 필수
-)
+# 【유일하게 허용되는 클라이언트 초기화 패턴】
+import sys
+sys.path.insert(0, r"c:\Users\euntaewoo\Desktop\다국어_이미지_번역\multilingual_text_in_image_translation")
+from multilingual_text_in_image_translation import load_credentials
+client = load_credentials()  # location="global" + 인증 자동 보장
 ```
 
 ### 🔴 (2) Self-deployed (사용자 전용 엔드포인트 직접 배포 방식)

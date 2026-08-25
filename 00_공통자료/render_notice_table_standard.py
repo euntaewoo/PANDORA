@@ -166,6 +166,19 @@ def build_notice_html(title, items, lang="EN"):
         # 💡 업데이트: 2열 의미단위 보호 및 순번 강제 줄바꿈
         val_str = str(val)
         
+        # 💡 [제품명/상품명 중·영문 병기 가로폭 초과 시 의미단위 괄호 앞 스마트 줄바꿈]
+        if any(k in lbl for k in ["제품명", "상품명", "产品名称", "產品名稱", "Product Name", "商品名"]):
+            if "<br>" not in val_str and ("(" in val_str or "（" in val_str):
+                m_paren = re.search(r'\s*([（(])', val_str)
+                if m_paren:
+                    # CJK 문자(26px)와 영문/숫자/공백(14px) 기준 예상 가로폭 산정
+                    cjk_count = len(re.findall(r'[\u4e00-\u9fff\uac00-\ud7af\u3040-\u30ff]', val_str))
+                    latin_count = len(val_str) - cjk_count
+                    est_width = (cjk_count * 26) + (latin_count * 14)
+                    # 2열 본문 안전 너비(520px)를 초과하여 자동 개행 시 단어 분절 결함이 생기는 경우에만 의미단위 개행
+                    if est_width > 520:
+                        val_str = val_str[:m_paren.start()] + "<br>" + val_str[m_paren.start():].lstrip()
+
         # 💡 [회사 단위 분리]: 제조업자/책임판매업자/생산기업/판매상 각 회사명 단위로 <br> 분리 및 Co., Ltd. 결속
         if any(k in lbl for k in ["제조업자", "책임판매업자", "생산기업", "판매상", "生产企业", "责任销售商", "Manufacturer", "Distributor", "製造販売元", "発売元"]):
             val_str = re.sub(r'(Co\.,?\s*Ltd\.?|Inc\.?|Corp\.?|\(주\)|주식회사|회사)\s*[,，/]\s*', r'\1<br>', val_str, flags=re.IGNORECASE)

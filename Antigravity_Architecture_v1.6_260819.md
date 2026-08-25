@@ -16,8 +16,8 @@
 
 | 구분 | 위치 | 의미 | 기준 |
 | --- | --- | --- | --- |
-| **전역 설정 (Global)** | `C:\Users\euntaewoo\.agent\` | 모든 프로젝트에 항상 적용되는 공통 원칙 및 범용 도구 | "이 규칙은 모든 작업에서 항상 지켜야 한다" |
-| **로컬 설정 (Local)** | `프로젝트폴더\.agent\` | 특정 프로젝트 안에서만 적용되는 전용 에이전트 및 SOP | "이 에이전트/규칙은 이 프로젝트에서만 쓰인다" |
+| **전역 설정 (Global)** | `C:\Users\euntaewoo\.agents\` | 모든 프로젝트에 항상 적용되는 공통 원칙 및 범용 도구 | "이 규칙은 모든 작업에서 항상 지켜야 한다" |
+| **로컬 설정 (Local)** | `프로젝트폴더\.agents\` | 특정 프로젝트 안에서만 적용되는 전용 에이전트 및 SOP | "이 에이전트/규칙은 이 프로젝트에서만 쓰인다" |
 | **Antigravity 시스템 규칙** | `C:\Users\euntaewoo\.gemini\antigravity\` | GEMINI.md: 시스템 전역 규칙 및 프로토콜 최종 저장소 | **[중요]** 에이전트 하드닝 시 직접 수정 |
 
 ---
@@ -32,7 +32,7 @@ C:\Users\euntaewoo\
 │     ├── Antigravity\                               ← Antigravity 2.0 메인 엔진
 │     └── agy\bin\agy.exe                            ← Antigravity CLI 바이너리
 │
-├── .agent\                                          ← [전역 독립 에이전트 & 규칙 보관소]
+├── .agents\                                          ← [전역 독립 에이전트 & 규칙 보관소]
 │     ├── instructions.md
 │     ├── harness\                                   ← ★ 하네스 엔지니어링 (환각 방지 시스템)
 │     │     ├── HARNESS.md
@@ -78,7 +78,7 @@ C:\Users\euntaewoo\
 
 > 하네스(Harness)는 AI 에이전트의 **환각(Hallucination)을 방지**하고 **행동 범위를 제어**하기 위한 시스템 레벨의 가드레일(Guardrail)이다.
 
-**저장 위치**: `C:\Users\euntaewoo\.agent\harness\`
+**저장 위치**: `C:\Users\euntaewoo\.agents\harness\`
 
 ### 구성 1: 가드레일 (Guardrails)
 
@@ -139,12 +139,12 @@ C:\Users\euntaewoo\
 ### 구성 5: 설정 로드 우선순위
 
 ```text
-1순위: .agent\rules\global_rules.md
-2순위: .agent\harness\HARNESS.md
-3순위: [프로젝트]\.agent\rules\skill_sync_policy.md
-4순위: [프로젝트]\.agent\rules\agents.md
-5순위: [프로젝트]\.agent\rules\Typography_Design_System.md
-6순위: [프로젝트]\.agent\workflows\maestro.md
+1순위: .agents\rules\global_rules.md
+2순위: .agents\harness\HARNESS.md
+3순위: [프로젝트]\.agents\rules\skill_sync_policy.md
+4순위: [프로젝트]\.agents\rules\agents.md
+5순위: [프로젝트]\.agents\rules\Typography_Design_System.md
+6순위: [프로젝트]\.agents\workflows\maestro.md
 7순위: graphify-out\GRAPH_REPORT.md
 ```
 
@@ -152,7 +152,7 @@ C:\Users\euntaewoo\
 
 | 항목 | 내용 |
 | --- | --- |
-| **스크립트** | `C:\Users\euntaewoo\.agent\harness\harness_sync.py` |
+| **스크립트** | `C:\Users\euntaewoo\.agents\harness\harness_sync.py` |
 | **작업명** | `Antigravity-HarnessSync` |
 | **실행 시점** | PC 시작 시 + 매일 오전 9시 |
 | **로그** | `sync_log.txt` |
@@ -214,7 +214,7 @@ C:\Users\euntaewoo\
 
 ### 새 PC 세팅 체크리스트
 
-- [ ] 1. `.agent\` 폴더 존재 확인
+- [ ] 1. `.agents\` 폴더 존재 확인
 - [ ] 2. `global_rules.md` 존재 확인
 - [ ] 3. `harness\HARNESS.md` 존재 확인
 - [ ] 4. MCP 서버 4개 등록 확인
@@ -237,8 +237,8 @@ C:\Users\euntaewoo\
 독립 구동 바이너리 에이전트            컴퓨터 윈도우 OS 위에서 단독 프로세스로 구동되는         (예: AppData\Local\hermes\)
 (Standalone Executable Agent)    대형 AI 소프트웨어 엔진
 --------------------------------------------------------------------------------------------------------
-[유형 2]                         • 안티그래비티 2.0 엔진 위에서 백그라운드 멀티스레드로   C:\Users\euntaewoo\.agent\skills\<에이전트명>\
-안티그래비티 의존 독립 에이전트        독립 대화 맥락(Context)을 생성하고 5단계 자동화       (예: .agent\skills\pdp-generator\)
+[유형 2]                         • 안티그래비티 2.0 엔진 위에서 백그라운드 멀티스레드로   C:\Users\euntaewoo\.agents\skills\<에이전트명>\
+안티그래비티 의존 독립 에이전트        독립 대화 맥락(Context)을 생성하고 5단계 자동화       (예: .agents\skills\pdp-generator\)
 (Antigravity-dependent Agent)    파이프라인을 자율 구동하는 전문 에이전트
 --------------------------------------------------------------------------------------------------------
 [유형 3]                         • 에이전트가 추론하고 행동할 때 읽고 따르는             C:\Users\euntaewoo\.gemini\config\skills\

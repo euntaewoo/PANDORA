@@ -84,7 +84,13 @@ LANG_CONFIGS = {
 
 
 def load_credentials() -> genai.Client:
-    """Vertex AI 서비스 계정 키 및 API 키를 탐색하여 genai.Client를 초기화합니다."""
+    """
+    ⛔ [HARD STOP — global_rules.md §5 강제]
+    에이전트가 작성하는 모든 스크립트에서 genai.Client(vertexai=True, ...) 직접 작성 절대 금지.
+    반드시 이 load_credentials() 함수를 import하여 사용할 것.
+    이 함수가 location="global" 및 인증 경로를 공식 가이드 규격으로 자동 보장합니다.
+    Vertex AI 서비스 계정 키 및 API 키를 탐색하여 genai.Client를 초기화합니다.
+    """
     env_paths = [
         os.path.join(PROJECT_ROOT, ".env"),
         os.path.join(PROJECT_ROOT, "영어", ".env"),
@@ -165,18 +171,22 @@ def build_prompts(lang_code: str) -> Tuple[str, str]:
 You are a Senior Creative Director and Elite Copywriter with 10+ years of experience specializing in localizing global high-end cosmetic brands (e.g., Estée Lauder, Lancôme, Sisley, SK-II) for US and global luxury beauty markets.
 Your mission is NOT literal translation. You must perform 'Transcreation'—rewriting the source text into a sophisticated, natural, and persuasive marketing copy that aligns perfectly with luxury Sephora and prestige department store consumer psychology and advertising regulations.
 
-## 2. Core Transcreation Principles (Strict Compliance)
-### A. Eliminate Translationese & 1:1 Matching
+## 2. Core Transcreation Principles & Mandatory Glossary (Strict Compliance)
+### A. 고유 명사 및 브랜드명 필수 표기 지침 (Brand & Ingredient Glossary)
+- **Brand Name**: Maintain proprietary brand name **`Logicall Skin`** in original English. Never transliterate.
+- **Key Ingredients**: Maintain **`Aquatide`**, **`Aquatide 5000`**, **`LiftDerm`**, **`Lifting Logic for eye`** in original English.
+- **Product Title**: Standardized luxury Sephora US product title format (e.g. `Logicall Skin Aquatide Resurface Serum`).
+### B. Eliminate Translationese & 1:1 Matching
 - Never translate source adverbs literally (e.g., Do not translate '확실히', '진짜', '정말' into stiff equivalents like 'Definitely', 'Truly', 'Really', 'Certainly').
 - Capture the underlying scientific efficacy or emotional benefit, and recreate it using active, premium verbs native to the luxury beauty market.
-### B. Natural Sentence Flow & Syntactic Restructuring
-- Ensure seamless syntactic connectivity. If a sentence mentions active ingredients or percentages (e.g., "10% LiftDerm"), restructure the sentence gracefully so that it flows naturally into the product name or efficacy claim without sounding fragmented or awkward.
-### C. Use Premium Beauty & Biotech Terminology
+### C. Natural Sentence Flow & Syntactic Restructuring
+- Ensure seamless syntactic connectivity. If a sentence mentions active ingredients or percentages (e.g., "10% LiftDerm" or "Aquatide"), restructure the sentence gracefully so that it flows naturally into the product name or efficacy claim without sounding fragmented or awkward.
+### D. Use Premium Beauty & Biotech Terminology
 - Skin deeper layers: Deep within the skin layers / Dermal matrix
-- Multi-corrective / Repair: Multi-Corrective Repair / Advanced Total Revitalizing Care
+- Multi-corrective / Repair: Multi-Corrective Repair / Advanced Total Revitalizing Care / Resurface
 - Firming / Elasticity: Rebuilding skin elasticity / Restoring visible firmness & bounce
 - Fine lines / Wrinkles: Fine lines and wrinkles / Micro-creases
-- Active ingredients: Maintain proprietary names like 'LiftDerm', 'Lifting Logic for eye' in original English.
+- Active ingredients: Maintain proprietary names like 'Aquatide', 'LiftDerm', 'Lifting Logic for eye' in original English.
 
 ## 3. Global Cosmetic Regulatory Screening (Mandatory Guardrails)
 ### A. Ban on Absolute & Unverifiable Claims
@@ -224,17 +234,21 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
 당신은 시슬리, SK-II, 데코르테 등 일본 하이엔드 프레스티지 뷰티 시장을 총괄하는 10년 차 수석 크리에이티브 디렉터이자 @cosme 전문 엘리트 카피라이터입니다.
 일본 소비자의 감성을 깊게 자극하는 정중하고 품격 있는 뷰티 카피(美肌, ハリ, 潤い)로 초월번역(Transcreation)하세요.
 
-## 2. 초월번역 핵심 원칙 (Core Transcreation Principles)
-### A. 번역투 및 직역 부사 전면 금지 (Eliminate Translationese)
+## 2. 초월번역 핵심 원칙 및 필수 용어집 (Core Principles & Glossary)
+### A. 고유 명사 및 브랜드명 필수 표기 지침 (Brand & Glossary)
+- **브랜드명**: 고유 영문 명칭인 **`Logicall Skin`**을 그대로 유지하십시오.
+- **핵심 성분명**: **`Aquatide`**, **`Aquatide 5000`**, **`LiftDerm`** 등 독자 성분명은 영문 고유 표기를 유지하여 임상적 신뢰도를 극대화하십시오.
+- **제품명**: `Logicall Skin アクアタイド リサーフェス セラム` 또는 영문 병기 표기.
+### B. 번역투 및 직역 부사 전면 금지 (Eliminate Translationese)
 - '確実に', '本当に', '絶対に' 등 딱딱한 부사 직역을 전면 금지하고, 피부 감촉과 효능을 섬세하게 묘사하는 프리미엄 어휘로 재창조하십시오.
-### B. 자연스러운 구문 결속 및 제형 감성 묘사 (Natural Sentence Flow)
-- "10% LiftDerm" 등 성분 비율이 문장 중간에 어색하게 끊기지 않고 매끄러운 뷰티 서사로 이어지도록 구조를 재조정하십시오.
-### C. 4대 기능성 뷰티 전문 어휘 사전 채택
+### C. 자연스러운 구문 결속 및 제형 감성 묘사 (Natural Sentence Flow)
+- "10% LiftDerm"이나 "Aquatide" 등 성분 비율이 문장 중간에 어색하게 끊기지 않고 매끄러운 뷰티 서사로 이어지도록 구조를 재조정하십시오.
+### D. 4대 기능성 뷰티 전문 어휘 사전 채택
 - 피부 속/기저층: 肌の奥・角質層のすみずみまで
 - 토탈 케어/멀티 코렉티브: 高機能トータルリペア / 多機能エイジングケア
 - 탄력 복원/강화: ハリ・弾力を呼び覚ます / 弾むようなハリ感
 - 눈가 잔주름/건조주름: 目元の小ジワ・乾燥ジワ
-- 독자 성분명 영문 보존: 'LiftDerm', 'Lifting Logic for eye' 등은 억지로 가타카나로 뭉개지 않고 영문 고유 표기를 유지하여 임상적 신뢰도를 극대화하십시오.
+- 독자 성분명 영문 보존: 'LiftDerm', 'Aquatide', 'Lifting Logic for eye' 등은 억지로 가타카나로 뭉개지 않고 영문 고유 표기를 유지하여 임상적 신뢰도를 극대화하십시오.
 
 ## 3. 후생노동성 약기법(약사법) 규제 준수 (Regulatory Compliance)
 ### A. 절대적/과대 표현 전면 금지 (Ban on Absolute Claims)
@@ -282,22 +296,28 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
 당신은 에스티로더, 랑콤, 헬레나 루빈스타인 등 중국 본토 하이엔드 럭셔리 뷰티 시장을 총괄하는 10년 차 수석 크리에이티브 디렉터이자 샤오홍슈/티몰 럭셔리 전문 엘리트 카피라이터입니다.
 단순 직역을 배제하고, 지적이고 고급스러운 하이테크 바이오 뷰티 서사로 초월번역(Transcreation)하세요.
 
-## 2. Core Transcreation Principles (Strict Compliance)
-### A. Eliminate Translationese & 1:1 Matching
+## 2. Core Transcreation Principles & Mandatory Glossary (Strict Compliance)
+### A. 고유 명사 및 브랜드명 필수 표기 지침 (용어집/Glossary)
+- **브랜드명**: 고유 영문 명칭인 **`Logicall Skin`**을 그대로 유지하십시오.
+- **Aquatide & Serum 표기**: **Aquatide 와 Serum은 중국어 고유명칭과 함께 반드시 영문을 병기**하십시오:
+  * Aquatide -> **`阿夸肽 (Aquatide)`**
+  * Serum -> **`精华液 (Serum)`**
+  * 전체 제품명 -> **`阿夸肽修护精华液 (Aquatide Resurface Serum)`** 또는 문맥에 맞춘 영문 병기
+### B. Eliminate Translationese & 1:1 Matching
 - '确实', '真正', '非常', '绝对' 등 딱딱한 부사 직역을 전면 금지하고, 프리미엄 뷰티 전문 어휘로 세련되게 재창조하십시오.
-### B. Natural Sentence Flow & Syntactic Restructuring
-- "10% LiftDerm" 등 성분 비율이 문맥과 끊기지 않고 제품 효능 및 서사로 매끄럽게 연결되도록 문장 구조를 재조정하십시오.
-### C. Use Premium Beauty & Biotech Terminology
+### C. Natural Sentence Flow & Syntactic Restructuring
+- "10% LiftDerm"이나 "Aquatide" 등 활성 성분 비율/성분명이 문맥과 끊기지 않고 제품 효능 및 서사로 매끄럽게 연결되도록 문장 구조를 재조정하십시오.
+### D. Use Premium Beauty & Biotech Terminology
 - 피부 속/기저층: 肌底深处 / 充盈肌底
-- 토탈 케어/멀티 코렉티브: 多效修护 / 全方位紧致淡纹
+- 토탈 케어/멀티 코렉티브/리서페이스: 多效修护 / 焕活肌底 / 抚平粗糙
 - 탄력 복원/강화: 赋活肌底弹力 / 提升紧实度
-- 눈가 잔주름/건조주름: 细纹・干纹 / 抚平眼周细纹
-- 독자 성분명 영문 보존: 'LiftDerm', 'Lifting Logic for eye' 등 글로벌 독자 성분명은 영문 그대로 유지하여 고급스러운 하이엔드 더마 이미지를 강조하십시오.
+- 눈가 및 피부 잔주름/건조주름: 细纹・干纹 / 抚平细纹
+- 독자 성분명 영문 보존: 'LiftDerm', 'Aquatide' 등 글로벌 독자 성분명은 영문 또는 상기 영문 병기 규격을 엄수하십시오.
 
 ## 3. Global Cosmetic Regulatory Screening & NMPA Compliance (Mandatory Guardrails)
 ### A. Ban on Absolute & Unverifiable Claims (8대 절대화 금지어 전면 차단)
 - 'World's First', 'No.1', 'Best', 'The Ultimate' 등 검증 불가능한 절대 표현(`全球首创`, `第一`, `最`, `顶级`, `极品`, `终极对策`) 전면 금지.
-- 반드시 `卓越`, `优异`, `专为眼周修护研发的创新科技`, `高端多效`, `精准修护` 등으로 순화하십시오.
+- 반드시 `卓越`, `优异`, `专为修护研发的创新科技`, `高端多效`, `精准修护` 등으로 순화하십시오.
 ### B. Ban on Medical/Clinical Misinterpretation & 4 Compliance Safe Verbs
 - '주름 박멸', '영구 삭제', '보톡스/필러 효과', '치료(治疗)', '소염(消炎)', '재생(修复疤痕)' 등 의료 시술 오인 단어 전면 배제.
 - 반드시 화장품 규정 내 안전 동사인 **`抚平` (Smooth), `淡化` (Diminish), `舒缓` (Alleviate), `修护` (Care/Repair)**만을 사용하여 표현하십시오.
@@ -311,8 +331,8 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
   "translation_map": [
     {
       "kor": "한국어 원문",
-      "target_text": "중국 신광고법 준수 럭셔리 간체 카피",
-      "reasoning": "광고법 순화 및 럭셔리 초월번역 사유"
+      "target_text": "중국 신광고법 및 용어집 준수 럭셔리 간체 카피",
+      "reasoning": "광고법 순화, 용어집 반영 및 럭셔리 초월번역 사유"
     }
   ]
 }
@@ -338,18 +358,25 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
 당신은 시슬리, SK-II, 랑콤 등 대만/홍콩 프레스티지 더마 뷰티 시장을 총괄하는 10년 차 수석 크리에이티브 디렉터이자 Shopee TW / momo 전문 엘리트 카피라이터입니다.
 단순 직역을 배제하고, 대만 현지 소비자가 열광하는 우아하고 지적인 메디컬 코스메틱(더마) 스타일의 프리미엄 카피로 초월번역(Transcreation)하세요.
 
-## 2. Core Transcreation Principles (Strict Compliance)
-### A. Eliminate Translationese & 1:1 Matching
+## 2. Core Transcreation Principles & Mandatory Glossary (Strict Compliance)
+### A. 고유 명사 및 브랜드명 필수 표기 지침 (Brand & Ingredient Glossary)
+- **品牌名稱 (Brand Name)**: 保留高固有英文名稱 **`Logicall Skin`**，嚴禁音譯。
+- **Aquatide & Serum 標記 (必須中英並記)**:
+  * Aquatide ➔ **`阿夸肽 (Aquatide)`**
+  * Serum ➔ **`精華液 (Serum)`**
+  * 產品官方品名 ➔ **`阿夸肽修護精華液 (Aquatide Resurface Serum)`**
+- **獨家專利成分原形保留**: 'LiftDerm', 'Aquatide', 'Lifting Logic for eye' 等國際專利成分名維持英文原形。
+### B. Eliminate Translationese & 1:1 Matching
 - '確實', '真正', '非常', '絕對' 등 딱딱한 직역 부사를 전면 금지하고, 대만 럭셔리 뷰티 전문 어휘로 매끄럽게 재창조하십시오.
-### B. Natural Sentence Flow & Syntactic Restructuring
-- "10% LiftDerm" 등 활성 성분 비율이나 특정 수치가 문장 중간에 끊기지 않고 자연스러운 제품명 및 효능 서사로 이어지도록 문장 구조를 우아하게 재조정하십시오.
-### C. Use Premium Beauty & Biotech Terminology
+### C. Natural Sentence Flow & Syntactic Restructuring
+- "10% LiftDerm"이나 "Aquatide" 등 활성 성분 비율이나 특정 수치가 문장 중간에 끊기지 않고 자연스러운 제품명 및 효능 서사로 이어지도록 문장 구조를 우아하게 재조정하십시오.
+### D. Use Premium Beauty & Biotech Terminology
 - 피부 속/기저층: 肌底 / 肌底深層
-- 토탈 케어/멀티 코렉티브: 多效修護 / 全方位全效修護
+- 토탈 케어/멀티 코렉티브/리서페이스: 多效修護 / 全方位全效修護 / 煥活肌底
 - 탄력 복원/강화: 賦活肌底彈力 / 喚醒肌膚澎潤彈性
-- 눈가 잔주름/건조주름: 細紋・乾紋 / 撫平眼周細紋
+- 눈가 잔주름/건조주름: 細紋・乾紋 / 撫平細紋
 - 보습/장벽/에센스: 保濕 / 鎖水保護膜 / 保濕屏障 / 精華液 / 菸鹼醯胺
-- 독자 성분명 영문 보존: 'LiftDerm', 'Lifting Logic for eye' 등 글로벌 성분명은 영문 원형 유지.
+- 독자 성분명 영문 보존: 'LiftDerm', 'Aquatide', 'Lifting Logic for eye' 등 글로벌 성분명은 영문 원형 유지.
 
 ## 3. Global Cosmetic Regulatory Screening & TFDA Compliance (Mandatory Guardrails)
 ### A. Ban on Absolute & Unverifiable Claims (절대적/과대 표현 전면 금지)
@@ -774,6 +801,8 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
 
     try:
         original_image = Image.open(in_path)
+        if original_image.mode != "RGB":
+            original_image = original_image.convert("RGB")
         original_image.load()
         orig_w, orig_h = original_image.size
     except Exception as e:
@@ -874,10 +903,13 @@ def process_single_image(client: genai.Client, in_path: str, out_path: str, lang
     return False
 
 
-def run_translation_batch_for_folder(client: genai.Client, current_source_dir: str, target_lang: str, product_name: str):
+def run_translation_batch_for_folder(client: genai.Client, current_source_dir: str, target_lang: str, product_name: str, custom_target_dir: Optional[str] = None):
     """지정된 단일 리프 폴더(current_source_dir)에 대해 이미지 및 DOCX 번역 배치를 실행합니다."""
     config = LANG_CONFIGS[target_lang]
-    target_dir = os.path.join(DEFAULT_OUTPUT_BASE, f"{product_name}_{config['folder_name']}")
+    if custom_target_dir:
+        target_dir = custom_target_dir
+    else:
+        target_dir = os.path.join(DEFAULT_OUTPUT_BASE, f"{product_name}_{config['folder_name']}")
     os.makedirs(target_dir, exist_ok=True)
 
     print(f"================================================================================")
@@ -887,8 +919,8 @@ def run_translation_batch_for_folder(client: genai.Client, current_source_dir: s
     print(f"📁 [저장 위치] {target_dir}")
     print(f"================================================================================\n")
 
-    # 1. 이미지 파일 처리
-    image_files = sorted([f for f in os.listdir(current_source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')) and not f.startswith('~')])
+    # 1. 이미지 파일 처리 (.gif 확장자 포함)
+    image_files = sorted([f for f in os.listdir(current_source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif')) and not f.startswith('~')])
     docx_files = sorted([f for f in os.listdir(current_source_dir) if f.lower().endswith('.docx') and not f.startswith('~')])
 
     total_tasks = len(image_files) + len(docx_files)
@@ -1234,29 +1266,30 @@ Output format MUST be clean, well-structured plain text with Markdown headers.
 
 【核心要求：面向消费者的专业电商文案，全面剔除 AI / 工程化术语】
 - 本文档将直接用于商品详情页与电商页面，供广大终端消费者与买家阅读。
+- 【品牌及术语统一规范】：品牌名保留高固有英文名称【Logicall Skin】；Aquatide 与 Serum 若有中文固定译名必须进行中英文双语并记（如：阿夸肽 (Aquatide)、精华液 (Serum)）。
 - 严禁使用 Markdown 特殊符号（如 **, ##, ###, - 等）。电商平台不支持这些符号。主标题必须仅使用阿拉伯数字（1., 2., 3.），而所有下级特征、成分及列表项必须使用带右括号的数字（1), 2), 3), 4), 5)）进行标记。
 - 严禁出现“生成式 AI”、“GEO”、“AEO”、“大模型知识图谱”、“语义实体锚定”、“第一部分/第二部分/第三部分”、“SECTION 1/2/3”等任何偏向开发者或内部算法的死板术语。
 - 每一个大标题与子标题，必须是清晰定义该板块内容、兼顾高权重搜索关键词与消费者阅读体验的【专业电商详情页标题】。
 
 【标准三段式详情结构】
 1. 第一板块标题：1. 跨境电商官方高转化商品标题 (严格控制在100字符以内)
-   - 标准公式：[品牌名] [核心专利/核心成分] [产品正规品名] [核心功效/定位] [净含量]
+   - 标准公式：[品牌名 Logicall Skin] [阿夸肽 (Aquatide)] [阿夸肽修护精华液 (Aquatide Resurface Serum)] [核心功效/定位] [净含量]
    - 必须严格控制在 100 字符以内（含空格与标点）。严禁输出任何字符数统计注解（如“注：本标题共计xx字符...”）、严禁出现虚假功效/违规认证宣传词（如将海外机能性审查写为“食药处认证”等违规词）。输出内容必须是可以100%直接无缝复制粘贴至电商详情页与商品上架后台的纯净文案。
    
 2. 第二板块标题：2. 核心价值与成分科技摘要
    - (核心要求：极简微型摘要！严禁段落！只能使用关键词和极短句！整个第二板块最多5行字。)
-   - 品牌内核: [品牌名] ([一句话哲理])
-   - 核心成分: [逗号分隔列出3-4个核心成分]
+   - 品牌内核: Logicall Skin ([一句话哲理])
+   - 核心成分: [逗号分隔列出3-4个核心成分，含阿夸肽 (Aquatide)]
    - 核心功效: [逗号分隔列出3-4个核心功效]
    - 配方特点: [逗号分隔列出2-3个配方特点]
    - 搜索标签: [10个关键词，逗号分隔]
      
 3. 第三板块标题：3. 商品使用指南与消费者常见问题解答 (FAQ)
    - 5大消费者高频关切 Q&A 问答对（问题标题必须为清晰的消费指南标题）：
-     - Q1. 【核心功效与改善效果】：【产品品名】能带来怎样的紧致淡纹与焕亮改善？
-     - Q2. 【护肤步骤与正确手法】：含有高浓度活性成分的【产品品名】早晚使用顺序与涂抹手法？
+     - Q1. 【核心功效与改善效果】：Logicall Skin 阿夸肽修护精华液 (Aquatide Resurface Serum) 能带来怎样的紧致淡纹与修护改善？
+     - Q2. 【护肤步骤与正确手法】：含有高浓度活性成分的阿夸肽精华液早晚使用顺序与涂抹手法？
      - Q3. 【肤质适用与温和性说明】：高浓度活性配方是否适用于敏感肌及所有肤质？
-     - Q4. 【成分协同与紧致机理】：【核心复合成分】如何协同解决眼周细纹与眼窝凹陷？
+     - Q4. 【成分协同与紧致机理】：阿夸肽 (Aquatide) 复合成分如何协同修护肌底并平滑细纹？
      - Q5. 【产品保存与官方咨询】：产品保存注意事项与官方售后客服热线 (+82-2-6743-3206)。
 
 【上下文数据】
@@ -1420,20 +1453,19 @@ def find_target_leaf_folders(base_dir: str) -> List[Tuple[str, str]]:
     """이미지나 docx가 존재하는 실제 리프 폴더들을 탐색하여 (폴더경로, 상품명) 목록을 반환합니다."""
     leaf_dirs = []
     for root, dirs, files in os.walk(base_dir):
-        valid_files = [f for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.docx')) and not f.startswith('~')]
+        valid_files = [f for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif', '.docx')) and not f.startswith('~')]
         if valid_files:
             rel = os.path.relpath(root, base_dir)
             if rel == ".":
                 pname = extract_product_name_from_files(valid_files, os.path.basename(base_dir))
             else:
-                # 최상위 서브폴더 기준 또는 현재 폴더 기준 이름 추출
                 top_part = rel.split(os.sep)[0]
                 pname = extract_product_name_from_files(valid_files, top_part)
             leaf_dirs.append((root, pname))
     return leaf_dirs
 
 
-def run_translation_batch(client: genai.Client, source_dir: str, target_lang: str):
+def run_translation_batch(client: genai.Client, source_dir: str, target_lang: str, custom_target_dir: Optional[str] = None, custom_product_name: Optional[str] = None):
     """source_dir 내에 서브폴더나 중첩 폴더를 탐색하여 모든 대상 리프 폴더를 번역합니다."""
     leaf_folders = find_target_leaf_folders(source_dir)
     if not leaf_folders:
@@ -1441,7 +1473,8 @@ def run_translation_batch(client: genai.Client, source_dir: str, target_lang: st
         return
 
     for sdir, pname in leaf_folders:
-        run_translation_batch_for_folder(client, sdir, target_lang, pname)
+        final_pname = custom_product_name if custom_product_name else pname
+        run_translation_batch_for_folder(client, sdir, target_lang, final_pname, custom_target_dir=custom_target_dir)
 
 
 # =================================================================================
@@ -1451,6 +1484,8 @@ def main():
     parser = argparse.ArgumentParser(description="multilingual_text_in_image_translation")
     parser.add_argument("--source", default=DEFAULT_INPUT_DIR, help="원본 이미지 디렉터리")
     parser.add_argument("--lang", choices=["EN", "JP", "CN", "TW", "ALL"], default=None, help="도착 언어 코드")
+    parser.add_argument("--out_dir", default=None, help="결과물 저장 디렉터리 직접 지정 (선택)")
+    parser.add_argument("--product_name", default=None, help="상품 식별명 직접 지정 (선택)")
     args = parser.parse_args()
 
     source_dir = os.path.abspath(args.source)
@@ -1458,10 +1493,9 @@ def main():
 
     chosen_lang = args.lang
     if not chosen_lang:
-        # 하위 이미지 총 개수 카운트
         image_count = 0
         for root, _, files in os.walk(source_dir):
-            image_count += len([f for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))])
+            image_count += len([f for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif'))])
 
         print("\n" + "=" * 76)
         print(" 🌐 multilingual_text_in_image_translation")
@@ -1505,10 +1539,11 @@ def main():
 
     if chosen_lang == "ALL":
         for lang in ["EN", "JP", "CN", "TW"]:
-            run_translation_batch(client, source_dir, lang)
+            run_translation_batch(client, source_dir, lang, custom_target_dir=args.out_dir, custom_product_name=args.product_name)
     else:
-        run_translation_batch(client, source_dir, chosen_lang)
+        run_translation_batch(client, source_dir, chosen_lang, custom_target_dir=args.out_dir, custom_product_name=args.product_name)
 
 
 if __name__ == "__main__":
     main()
+

@@ -29,6 +29,14 @@
 - 모든 Gemini 3.1+ 모델 호출 시, 추측성 리전 변경을 엄격히 금지하며 무조건 프로젝트 내 구글 공식 가이드(`00_공통자료/.../Vertex_AI_Model_Garden_공식가이드_및_모델선택규칙.md`)의 **`location="global"` (Serverless 관리형 규격)**을 100% 강제 적용합니다.
 - 어떠한 상황에서도 공식 기술 문서의 규격을 이탈하여 `us-central1` 등 임의의 리전으로 단독 변경하는 행위를 절대 금지합니다.
 - **[공식 문서 주기적 체크 필수]**: 구글 클라우드 에이전트 플랫폼(Google Cloud Agent Platform) 및 Vertex AI Model Garden 공식 가이드와 신규 업데이트 내용을 작업 전/주기적으로 반드시 탐색·체크하여 최신 API 표준 및 리전 정책을 차질 없이 반영합니다.
+- **[HARD STOP — load_credentials() 의무 사용 규칙]**: 에이전트가 Gemini API를 호출하는 모든 스크립트(임시 스크래치 파일 포함)에서 `genai.Client(vertexai=True, project=..., location=...)` 를 **직접 작성하는 행위를 전면 절대 금지**합니다. 반드시 `multilingual_text_in_image_translation.py` 내 `load_credentials()` 함수를 `import`하여 호출해야 합니다. 이 함수가 `location="global"` 을 포함한 모든 인증 및 리전 규칙을 정확히 보장합니다.
+  ```python
+  # 【유일하게 허용되는 클라이언트 초기화 패턴】
+  import sys
+  sys.path.insert(0, r"c:\Users\euntaewoo\Desktop\다국어_이미지_번역\multilingual_text_in_image_translation")
+  from multilingual_text_in_image_translation import load_credentials
+  client = load_credentials()  # location="global" 자동 보장
+  ```
 
 ## 6. 깃허브 자동 버전 관리 및 실시간 푸시 규칙 (Automatic GitHub Sync & Push)
 - 모든 작업 진행 시, 소스코드 수정, 문서 개정, 신규 기능 추가가 일어날 때마다 무조건 깃허브 저장소(`https://github.com/euntaewoo/PANDORA.git`)로 자동 커밋 및 푸시(Auto Commit & Push)를 수행하여 버전 관리를 실시간 유지해야 합니다.
@@ -100,7 +108,14 @@
   - **토탈 케어/멀티 코렉티브**: [EN] `Multi-Corrective Repair` / [JA] `高機能トータルリペア` / [ZH-CN] `多效修护` / [ZH-TW] `多效修護`
   - **탄력 복원/강화**: [EN] `Rebuilding skin elasticity` / [JA] `ハリ・弾力を呼び覚ます` / [ZH-CN] `赋活肌底弹力` / [ZH-TW] `賦活肌底彈力`
   - **눈가 잔주름/건조주름**: [EN] `Fine lines and wrinkles` / [JA] `目元の小ジワ・乾燥ジワ` / [ZH-CN] `细纹・干纹` / [ZH-TW] `細紋・乾紋`
-- **5. 독자 성분명 및 브랜드명 보존**: `LiftDerm`, `Lifting Logic for eye` 등 글로벌 성분명은 영문 원형 유지. 제품 본품 인쇄 영문/로고 100% 보존.
+- **5. 독자 성분명, 브랜드명 및 전역 용어집(Brand & Key Ingredient Glossary Standard)**:
+  - **브랜드명(Brand Name)**: 고유 영문 명칭인 **`Logicall Skin`**을 100% 원형 유지하며, 임의 한자/가타카나 번역을 금지한다.
+  - **Aquatide & Serum 표기 (중화권 필수)**: **Aquatide 와 Serum은 중국어 고유명칭이 있는 경우 반드시 영문을 병기**한다:
+    * Aquatide ➔ **`阿夸肽 (Aquatide)`**
+    * Serum ➔ **`精华液 (Serum)`**
+    * 제품 정식 명칭 ➔ **`阿夸肽修护精华液 (Aquatide Resurface Serum)`**
+  - **글로벌 독자 성분명 보존**: `LiftDerm`, `Lifting Logic for eye`, `Aquatide 5000` 등 글로벌 독자 성분명은 영문 원형을 보존한다.
+  - **제품 본품 인쇄 무손실 보존**: 제품 본품(용기 표면)에 인쇄된 영문 텍스트 및 로고는 1픽셀 왜곡 없이 100% 보존한다.
 - **6. 절대적/검증불가 표현 전면 금지 (Ban on Absolute & Unverifiable Claims)**:
   - `全球首創`(세계최초), `第一`(제1), `最佳`(최고), `終極對策`(종극대책) 등 절대적 수식어 전면 차단.
   - 반드시 `專為...研發의 創新科技`(혁신기술), `頂級多效`(프리미엄케어), `精準修護`(어드밴스드 포뮬러)로 의무 순화.
@@ -135,6 +150,9 @@
     * **JP 샌드박스**: 일본 약기법 및 @cosme 표준 (`製造販売業者及び<br>製造業者`, `使用期限又は<br>開封後の使用期間`, `医薬部外品・薬用<br>審査済み`).
     * **EN 샌드박스**: 글로벌 FDA/EU 규격 (`Cosmetics Manufacturer /<br>Responsible Distributor`, `Functional Cosmetics<br>Review Status`).
     * **KO 샌드박스**: 식약처 고시 표준 (`기능성 화장품<br>심사 필 유무`, `화장품제조업자 및<br>책임판매업자`, `사용기한 또는<br>개봉 후 사용기간`).
+  - **2열 본문 상품명/영문 병기 스마트 의미 단위 줄바꿈 (Smart Semantic Line-Break for Bilingual Product Names)**:
+    * 2열 본문의 상품명(제품명)이 1줄 가로폭(`570px`)에 온전히 들어가는 짧은 품명은 **1줄 자연 안착을 유지**한다.
+    * 한자/한글 품명과 영문 병기를 합친 길이가 2열 안전 가로폭(`520px`)을 초과하여 영문 단어 도중 어정쩡하게 줄바꿈 결함이 발생하는 경우에는, **괄호 앞(`(` 또는 `（`)에 `<br>`을 자동 주입하여 `한자 품명` / `(영문 병기)` 형태로 완벽한 의미 단위 2줄 분리 안착**을 강제 적용한다.
   - **2열 본문 단어 결속 보호**: 전문의 상담 어휘(`专业医生`, `专业医师`, `전문의 등과 상담할 것`) 등 핵심 구문은 `<span style="white-space: nowrap">` 또는 `&nbsp;`로 묶어 1글자 낙오 원천 차단.
   - **공통 Fallback**: 정규식 미등록 라벨 인입 시 기호(`/`, `&`, `+`, `및`, `또는`, `或`, `及`) 기준 2차 자동 분기 + CSS `word-break: break-word` 3차 방어.
 - **5. 고시정보표 전담 프론트엔드 QA 서브에이전트 (`notice_table_frontend_qa_agent`) 4대 핵심 업무 명문화**:
@@ -160,6 +178,21 @@
   - **한국 (KO)**: 화장품 표시·광고 실증에 관한 규정에 맞춘 기능성 화장품 표기 준수.
 - **4. 쇼핑몰 상품등록 표준 실무 매뉴얼 동기화**:
   - `00_공통자료/쇼핑몰_상품등록_원클릭_복사_실무가이드.md` 문서에 지마켓/옥션(ESM Plus), 스마트스토어, 쿠팡, 타오바오 등 탭별 원클릭 복사 실무 프로세스를 영구 보존.
+
+---
+
+## 13. 영문 번역 시 미국 FDA FD&C Act 및 MoCRA 의약품 오인성(Drug Claim) 원천 금지 및 럭셔리 초월번역 표준 규격
+- **1. [HARD STOP] 화장품 효능 표제 내 의약품성 단어 사용 원천 금지**:
+  - 미국 연방 식품의약품화장품법(FD&C Act 201(g)) 및 화장품 규제 현대화법(MoCRA)에 따라, 화장품 상세페이지의 메인 카피나 표제구에서 질병/증상 치료를 연상시키는 의약품성 용어 사용을 전면 금지한다.
+- **2. 의약품 오인성 금지어 ➔ 럭셔리 뷰티 초월번역 매핑 강제**:
+  - `Wrinkle Treatment` (주름 치료) ➔ **`Advanced Wrinkle Care` / `Targeted Wrinkle Solution` / `Age-Defying Ritual`**
+  - `Treatment` (단독/치료 표기) ➔ **`Care` / `Solution` / `Formula` / `Ritual`**
+  - `Whitening` (미백/탈색 오인) ➔ **`Brightening` / `Radiance` / `Illuminating`**
+  - `Trouble / Skin Trouble` ➔ **`Blemish` / `Sensitive Skin Concerns` / `Visible Irritation`**
+  - `Cure / Heal / Repair tissue` ➔ **`Soothe` / `Comfort` / `Fortify skin barrier` / `Visible Renewal`**
+  - `Bulk up / Build up` (피트니스 은어) ➔ **`Volumizing Skin Density Matrix` / `Triple Firming Architecture`**
+- **3. 원본 텍스트 무비판적 계승(Carryover) 원천 차단**:
+  - 영문 원본이나 한국어 직역 텍스트에 상기 금지어가 존재하더라도, Pass 1 OCR/초월번역 단계에서 100% 필터링하여 글로벌 프레스티지 스킨케어(Sephora/Amazon US) 규격 카피로만 출력한다.
 
 
 
