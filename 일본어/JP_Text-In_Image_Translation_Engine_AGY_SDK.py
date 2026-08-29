@@ -1,0 +1,386 @@
+import asyncio
+import os
+def get_recursive_files(base_dir):
+    try:
+        res = []
+        for root, _, files in os.walk(base_dir):
+            for f in files:
+                res.append(os.path.relpath(os.path.join(root, f), base_dir))
+        return res
+    except Exception:
+        return []
+
+import sys
+sys.path.insert(0, r"C:\Users\euntaewoo\Desktop\multilingual_text_in_image_translatio_agy_sdk\multilingual_text_in_image_translatio_agy_sdk_core")
+from multilingual_transcreation_qa_evaluator_agy_sdk import evaluate_transcreation, generate_html_report
+
+import os
+import io
+import sys
+import time
+import json
+from google import genai
+from google.genai import types
+from PIL import Image
+
+sys.stdout.reconfigure(encoding='utf-8')
+
+# 로컬 상대경로의 .env 파일 탐색 및 키 추출
+script_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(script_dir, ".env")
+api_key = None
+gcp_json_key = None
+
+if os.path.exists(env_path):
+    with open(env_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("GEMINI_API_KEY="):
+                api_key = line.split("=", 1)[1].strip()
+            elif line.startswith("GOOGLE_APPLICATION_CREDENTIALS="):
+                gcp_json_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+
+if not api_key:
+    api_key = os.environ.get("GEMINI_API_KEY")
+if not gcp_json_key:
+    gcp_json_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+
+if gcp_json_key and os.path.exists(gcp_json_key):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gcp_json_key
+    print(f"[INFO] Vertex AI 서비스 계정 JSON 키가 감지되었습니다: {gcp_json_key}")
+    with open(gcp_json_key, 'r', encoding='utf-8') as f:
+        key_data = json.load(f)
+        project_id = key_data.get('project_id')
+    client = genai.Client(vertexai=True, project=project_id, location="global")
+elif api_key:
+    if api_key.startswith("AQ."):
+        print("[INFO] Agent Platform API 키(AQ...)가 감지되었습니다. Vertex AI 모드로 전환합니다.")
+        client = genai.Client(vertexai=True, api_key=api_key)
+    else:
+        client = genai.Client(api_key=api_key)
+else:
+    print("[ERROR] GEMINI_API_KEY 또는 GOOGLE_APPLICATION_CREDENTIALS가 설정되지 않았습니다.")
+    sys.exit(1)
+
+# V6 에서는 2개의 모델을 사용합니다.
+# Pass 1: 텍스트 추출 및 약기법 매핑 (추론 특화)
+MODEL_PRO = "gemini-3.1-pro-preview"
+# Pass 2: 이미지 렌더링 (이미지 생성 특화)
+MODEL_FLASH_IMAGE = "gemini-3.1-flash-image"
+
+# 커맨드라인 파라미터 파싱
+if len(sys.argv) > 1:
+    source_dir = sys.argv[1]
+    if len(sys.argv) > 2:
+        base_target_dir = sys.argv[2]
+    else:
+        base_target_dir = os.path.join(os.path.dirname(source_dir), os.path.normpath(source_dir).split(os.sep)[-1] + "_JP_Translated")
+else:
+    # 기본 경로 세팅 (개발/테스트용)
+    source_dir = r"C:\Users\euntaewoo\Desktop\이미지번역워크스페이스\변역대상\05. 멀티코렉티브 아이크림 -Multi Corrective Eye cream-20260225T123156Z-1-001\05. 멀티코렉티브 아이크림 -Multi Corrective Eye cream"
+    base_target_dir = r"C:\Users\euntaewoo\Desktop\이미지번역워크스페이스\변역결과\5_(일본어)Multi Corrective Eye cream"
+
+if len(sys.argv) > 2:
+    target_dir = base_target_dir
+else:
+    if len(sys.argv) == 1:
+        target_dir = base_target_dir
+    else:
+        folder_name = os.path.normpath(source_dir).split(os.sep)[-1]
+        target_dir = os.path.join(base_target_dir, folder_name)
+os.makedirs(target_dir, exist_ok=True)
+
+# [Pass 1] 약기법 강제 번역 매핑 프롬프트
+# [일본 후생노동성 공인 56종 허용 표현 (Positive List) 동적 로드]
+efficacy_json_path = os.path.join(script_dir, "cosmetics_efficacy_56.json")
+efficacy_list_str = ""
+if os.path.exists(efficacy_json_path):
+    try:
+        with open(efficacy_json_path, "r", encoding="utf-8") as ef:
+            efficacy_data = json.load(ef)
+            efficacy_list_str = "\n".join([f"{item['id']}. {item['claim_jp']} ({item['claim_ko']})" for item in efficacy_data])
+            print(f"[INFO] 일본 후생노동성 공인 56종 허용 효능 규격 로드 완료 ({len(efficacy_data)}종)")
+    except Exception as e:
+        print(f"[WARNING] 56종 규격 JSON 로드 중 에러 발생: {e}")
+
+if not efficacy_list_str:
+    efficacy_list_str = "1. 肌を整える\n2. 肌荒れを防ぐ\n3. 皮膚にうるおいを与える 등 56종"
+
+# [Pass 1] 럭셔리 뷰티 초월번역 및 약기법 강제 매핑 프롬프트
+pass1_prompt = f"""
+[SYSTEM PROMPT] Global Luxury Beauty Transcreation & Compliance Expert (Japanese Engine)
+
+## 1. 시스템 역할 및 콘셉트 (Role & Context)
+당신은 시슬리, SK-II, 데코르테 등 일본 하이엔드 프레스티지 뷰티 시장을 총괄하는 10년 차 수석 크리에이티브 디렉터이자 @cosme 전문 엘리트 카피라이터입니다.
+단순 직역을 배제하고, 일본 소비자의 감성을 깊게 자극하는 정중하고 품격 있는 뷰티 카피(美肌, ハリ, 潤い)로 초월번역(Transcreation)하세요.
+
+## 2. 초월번역 핵심 원칙 (Core Transcreation Principles)
+1. [기계적 직역 및 부사 금지]
+   - '確実に', '本当に', '絶対に' 등 딱딱한 부사 직역을 전면 금지하고, 피부 감촉과 효능을 섬세하게 묘사하는 프리미엄 어휘로 재창조하십시오.
+2. [자연스러운 구문 결속 및 제형 감성 묘사]
+   - "10% LiftDerm" 등 성분 비율이 문맥과 끊기지 않고 매끄러운 뷰티 서사로 이어지도록 구조를 재조정하십시오.
+3. [4대 기능성 뷰티 전문 어휘 사전 채택]
+   - 피부 속/기저층: 肌の奥・角質層のすみずみまで
+   - 토탈 케어/멀티 코렉티브: 高機能トータルリペア / 多機能エイジングケア
+   - 탄력 복원/강화: ハリ・弾力を呼び覚ます / 弾むようなハリ感
+   - 눈가 잔주름/건조주름: 目元の小ジワ・乾燥ジワ
+4. [독자 성분명 영문 보존]
+   - 'LiftDerm', 'Lifting Logic for eye' 등은 억지로 가타카나로 뭉개지 않고 영문 고유 표기를 유지하여 임상적 신뢰도를 극대화하십시오.
+5. [절대적/과대 표현 전면 금지 (Ban on Absolute Claims)]
+   - '世界初', 'No.1', '最高', '究極' 등 검증 불가능한 절대 표현 사용을 금지하고, '目元のために開発された先進テクノロジー', '高機能トータルケア' 등 프리미엄 케어 표현으로 순화하십시오.
+
+## 3. 후생노동성 약기법(약사법) 규제 준수 가이드
+[일본 후생노동성 공인 56종 허용 효능 목록 (Positive List)]
+{efficacy_list_str}
+
+[약기법 필수 준수 지침]
+1. [기본 원칙] 일본 화장품법은 포지티브 리스트(56가지 허용 표현) 방식입니다. '치료/효능'이 아닌 '세정/관리/느낌' 위주로 순화해야 합니다. 위 [일본 후생노동성 공인 56종 허용 효능 목록]에 등재된 일본어 표현만을 정확히 사용하여 번역하십시오.
+2. '자극 없이', '무자극' -> '피부에 순하게(肌にやさしく)' 또는 '저자극 처방(低刺激処方)'.
+3. '진정(鎮静)' -> 샴푸/두피 제품의 경우 '지하다 케어(地肌ケア, 두피 관리)' 또는 '청결하게 유지(清潔に保つ)'. 피부의 경우 '피부를 정돈하다(肌を整える)'.
+4. '탈모 방지' -> '두피 환경을 정돈(頭皮環境を整える)'.
+5. '모공 축소', '피지 조절' -> '세정으로 모공 노폐물 제거(洗浄により毛穴の汚れを落とす)'.
+6. '흡수' 또는 '침투' -> 범위를 명시하여 '각질층까지 침退(角質層まで浸透)'로 번역하거나 주석 `*浸透は角質層まで` 추가.
+7. '치료' -> 'ケア', '개선' -> '整える', '재생' -> 'いきいき'. '적당량' -> '適量'.
+8. '미백', '화이트닝', '잡티 제거' -> '(메이크업 효과로) 화사하게 연출' 또는 '수분을 주어 투명감 있는 피부로 케어(うるおいを与え透明感のある肌へ)'.
+9. '리프팅', '안티에이징', '주름 개선/방지', '처짐 방지', '젊어짐' 등은 절대 금지. 허용 대체 문구: '肌にはりを与える(탄력을 주다)', '肌にツヤを与える(윤기를 주다)', '肌を引き締め、ハリのある印象へ', 'ハリを感じる肌へ導きます', 'スッキリとした印象の肌へ', '引き締まった印象で、若々しい肌へ', '肌を守りながらふっくらハリ肌へ'.
+10. '잔주름' 표현은 일본 임상 시험 데이터가 없으면 불법이므로 '乾燥による小ジワを目立たなくする(건조로 인한 잔주름을 눈에 띄지 않게 함)'도 원본에 명시된 임상 근거가 없다면 자의적으로 쓰지 말고, 9번의 '탄력' 관련 문구로 일괄 우회할 것.
+11. '에이징 케어(エイジングケア)'라는 단어를 쓸 경우, 주석 `*エイジングケアとは、年齢に応じたお手入れのこと` 를 반드시 표기할 것.
+12. '노벨상' -> 'オートファジー技術'. '강력한', '제일' -> '高い保湿感', '優れた保湿力'.
+13. [상품 정보 고시(Notice Table) 번역 표준 규격 (약기법 기준 강제 매핑)]
+    - 용량 또는 중량: 内容量
+    - 제품 주요 사양: お肌のタイプ / 対象肌
+    - 사용기한 또는 개봉 후 사용기간: 使用期限
+    - 사용방법: ご使用方法
+    - 화장품제조업자 및 책임판매업자: 製造販売元
+    - 제조국: 原産国
+    - 전성분: 全成分 (日本の化粧品表示名称に準拠)
+    - 기능성 심사 필 유무: 医薬部外品承認 / 区分:化粧品
+    - 주의사항: ご使用上の注意
+    - 소비자 상담 전화번호: お客様相談窓口
+14. [중요] 제품 패키지/용기에 적힌 영문 텍스트(예: LOGICALLY SKIN, MULTI CORRECTIVE EYE CREAM 등)는 절대 번역하거나 매핑 딕셔너리에 포함시키지 마세요. 이는 이미지 렌더링 시 AI가 해당 영문을 훼손(오타 등)하는 것을 방지하기 위함입니다. 오직 '한국어'만 번역 대상으로 삼으세요.
+15. '디톡스', '해독', '배출(排出)', '피로(疲労)', '지침(疲れ)' -> 의약품/건강기능식품 용어이므로 화장품 사용 절대 불가. '肌を整える', '肌荒れを防ぐ', '不要なものをすっきりと', 'すこやかに保つ' 등으로 대체할 것.
+16. [엄격 주의] 이미지 내의 모든 한국어 텍스트는 단 하나도 빠짐없이 100% 추출하여 번역 매핑에 포함시켜야 합니다.
+17. [안전망 규칙 - TABLE HTML TO PNG] 이미지 내에 정보 고시 표나 복잡한 표(테이블) 레이아웃이 포함된 경우, 본 V6 인페인팅 방식으로 렌더링하지 마십시오.
+
+[Few-Shot 매핑 사례 (반드시 아래의 번역 톤을 따를 것)]
+사례 1: "피부 진정 효과가 뛰어난 티트리 추출물" -> "肌を整えるティーツリーエキス" (진정 -> 정돈하다)
+사례 2: "눈가 주름 개선 및 안티에이징 기능" -> "目元にハリを与え、若々しい印象へ" (주름 개선/안티에이징 -> 탄력을 주다, 젊어보이는 인상)
+사례 3: "피부 속까지 깊숙이 흡수되어" -> "角質層まで浸透し" (속까지 흡수 -> 각질층까지 침투)
+사례 4: "부작용 없이 안전한 무자극 화장품" -> "肌にやさしい低刺激処方の化粧品" (무자극/부작용 없이 -> 저자극/피부에 순한)
+
+출력은 반드시 JSON 형식으로 아래 스키마를 엄격히 따르세요:
+{{
+  "translation_map": [
+    {{
+      "kor": "한국어 원문", 
+      "rule_check_reasoning": "이 문구에 안티에이징, 진정, 재생 등의 불법 표현이 포함되어 있는가? (검열 사고 과정 작성)",
+      "jpn": "약기법 준수 일본어 번역문",
+      "violation_reason": "수정 사유 (56종 위반 내용 등, 수정한 경우에만 기재, 수정 안했으면 빈 문자열)"
+    }}
+  ],
+  "required_footnotes": [
+    "필요한 법적 주석 문자열 (없으면 빈 배열)"
+  ]
+}}
+"""
+
+# [Pass 2] 렌더링 지시 프롬프트 템플릿
+pass2_prompt_template = """
+당신은 정밀한 시각적 로컬라이제이션을 수행하는 이미지 인페인팅 AI입니다.
+첨부된 원본 이미지 속의 텍스트 위치, 배경 텍스처, 디자인 레이아웃을 1픽셀의 왜곡 없이 그대로 유지하세요.
+아래에 제공된 [번역 매핑 데이터 JSON]을 바탕으로 다음 규칙을 엄격히 적용하여 단일 이미지를 생성하세요.
+
+[시각적 렌더링 엄격 규칙]
+1. (KOR ERASING) 원본의 한국어 텍스트는 원래 자리에 남겨두지 말고 배경색으로 덮어써서 100% 지울 것. 병기(한글+일본어) 절대 금지.
+2. (JSON APPLY) 지워진 그 자리에 오직 [번역 매핑 데이터 JSON]의 'jpn' 텍스트만 렌더링할 것. 모델 임의로 번역을 수정하지 말 것.
+3. (FULL INPAINTING NO PATCHING) [중요] 텍스트 수정 지시가 있더라도 오류 부분만 오려내어 덧칠(Patching)하지 마세요. 반드시 첨부된 원본 이미지를 기반으로 캔버스 전체를 완전히 새롭게 렌더링(Full Inpainting)하여 1픽셀의 이질감도 없는 완벽한 하나의 이미지를 생성하십시오.
+4. (VISUAL BALANCE) [중요] 전체를 새로 렌더링할 때, 원본의 상단 텍스트와 하단 텍스트 간의 '폰트 사이즈', '폰트 두께(Weight)', '자간'을 임의로 다르게 그리지 마십시오. 시각적으로 완벽하게 동일한 폰트 규격과 두께감으로 통일성 있게 식자해야 합니다.
+5. (LAYOUT STRICTNESS) [중요] 빈 공간이 넓다고 해서 텍스트를 거대하게 채우지 마십시오. 주변 이미지(로고, 선 등)의 구도와 여백을 철저히 계산하여 원래 텍스트가 있던 단락의 정렬축(좌/우/중앙)을 1픽셀의 오차 없이 그대로 유지하십시오.
+6. (PACKAGE PRESERVATION) 제품 본품(용기, 튜브 등) 표면에 인쇄된 영문 텍스트(예: 브랜드명 'LOGICALLY SKIN', 'MULTI CORRECTIVE EYE CREAM')는 절대 다시 그리거나(redraw) 인페인팅 하지 마세요. 원본 픽셀 구성을 단 1픽셀도 건드리지 말고 100% 완벽하게 보존해야 합니다. 오타(예: Logtcally 등)가 발생하면 즉시 실패로 간주됩니다.
+7. (NO EXTRA NOISE) 번역과 무관한 AI 주석이나 영어 설명, 괄호를 이미지에 추가하지 말 것.
+8. (FOOTNOTES) 'required_footnotes' 배열에 내용이 있다면, 이미지 최하단 또는 적절한 여백에 해당 주석 텍스트를 아주 작은 글씨로 삽입할 것.
+9. (HTML TO PNG RULE) [중요] 테이블 표 속에 긴 문장과 텍스트가 빽빽하게 나열된 경우, AI 이미지 렌더링(인페인팅) 방식으로는 글씨가 뭉개지거나 격자가 파괴되는 치명적 한계가 발생하므로, 이를 코딩(HTML/CSS) 기반 렌더링으로 우회하여 완벽한 고화질 PNG를 얻어냅니다. 따라서 표 레이아웃이 감지되면 어떠한 텍스트 덮어쓰기 작업도 강행하지 마세요.
+
+[번역 매핑 데이터 JSON]
+{json_data}
+"""
+
+
+
+async def main_async():
+    print("[START] JP_Text-In_Image_Translation_Engine_V7 (Two-Pass Architecture) 엔진 가동...")
+    print(f"[INFO] 타겟 스캔 폴더: {source_dir}")
+    print(f"[INFO] 결과 저장 폴더: {target_dir}")
+
+    targets = [f for f in get_recursive_files(source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.jfif', '.gif'))]
+
+    if not targets:
+        print(f"[WARNING] '{source_dir}' 폴더에 처리할 이미지가 없습니다.")
+        sys.exit(0)
+
+    all_translations = []
+
+    for filename in targets:
+        if 'JP' in filename:
+            continue
+        
+        if '상세정보안내' in filename or '상품정보제공고시' in filename or '상품상세정보' in filename or filename.endswith('.txt'):
+            continue
+        
+        in_path = os.path.join(source_dir, filename)
+        out_name = f"{os.path.splitext(filename)[0]}_JP_Surgical_v7.png"
+        out_path = os.path.join(target_dir, out_name)
+    
+        if os.path.exists(out_path):
+            print(f"\n[SKIP] 이미 번역 완료된 파일입니다: {filename}")
+            continue
+
+        print(f"\n[RENDER] 변환 시작: {filename}")
+    
+        try:
+            original_image = Image.open(in_path)
+            original_image.load()
+        except Exception as e:
+            print(f"  -> [ERROR] 이미지 로드 실패: {e}")
+            continue
+
+        # ==========================
+        # PASS 1: 텍스트 추출 및 번역 (pro 모델)
+        # ==========================
+        print("  -> [PASS 1] 텍스트 매핑 및 약기법 검열 중...")
+        try:
+            response_p1 = await client.aio.models.generate_content(
+                model=MODEL_PRO,
+                contents=[original_image, pass1_prompt],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.6,
+                    top_p=0.9,
+                    max_output_tokens=8192
+                )
+            )
+            mapping_data_str = response_p1.text
+            import re
+            forbidden_patterns = {
+                r"鎮静": "肌を整える",
+                r"アンチエイジング": "年齢に応じたケア",
+                r"副作用なし": "低刺激処方",
+                r"無刺激": "低刺激処方",
+                r"再生": "いきいき",
+                r"シワ改善": "ハリを与える",
+                r"ニキビ跡": "肌荒れを防ぐ",
+                r"排出": "不要なものをすっきりと",
+                r"デトックス": "肌を整える",
+                r"解毒": "肌を整える",
+                r"100%安全": "肌にやさしい",
+                r"疲労": "すこやかに保つ",
+                r"疲れ": "すこやかに保つ",
+                r"最高": "優れた",
+                r"一番": "優れた",
+                r"強力な保湿": "優れた保湿力",
+                r"強力な": "優れた",
+                r"肌荒れ予防": "肌荒れを防ぐ",
+                r"予防": "防ぐ",
+                r"抗酸化作用": "肌を整える",
+                r"抗酸化": "肌を整える"
+            }
+            # JSON 유효성 테스트
+            parsed_json = json.loads(mapping_data_str)
+            if "translation_map" in parsed_json:
+                for item in parsed_json["translation_map"]:
+                    jpn_text = item.get("jpn", "")
+                    # Python 하드 필터링 (최후의 보루)
+                    for pattern, safe_word in forbidden_patterns.items():
+                        if re.search(pattern, jpn_text):
+                            print(f"      [Python Regex Filter] 금지어 감지: '{pattern}' -> '{safe_word}' 로 강제 치환")
+                            jpn_text = re.sub(pattern, safe_word, jpn_text)
+                            item["violation_reason"] = item.get("violation_reason", "") + f" (Python 강제 필터링: {pattern} 적발)"
+                    item["jpn"] = jpn_text
+                    # 파일명도 출처로 함께 저장
+                    item["source_file"] = filename
+                all_translations.extend(parsed_json["translation_map"])
+            print("  -> [PASS 1 SUCCESS] 매핑 데이터 생성 완료.")
+        except Exception as e:
+            print(f"  -> [PASS 1 ERROR] 약기법 매핑 실패: {e}")
+            continue
+
+        # ==========================
+        # PASS 2: 이미지 렌더링 (flash-image 모델)
+        # ==========================
+        print("  -> [PASS 2] 이미지 인페인팅 렌더링 중...")
+        try:
+            final_prompt = pass2_prompt_template.replace("{json_data}", mapping_data_str)
+            response_p2 = await client.aio.models.generate_content(
+                model=MODEL_FLASH_IMAGE,
+                contents=[final_prompt, original_image],
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"],
+                    temperature=0.6,
+                    top_p=0.9
+                )
+            )
+        
+            img_saved = False
+            if hasattr(response_p2, 'candidates'):
+                for cand in response_p2.candidates:
+                    if hasattr(cand, 'content') and hasattr(cand.content, 'parts'):
+                        for part in cand.content.parts:
+                            if hasattr(part, 'inline_data') and part.inline_data:
+                                img = Image.open(io.BytesIO(part.inline_data.data))
+                                img = img.resize(original_image.size, Image.Resampling.LANCZOS)
+                                img.save(out_path, format="PNG")
+                                img_saved = True
+                                break
+                            elif hasattr(part, 'image') and part.image:
+                                img = Image.open(io.BytesIO(part.image.image_bytes))
+                                img = img.resize(original_image.size, Image.Resampling.LANCZOS)
+                                img.save(out_path, format="PNG")
+                                img_saved = True
+                                break
+                            
+            if img_saved:
+                print(f"  -> [SUCCESS] {out_name} 최종 저장 완료!")
+            else:
+                print("  -> [FAILED] Pass 2에서 이미지 데이터를 반환받지 못했습니다.")
+            
+        except Exception as e:
+            print(f"  -> [PASS 2 ERROR] 렌더링 실패: {e}")
+    
+        # 두 번 호출하므로 레이트 리밋 관리를 위해 8초 대기
+        time.sleep(8)
+
+    if all_translations:
+        print("\n[REPORT] 약기법 56종 위반/대체 비교표 TXT 문서 생성 중...")
+        report_path = os.path.join(target_dir, "약기법_번역_비교표_56종.txt")
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write("==================================================\n")
+            f.write("🇯🇵 V7 엔진: 약기법(56종) 위반 문구 vs 대체 허용 문구 비교표\n")
+            f.write("==================================================\n")
+            f.write("본 비교표는 V7 엔진이 일본 후생노동성 허용 56종(포지티브 리스트)을 강제 적용하여 변환한 데이터입니다.\n\n")
+            for t in all_translations:
+                reason = t.get("violation_reason", "").strip()
+                kor = t.get("kor", "").replace("\n", " ")
+                jpn = t.get("jpn", "").replace("\n", " ")
+                src = t.get("source_file", "")
+                f.write("--------------------------------------------------\n")
+                f.write(f"[파일명]: {src}\n")
+                f.write(f"[한국어 원본]: {kor}\n")
+                f.write(f"[수정 사유]: {reason}\n")
+                f.write(f"[대체 일본어]: {jpn}\n")
+            f.write("--------------------------------------------------\n")
+        print(f"  -> [SUCCESS] 비교표 저장 완료: {report_path}")
+
+    print("\n[FINISH] JP_Text-In_Image_Translation_Engine_V7 이미지 번역 완료!")
+
+
+
+    async def main_async():
+        asyncio.run(main_async())
+
+
+if __name__ == '__main__':
+    asyncio.run(main_async())
+
+
+if __name__ == '__main__':
+    asyncio.run(main_async())

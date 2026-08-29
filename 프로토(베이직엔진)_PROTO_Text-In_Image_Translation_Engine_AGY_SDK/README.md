@@ -1,0 +1,43 @@
+# 🚀 PROTO_Text-In_Image_Translation_Engine_AGY_SDK (Two-Pass Core Architecture)
+
+본 문서는 다국어 이미지 번역 시스템의 기초 토대가 되는 **프로토 비동기 베이직 엔진(AGY_SDK)**의 기술 명세서입니다.
+
+---
+
+## ⚙️ 엔진 하이퍼파라미터 및 토큰 제원 (Hyperparameters & Token Limits)
+- **4대 핵심 하이퍼파라미터 (GenerationConfig)**:
+  - `temperature`: **0.6** (해외 광고법 준수 안전선 유지 및 럭셔리 초월번역 밸런스 확보)
+  - `top_p`: **0.9** (하위 10% 투박한 직역 표현 배제 및 정제된 백화점 뷰티 어휘 필터링)
+- **토큰 한도 이원화 (Token Limit Dualization)**:
+  - **대용량 데이터 추출 및 고시표 번역 (Pass 1 & Table Render)**: `max_output_tokens=8192` (전성분 등 방대한 화학 명칭 및 JSON 구조 유실 방지)
+  - **마케팅 카피 및 SEO 생성 (SEO/GEO/AEO)**: `max_output_tokens=4096` (불필요한 장황한 설명 차단 및 API 비용 최적화)
+
+> 💡 **[Temperature 0.6 공학적·수학적 배경 및 실측 제원 주석]**
+> - **수학적 작동 원리 (Softmax 연산식)**: $P(w_i) = \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}$
+>   - $T$ (Temperature)는 다음 단어를 샘플링할 때 확률 분포의 평탄화(Flatness) 정도를 제어하는 조절 매개변수임.
+> - **실측 동작 특성 비교**:
+>   - `T = 0.5`: 상위 1~2개 고확률 단어에 선택이 집중되어 결정론적/보수적 연산 수행 (문장이 딱딱한 기계 직역으로 고착됨).
+>   - `T = 0.7`: 하위 확률 단어의 채택 가능성이 높아져 무작위성 및 창의성은 증가하나, 원문에 없는 과장/절대화 금지어 환각 및 광고법 위반 리스크 급증.
+>   - `T = 0.6`: 해외 화장품 광고법(미국 MoCRA, 대만 TFDA, 일본 약기법, 중국 NMPA) 위반 리스크 차단과 백화점·세포라급 럭셔리 초월번역(Transcreation) 감성 품질 간의 **최적 균형점(황금 비율)**.
+
+
+---
+
+## 🏗️ 2-Pass 아키텍처 흐름
+1. **Pass 1 (Text & Multimodal)**: `gemini-3.1-pro-preview` (OCR 스캔, 규제 검열, 초월번역 JSON 매핑)
+2. **Pass 2 (Image Generation)**: `gemini-3.1-flash-image` (한글 완전 삭제 및 시각적 인페인팅 렌더링)
+3. **후처리 (Post-Processing)**: Pillow `LANCZOS` 알고리즘을 통한 원본 해상도 1:1 종횡비 보존 복원
+
+
+---
+
+## 🏆 초월번역(Transcreation) 품질 자동 평가 4대 루브릭 (100점 만점)
+- **① 현지 카테고리 어휘 적합성 (30점)**: 콩글리시/직역투 배제, 현지 뷰티 플랫폼 네이티브 어휘 채택
+- **② 국가별 광고법 무결성 (30점)**: 미국 MoCRA, 일본 약기법, 중국 NMPA/신광고법 위반 표현 100% 차단
+- **③ 브랜드 감성 및 초월번역 완성도 (25점)**: 백화점·세포라급 하이엔드 뷰티 톤앤매너 및 구매 전환 설득력
+- **④ 시각적 레이아웃 및 가독성 (15점)**: 텍스트 박스 침범 방지 및 간결한 문장 구조
+- **[합격 기준 및 자가치유]**: **90점 이상 & 위반 0건 합격**, 미달 시 피드백 기반 **최대 2회 자동 재렌더링 및 `Transcreation_QA_Report.html` 발행**
+
+
+## ⚡ 비동기 API 통신 규격
+- wait client.aio.models.generate_content() 비동기 I/O 표준 100% 적용

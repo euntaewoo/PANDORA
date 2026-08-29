@@ -1,0 +1,47 @@
+# ==============================================================================
+# Antigravity AI Context Ignore Rules (.antigravityignore)
+# Purpose: Prevent AI from ingesting massive virtual environments, build logs, 
+#          caches, and sensitive credentials into context window.
+# ==============================================================================
+
+# 1. Virtual Environments & Package Directories
+.venv/
+venv/
+env/
+node_modules/
+
+# 2. Python Caches & Compiled Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# 3. Logs, Debug Dumps & Telemetry
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+gemini_debug.json
+
+# 4. Large Archives & Binary Artifacts
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# 5. IDE & Container Metadata Caches
+.cache/
+.devcontainer/
+
+# 6. Security, API Keys & Secret Environment Files
+.env
+.env.*
+00_공통자료/APIs_KEY/
+00_공통자료/인증키_및_계정/
+vertex_service_account.json

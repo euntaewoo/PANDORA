@@ -1,0 +1,29 @@
+[project]
+name = "multilingual-text-in-image-translatio-agy-sdk-uv-version"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "euntaewoo", email = "euntaewoo5184@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.141.1",
+    "google-cloud-aiplatform>=2.0.1",
+    "google-cloud-storage>=3.13.1",
+    "google-cloud-vision>=3.15.0",
+    "google-genai>=2.20.0",
+    "html2image>=2.0.7",
+    "openpyxl>=3.1.5",
+    "pillow>=12.3.0",
+    "playwright>=1.62.0",
+    "python-docx>=1.2.0",
+    "python-dotenv>=1.2.3",
+    "uvicorn>=0.52.4",
+]
+
+[project.scripts]
+multilingual-text-in-image-translatio-agy-sdk-uv-version = "multilingual_text_in_image_translatio_agy_sdk_uv_version:main"
+
+[build-system]
+requires = ["uv_build>=0.12.2,<0.13.0"]
+build-backend = "uv_build"
