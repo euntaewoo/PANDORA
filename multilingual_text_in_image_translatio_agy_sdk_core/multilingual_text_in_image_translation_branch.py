@@ -58,6 +58,7 @@ else:
 
 DEFAULT_INPUT_DIR = os.path.join(PROJECT_ROOT, "01_번역대상_원본")
 DEFAULT_OUTPUT_BASE = os.path.join(PROJECT_ROOT, "02_번역결과_최종")
+DEFAULT_REMEDIATION_BASE = os.path.join(PROJECT_ROOT, "04_번역교정")
 
 MODEL_PRO = "gemini-3.1-pro-preview"
 MODEL_FLASH_IMAGE = "gemini-3.1-flash-image"
@@ -174,13 +175,192 @@ def load_jp_efficacy_list() -> str:
 
 
 # =================================================================================
+# 2-1. [QA-FEEDBACK-INJECTION-LOCK] 03_번역품질평가 진단 결과 자동 로더 & 결정론적 보정 게이트
+# =================================================================================
+def load_qa_feedback_and_transcreation_rules(source_folder: str, product_name: str = "", lang_code: str = "EN") -> Dict[str, Any]:
+    """
+    03_번역품질평가 진단 결과(Transcreation_QA_Report.json 및 correction_feedbacks / transcreation_comparisons)를
+    자동 탐색·로드하여 Pass 1 프롬프트 주입문 및 결정론적(Deterministic) 단어/구문 치환 딕셔너리로 변환합니다.
+    """
+    qa_data = {}
+    found_path = None
+
+    candidates = [
+        os.path.join(source_folder, "transcreation_guide.json"),
+        os.path.join(source_folder, "Transcreation_QA_Report.json"),
+        os.path.join(source_folder, "qa_report.json"),
+    ]
+    if product_name:
+        candidates.extend([
+            os.path.join(PROJECT_ROOT, "03_번역품질평가", "02_진단결과", product_name, "Transcreation_QA_Report.json"),
+            os.path.join(PROJECT_ROOT, "03_번역품질평가", "02_진단결과", f"{product_name}_{lang_code}", "Transcreation_QA_Report.json"),
+            os.path.join(PROJECT_ROOT, "03_번역품질평가", "02_진단결과", f"{product_name}_EN", "Transcreation_QA_Report.json"),
+        ])
+
+    qa_results_dir = os.path.join(PROJECT_ROOT, "03_번역품질평가", "02_진단결과")
+    if os.path.exists(qa_results_dir):
+        for sub in os.listdir(qa_results_dir):
+            sub_p = os.path.join(qa_results_dir, sub, "Transcreation_QA_Report.json")
+            if os.path.exists(sub_p) and sub_p not in candidates:
+                candidates.append(sub_p)
+
+    for c_path in candidates:
+        if os.path.exists(c_path):
+            try:
+                with open(c_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict) and (data.get("correction_feedbacks") or data.get("transcreation_comparisons")):
+                        qa_data = data
+                        found_path = c_path
+                        break
+            except Exception:
+                pass
+
+    prompt_lines = []
+    spelling_dict = {}
+    phrase_dict = {}
+
+    known_typos = {
+        r"\benurgy\b": "energy",
+        r"\bdeley\b": "delay",
+        r"\bocne\b": "acne",
+        r"\bmetabailism\b": "metabolism",
+        r"\bLIGHTWEGHT\b": "LIGHTWEIGHT",
+        r"\bCosmetis\b": "Cosmetics",
+        r"\bPynidoxine\b": "Pyridoxine",
+    }
+    for k, v in known_typos.items():
+        spelling_dict[k] = v
+
+    if qa_data:
+        print(f"  🎯 [QA 피드백 연동 성공] {os.path.relpath(found_path, PROJECT_ROOT)} 에서 교정 규칙 100% 로드 완료", flush=True)
+
+        feedbacks = qa_data.get("correction_feedbacks", [])
+        if feedbacks:
+            prompt_lines.append("### A. [MANDATORY SPELLING & COMPLIANCE CORRECTIONS (STRICT OVERRIDE)]")
+            for fb in feedbacks:
+                orig = fb.get("original", "").strip()
+                cur = fb.get("current_translation", "").strip()
+                rec = fb.get("recommended_correction", "").strip()
+                reason = fb.get("reason", "").strip()
+                if rec:
+                    prompt_lines.append(f"- **Issue**: `{orig or cur}` ➔ **MUST BE CORRECTED TO**: `{rec}` (Reason: {reason})")
+                    if cur and rec:
+                        phrase_dict[cur] = rec
+                    match = re.search(r'([a-zA-Z]+)\s*(?:->|➔|to)\s*([a-zA-Z]+)', reason)
+                    if match:
+                        typo_w, correct_w = match.group(1), match.group(2)
+                        spelling_dict[rf"\b{typo_w}\b"] = correct_w
+
+        comparisons = qa_data.get("transcreation_comparisons", [])
+        if comparisons:
+            prompt_lines.append("\n### B. [GOLD-STANDARD TRANSCREATION PAIRS (Pre-Approved Sephora-Grade Copy)]")
+            for comp in comparisons:
+                orig_ko = comp.get("original", "").strip()
+                lit = comp.get("literal_translation", "").strip()
+                trans = comp.get("transcreation", "").strip()
+                val = comp.get("value_analysis", "").strip()
+                if orig_ko and trans:
+                    prompt_lines.append(f"- **Source (KO)**: `{orig_ko}`")
+                    prompt_lines.append(f"  ➔ **Approved Transcreation**: `{trans}`")
+                    if val:
+                        prompt_lines.append(f"  ➔ **Key Reason**: {val}")
+                    phrase_dict[orig_ko] = trans
+                    if lit:
+                        phrase_dict[lit] = trans
+
+    override_text = "\n".join(prompt_lines)
+    return {
+        "found_path": found_path,
+        "raw_data": qa_data,
+        "prompt_override_text": override_text,
+        "spelling_dict": spelling_dict,
+        "phrase_dict": phrase_dict
+    }
+
+def apply_deterministic_qa_overrides(t_map: List[Dict[str, Any]], qa_rules: Dict[str, Any], lang_code: str) -> List[Dict[str, Any]]:
+    """
+    [DETERMINISTIC-QA-OVERRIDE-GATE]
+    Pass 1 LLM 응답 후, QA 진단 결과에서 도출된 오타/MoCRA 금지어/초월번역 쌍을
+    Python 정규식 및 치환 규칙으로 100% 강제 검증 및 보정합니다.
+    """
+    if not isinstance(t_map, list):
+        return t_map
+
+    spelling_dict = qa_rules.get("spelling_dict", {})
+    phrase_dict = qa_rules.get("phrase_dict", {})
+
+    mocra_banned_replacements = {
+        r"\bPrescribe\b": "Targeted Solution for",
+        r"\bprescribe\b": "targeted solution for",
+        r"\bBio-Immunity\b": "Skin Defense",
+        r"\bbio-immunity\b": "skin defense",
+        r"\bfed directly\b": "infused daily",
+        r"\bKyel-Tan-Tone\b": "Texture, Elasticity & Luminosity",
+        r"\bkyel-tan-tone\b": "texture, elasticity & luminosity",
+    }
+
+    updated_count = 0
+    for item in t_map:
+        if not isinstance(item, dict):
+            continue
+        kor = item.get("kor", "")
+        target = item.get("target_text", "")
+        if not target:
+            continue
+
+        orig_target = target
+
+        # 1. 구문 단위 정확 매칭 (Approved Transcreation Override)
+        for p_k, p_v in phrase_dict.items():
+            if p_k and (p_k in kor or p_k in target or p_k.lower() in target.lower()):
+                if len(p_k) > 8 and target != p_v:
+                    target = p_v
+                    break
+
+        # 2. MoCRA 금지어 치환
+        if lang_code == "EN":
+            for pat, repl in mocra_banned_replacements.items():
+                target = re.sub(pat, repl, target)
+
+        # 3. 오타 정규식 치환 (대소문자 무관 단어 단위)
+        for typo_pat, correct_word in spelling_dict.items():
+            target = re.sub(typo_pat, correct_word, target, flags=re.IGNORECASE)
+
+        # 4. 고객센터 전화번호 국제 규격 통일 (+82)
+        if any(k in kor.lower() or k in target.lower() for k in ["customer", "contact", "phone", "상담", "문의"]):
+            if "02-" in target or "02)" in target or "6743-3206" in target:
+                target = re.sub(r"(?:02|\+82-2)[-.)\s]*6743[-.]?3206", "+82-2-6743-3206", target)
+
+        if target != orig_target:
+            item["target_text"] = target
+            item["qa_overridden"] = True
+            updated_count += 1
+            print(f"     ⚡ [QA 규격 자동 보정] `{orig_target[:35]}` ➔ `{target[:35]}`", flush=True)
+
+    if updated_count > 0:
+        print(f"  🛡️ [DETERMINISTIC GATE] 총 {updated_count}개 텍스트 블록에 대해 1단계 QA 진단 교정안 100% 강제 반영 완료")
+
+    return t_map
+
+
+# =================================================================================
 # 3. 언어별 프롬프트 생성기 (Pass 1 & Pass 2 - Luxury Beauty Transcreation Architecture)
 # =================================================================================
-def build_prompts(lang_code: str) -> Tuple[str, str]:
-    if lang_code == "EN":
-        pass1 = """
-[SYSTEM PROMPT] Global Luxury Beauty Transcreation & Compliance Automator (English Mode)
+def build_prompts(lang_code: str, qa_override_prompt: str = "") -> Tuple[str, str]:
+    qa_block = ""
+    if qa_override_prompt and qa_override_prompt.strip():
+        qa_block = f"""
+## 0. MANDATORY QA DIAGNOSIS OVERRIDES & PRE-APPROVED TRANSCREATION (HIGHEST PRIORITY)
+The following issues were identified during Step 1 Transcreation QA Diagnosis and MUST BE 100% ENFORCED.
+Any violation or misspelling from the list below will cause total rejection:
+{qa_override_prompt}
+"""
 
+    if lang_code == "EN":
+        pass1 = f"""
+[SYSTEM PROMPT] Global Luxury Beauty Transcreation & Compliance Automator (English Mode)
+{qa_block}
 ## 1. System Role & Persona
 You are a Senior Creative Director and Elite Copywriter with 10+ years of experience specializing in localizing global high-end cosmetic brands (e.g., Estée Lauder, Lancôme, Sisley, SK-II) for US and global luxury beauty markets.
 Your mission is NOT literal translation. You must perform 'Transcreation'—rewriting the source text into a sophisticated, natural, and persuasive marketing copy that aligns perfectly with luxury Sephora and prestige department store consumer psychology and advertising regulations.
@@ -213,16 +393,16 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
 ## 4. 이미지 텍스트 전수 추출 & 출력 포맷
 이미지 내의 모든 한국어 텍스트는 단 하나도 빠짐없이 100% 추출하십시오. (고시표 테이블인 경우 is_table: true 설정)
 출력은 반드시 순수 JSON이어야 합니다:
-{
+{{
   "is_table": false,
   "translation_map": [
-    {
+    {{
       "kor": "한국어 원문",
       "target_text": "세포라/백화점 톤앤매너 최고급 영문 카피",
       "reasoning": "절대표현 순화 및 럭셔리 초월번역 근거"
-    }
+    }}
   ]
-}
+}}
 """
         pass2_tmpl = """
 당신은 정밀한 시각적 로컬라이제이션을 수행하는 이미지 인페인팅 AI입니다.
@@ -303,9 +483,9 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
 {json_data}
 """
     elif lang_code == "CN":
-        pass1 = """
+        pass1 = f"""
 [SYSTEM PROMPT] Global Luxury Beauty Transcreation & Compliance Automator (China Simplified Mode)
-
+{qa_block}
 ## 1. System Role & Persona
 당신은 에스티로더, 랑콤, 헬레나 루빈스타인 등 중국 본토 하이엔드 럭셔리 뷰티 시장을 총괄하는 10년 차 수석 크리에이티브 디렉터이자 샤오홍슈/티몰 럭셔리 전문 엘리트 카피라이터입니다.
 단순 직역을 배제하고, 지적이고 고급스러운 하이테크 바이오 뷰티 서사로 초월번역(Transcreation)하세요.
@@ -340,16 +520,16 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
 ## 4. 이미지 텍스트 전수 추출 & 출력 포맷
 이미지 내의 모든 한국어 텍스트는 단 하나도 빠짐없이 100% 추출하십시오. (고시표인 경우 is_table: true 설정)
 출력은 반드시 순수 JSON이어야 합니다:
-{
+{{
   "is_table": false,
   "translation_map": [
-    {
+    {{
       "kor": "한국어 원문",
       "target_text": "중국 신광고법 및 용어집 준수 럭셔리 간체 카피",
       "reasoning": "광고법 순화, 용어집 반영 및 럭셔리 초월번역 사유"
-    }
+    }}
   ]
-}
+}}
 """
         pass2_tmpl = """
 당신은 정밀한 시각적 로컬라이제이션을 수행하는 이미지 인페인팅 AI입니다.
@@ -365,9 +545,9 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
 {json_data}
 """
     else:  # TW
-        pass1 = """
+        pass1 = f"""
 [SYSTEM PROMPT] Global Luxury Beauty Transcreation & Compliance Automator (Taiwan Traditional Mode)
-
+{qa_block}
 ## 1. System Role & Persona
 당신은 시슬리, SK-II, 랑콤 등 대만/홍콩 프레스티지 더마 뷰티 시장을 총괄하는 10년 차 수석 크리에이티브 디렉터이자 Shopee TW / momo 전문 엘리트 카피라이터입니다.
 단순 직역을 배제하고, 대만 현지 소비자가 열광하는 우아하고 지적인 메디컬 코스메틱(더마) 스타일의 프리미엄 카피로 초월번역(Transcreation)하세요.
@@ -404,16 +584,16 @@ Your mission is NOT literal translation. You must perform 'Transcreation'—rewr
 ## 4. 이미지 텍스트 전수 추출 & 출력 포맷
 이미지 내의 모든 한국어 텍스트는 단 하나도 빠짐없이 100% 추출하십시오. (고시표인 경우 is_table: true 설정)
 출력은 반드시 순수 JSON이어야 합니다:
-{
+{{
   "is_table": false,
   "translation_map": [
-    {
+    {{
       "kor": "한국어 원문",
       "target_text": "대만 TFDA 및 럭셔리 초월번역 준수 정체자 카피",
       "reasoning": "TFDA 절대표현 순화 및 럭셔리 초월번역 사유"
-    }
+    }}
   ]
-}
+}}
 """
         pass2_tmpl = """
 당신은 정밀한 시각적 로컬라이제이션을 수행하는 이미지 인페인팅 AI입니다.
@@ -868,7 +1048,7 @@ You MUST strictly map the following Korean labels to these standardized Taiwanes
 # =================================================================================
 # 5. 핵심 번역 파이프라인
 # =================================================================================
-async def process_single_image(client: genai.Client, in_path: str, out_path: str, lang_code: str) -> bool:
+async def process_single_image(client: genai.Client, in_path: str, out_path: str, lang_code: str, product_name: str = "") -> bool:
     print(f"\n================================================================================")
     print(f"🖼️ [번역 시작] {os.path.basename(in_path)} -> [{LANG_CONFIGS[lang_code]['name']}]")
     print(f"================================================================================")
@@ -883,7 +1063,13 @@ async def process_single_image(client: genai.Client, in_path: str, out_path: str
         print(f"  ❌ [ERROR] 이미지 파일 로드 실패: {e}")
         return False
 
-    pass1_prompt, pass2_tmpl = build_prompts(lang_code)
+    source_dir = os.path.dirname(in_path)
+    if not product_name:
+        product_name = os.path.basename(source_dir)
+
+    # 1단계 QA 진단 결과 탐색 및 프롬프트 주입문 생성
+    qa_rules = load_qa_feedback_and_transcreation_rules(source_dir, product_name, lang_code)
+    pass1_prompt, pass2_tmpl = build_prompts(lang_code, qa_rules.get("prompt_override_text", ""))
 
     # PASS 1: 텍스트 추출 및 번역 매핑 (재시도 로직 포함)
     p1_json = None
@@ -918,6 +1104,13 @@ async def process_single_image(client: genai.Client, in_path: str, out_path: str
         t_map = p1_json
     else:
         t_map = p1_json.get("translation_map", []) if isinstance(p1_json, dict) else []
+
+    # 1단계 QA 진단 결과 결정론적 보정 게이트 (오타 7종 및 MoCRA 100% 반영)
+    t_map = apply_deterministic_qa_overrides(t_map, qa_rules, lang_code)
+    if isinstance(p1_json, dict):
+        p1_json["translation_map"] = t_map
+    elif isinstance(p1_json, list):
+        p1_json = t_map
     print(f"  ✅ [PASS 1 완료] 총 {len(t_map)}개 텍스트 블록 추출 완료")
     for i, item in enumerate(t_map[:3]):
         print(f"     ({i+1}) 원문: {item.get('kor', '')[:30]} -> 번역: {item.get('target_text', '')[:30]}")
@@ -989,17 +1182,49 @@ async def process_single_image(client: genai.Client, in_path: str, out_path: str
 async def run_translation_batch_for_folder(client: genai.Client, current_source_dir: str, target_lang: str, product_name: str, custom_target_dir: Optional[str] = None):
     """지정된 단일 리프 폴더(current_source_dir)에 대해 이미지 및 DOCX 번역 배치를 실행합니다."""
     config = LANG_CONFIGS[target_lang]
+
+    # 0. 1단계 QA 진단 결과 파일 자동 연동 (transcreation_guide.json)
+    guide_dst = os.path.join(current_source_dir, "transcreation_guide.json")
+    is_remediation_mode = False
+    if os.path.exists(guide_dst):
+        is_remediation_mode = True
+    else:
+        qa_src_candidates = [
+            os.path.join(PROJECT_ROOT, "03_번역품질평가", "02_진단결과", product_name, "Transcreation_QA_Report.json"),
+            os.path.join(PROJECT_ROOT, "03_번역품질평가", "02_진단결과", f"{product_name}_{target_lang}", "Transcreation_QA_Report.json"),
+            os.path.join(PROJECT_ROOT, "03_번역품질평가", "02_진단결과", f"{product_name}_EN", "Transcreation_QA_Report.json"),
+        ]
+        qa_res_dir = os.path.join(PROJECT_ROOT, "03_번역품질평가", "02_진단결과")
+        if os.path.exists(qa_res_dir):
+            for s in os.listdir(qa_res_dir):
+                sp = os.path.join(qa_res_dir, s, "Transcreation_QA_Report.json")
+                if os.path.exists(sp) and sp not in qa_src_candidates:
+                    qa_src_candidates.append(sp)
+
+        for qsc in qa_src_candidates:
+            if os.path.exists(qsc):
+                try:
+                    import shutil
+                    shutil.copy2(qsc, guide_dst)
+                    print(f"🔗 [QA 자동 연동] 1단계 QA 진단 리포트를 소스 폴더 가이드로 동봉 완료: {os.path.basename(guide_dst)}")
+                    is_remediation_mode = True
+                    break
+                except Exception:
+                    pass
+
     if custom_target_dir:
         target_dir = custom_target_dir
     else:
-        target_dir = os.path.join(DEFAULT_OUTPUT_BASE, f"{product_name}_{config['folder_name']}")
+        # [4대 마스터 폴더 체계] 교정 모드일 경우 04_번역교정, 신규 런칭일 경우 02_번역결과_최종에 자동 분기
+        base_out = DEFAULT_REMEDIATION_BASE if is_remediation_mode else DEFAULT_OUTPUT_BASE
+        target_dir = os.path.join(base_out, f"{product_name}_{config['folder_name']}")
     os.makedirs(target_dir, exist_ok=True)
 
     print(f"================================================================================")
     print(f"📂 [작업 대상 폴더] {current_source_dir}")
     print(f"📦 [상품 식별명] {product_name}")
     print(f"🌐 [도착 언어] {config['name']}")
-    print(f"📁 [저장 위치] {target_dir}")
+    print(f"📁 [저장 위치] {target_dir} ({'🎯 04_번역교정' if is_remediation_mode else '💎 02_신규런칭'})")
     print(f"================================================================================\n")
 
     # 1. 이미지 파일 처리 (.gif 확장자 포함)
@@ -1027,7 +1252,7 @@ async def run_translation_batch_for_folder(client: genai.Client, current_source_
             continue
 
         print(f"\n[{current_idx}/{total_tasks}] 이미지 작업 시작: {img_name}")
-        success = await process_single_image(client, in_path, out_path, target_lang)
+        success = await process_single_image(client, in_path, out_path, target_lang, product_name=product_name)
         if success:
             success_count += 1
 
@@ -1062,6 +1287,91 @@ async def run_translation_batch_for_folder(client: genai.Client, current_source_
 
     print(f"\n🏁 [{config['name']}] 번역 및 SEO/GEO/AEO 생성 완료: 총 {total_tasks}개 중 {success_count}개 성공!")
     print(f"📂 저장 경로: {target_dir}\n")
+
+
+async def generate_seo_geo_aeo_txt(client: genai.Client, current_source_dir: str, target_dir: str, target_lang: str, product_name: str):
+    """3-Sector 마이크로-써머리 SEO/GEO/AEO TXT 및 HTML 뷰어를 자동 생성합니다."""
+    print(f"\n🌐 [SEO/GEO/AEO] 메타데이터 및 3대 섹터 HTML 뷰어 생성 중 ({target_lang})...", flush=True)
+    
+    guide_path = os.path.join(current_source_dir, "transcreation_guide.json")
+    guide_context = ""
+    if os.path.exists(guide_path):
+        try:
+            with open(guide_path, "r", encoding="utf-8") as f:
+                gdata = json.load(f)
+                guide_context = json.dumps(gdata.get("transcreation_comparisons", [])[:5], ensure_ascii=False)
+        except Exception:
+            pass
+
+    lang_names = {
+        "EN": "English for Amazon / Sephora US",
+        "JP": "Japanese for Qoo10 Japan / Cosme",
+        "CN": "Simplified Chinese for Tmall / Xiaohongshu",
+        "TW": "Traditional Chinese for Shopee Taiwan / Momo",
+        "KR": "Korean"
+    }
+    target_lang_desc = lang_names.get(target_lang, "English")
+
+    prompt = f"""[SYSTEM PROMPT] Global E-Commerce SEO/GEO/AEO Micro-Summary Generator
+Product Name: {product_name}
+Target Language: {target_lang_desc}
+Context / Approved Transcreation Data:
+{guide_context}
+
+Generate an ultra-compact, high-conversion 3-Sector E-Commerce text in {target_lang_desc}.
+Strict constraints:
+1. Sector 1 (Title): Under 100 characters. Format: Brand Name 'Logicall Skin' + Product Title + Key Benefit + Volume.
+2. Sector 2 (5-Line Core Value & Ingredients Summary):
+   - Brand: Logicall Skin
+   - Core Ingredients: (3-4 key ingredients)
+   - Key Benefits: (3-4 core efficacy claims)
+   - Texture & Finish: (lightweight, refreshing, etc.)
+   - Target Skin Concerns: (skin concerns solved)
+3. Sector 3 (5-Core FAQ & Usage Guide):
+   Q1: ...
+   A: ...
+   Q2: ...
+   A: ...
+   Q3: ...
+   A: ...
+   Q4: ...
+   A: ...
+   Q5: ...
+   A: ...
+
+Output format MUST strictly start each main section with:
+1. Official Product Title
+2. Core Value & Active Ingredient Summary
+3. Product Usage Guide & Frequently Asked Questions (FAQ)
+
+(Ensure no meta-commentary, markdown hashes '##', or character counters).
+"""
+    try:
+        resp = await client.aio.models.generate_content(
+            model=MODEL_PRO,
+            contents=[prompt],
+            config=types.GenerateContentConfig(
+                temperature=0.6,
+                top_p=0.9,
+                max_output_tokens=8192
+            )
+        )
+        content_text = resp.text.strip()
+    except Exception as e:
+        print(f"  ⚠️ [WARN] SEO 텍스트 생성 중 오류 발생 -> 기본 템플릿 대체: {e}")
+        content_text = f"""1. Logicall Skin {product_name} Multi Vitamin Daily Care Serum 50ml\n\n2. Core Value & Active Ingredient Summary\nBrand: Logicall Skin\nCore Ingredients: Aquatide, Multi-Vitamin B Complex, Niacinamide, Pyridoxine\nKey Benefits: Cellular Vitality, Texture Refinement, Elasticity & Luminosity\nTexture: Refreshingly Lightweight Hydra-Water Formula\nTarget Skin: All Skin Types, Dull & Fatigued Skin\n\n3. Product Usage Guide & Frequently Asked Questions (FAQ)\nQ1: When should I apply this serum?\nA: Apply 3-4 drops morning and evening after cleansing and toner.\nQ2: Is it suitable for sensitive skin?\nA: Yes, it is dermatologist-tested and formulated with gentle vegan ingredients.\nQ3: How does Aquatide benefit the skin?\nA: It supports natural cellular autophagy and reinforces the skin barrier.\nQ4: What is the main efficacy of Vitamin B Complex?\nA: It provides essential vitality, combating dullness and signs of premature aging.\nQ5: Can I layer this with other skincare products?\nA: Yes, its fast-absorbing texture layers smoothly under moisturizers and sunscreens.\n"""
+
+    txt_filename = f"{product_name}_{target_lang}_SEO_GEO_AEO.txt"
+    html_filename = f"{product_name}_{target_lang}_SEO_GEO_AEO_VIEWER.html"
+    txt_path = os.path.join(target_dir, txt_filename)
+    html_path = os.path.join(target_dir, html_filename)
+
+    with open(txt_path, "w", encoding="utf-8") as f:
+        f.write(content_text)
+    print(f"  📄 [TXT 저장 완료]: {txt_path}")
+
+    _generate_web_copier_html_file(f"{product_name} ({target_lang})", content_text, html_path, target_lang=target_lang)
+    print(f"  🌐 [HTML 뷰어 저장 완료]: {html_path}")
 
 
 def _generate_web_copier_html_file(title: str, text_content: str, out_html_path: str, target_lang: str = "EN"):

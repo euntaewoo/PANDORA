@@ -1,9 +1,9 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 evaluate_transcreation_quality.py
 =============================================================================
 03_번역품질평가 전용 초고속 원클릭 QA 진단 및 4단 가치대조 리포터 (One-Pass Async)
-• 인풋 : 03_번역품질평가\01_대상원본\[제품폴더]\ (영문/일문/중문/다국어 상세페이지 이미지 또는 텍스트)
+• 인풋 : 03_번역품질평가\01_평가대상_원본\[제품폴더]\ (영문/일문/중문/다국어 상세페이지 이미지 또는 텍스트)
 • 아웃풋: 03_번역품질평가\02_진단결과\[제품폴더]\Transcreation_QA_Report.html 및 JSON
 =============================================================================
 """
@@ -28,7 +28,12 @@ from multilingual_transcreation_qa_evaluator_agy_sdk import (
     generate_html_report
 )
 
-INPUT_MASTER_DIR = os.path.join(BASE_DIR, "03_번역품질평가", "01_대상원본")
+input_dir_candidates = [
+    os.path.join(BASE_DIR, "03_번역품질평가", "01_평가대상_원본"),
+    os.path.join(BASE_DIR, "03_번역품질평가", "평가대상원본"),
+    os.path.join(BASE_DIR, "03_번역품질평가", "01_대상원본")
+]
+INPUT_MASTER_DIR = next((p for p in input_dir_candidates if os.path.exists(p)), input_dir_candidates[0])
 OUTPUT_MASTER_DIR = os.path.join(BASE_DIR, "03_번역품질평가", "02_진단결과")
 
 def get_client() -> genai.Client:
@@ -92,15 +97,28 @@ def extract_texts_from_folder(folder_path: str) -> tuple[List[str], List[str]]:
 
     return orig_texts, trans_texts
 
-async def process_quality_eval_folder(client: genai.Client, folder_name: str):
-    in_dir = os.path.join(INPUT_MASTER_DIR, folder_name)
-    out_dir = os.path.join(OUTPUT_MASTER_DIR, folder_name)
+def get_eval_targets(input_dir: str) -> List[tuple[str, str]]:
+    """하위 폴더 또는 01_평가대상_원본 자체를 평가 대상으로 탐색"""
+    targets = []
+    subfolders = [f for f in os.listdir(input_dir) if os.path.isdir(os.path.join(input_dir, f))]
+    if subfolders:
+        for f in subfolders:
+            targets.append((os.path.join(input_dir, f), f))
+    else:
+        # 폴더 내에 직접 파일들이 있는 경우
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        if files:
+            targets.append((input_dir, "평가진단결과"))
+    return targets
+
+async def process_quality_eval_folder(client: genai.Client, folder_path: str, output_name: str):
+    out_dir = os.path.join(OUTPUT_MASTER_DIR, output_name)
     os.makedirs(out_dir, exist_ok=True)
 
-    target_lang = detect_language_from_name(folder_name)
-    print(f"\n📂 [평가 대상 폴더 감지]: {folder_name} (도착/심사 언어: {target_lang})")
+    target_lang = detect_language_from_name(output_name)
+    print(f"\n📂 [평가 대상 경로]: {folder_path} (도착/심사 언어: {target_lang})")
 
-    orig_texts, trans_texts = extract_texts_from_folder(in_dir)
+    orig_texts, trans_texts = extract_texts_from_folder(folder_path)
     print(f"  🔍 문안 {len(orig_texts)}개 추출 완료. 4대 루브릭 One-Pass Async 심사 중...")
 
     eval_result = await evaluate_transcreation_async(client, orig_texts, trans_texts, target_lang=target_lang)
@@ -125,16 +143,16 @@ async def main():
     print("=" * 75)
 
     client = get_client()
-    subfolders = [f for f in os.listdir(INPUT_MASTER_DIR) if os.path.isdir(os.path.join(INPUT_MASTER_DIR, f))]
+    targets = get_eval_targets(INPUT_MASTER_DIR)
 
-    if not subfolders:
+    if not targets:
         sample_folder = "08_영어_PDP_Care_Cleansing_Foam_200ml_영어"
         sample_path = os.path.join(INPUT_MASTER_DIR, sample_folder)
         os.makedirs(sample_path, exist_ok=True)
-        subfolders = [sample_folder]
-        print(f"ℹ️ [안내] 01_대상원본 폴더가 비어 있어 샘플 검사 폴더를 생성하였습니다: {sample_folder}")
+        targets = [(sample_path, sample_folder)]
+        print(f"ℹ️ [안내] {os.path.basename(INPUT_MASTER_DIR)} 폴더가 비어 있어 샘플 검사 폴더를 생성하였습니다: {sample_folder}")
 
-    tasks = [process_quality_eval_folder(client, folder) for folder in subfolders]
+    tasks = [process_quality_eval_folder(client, path, name) for path, name in targets]
     await asyncio.gather(*tasks)
     print("\n✅ [ALL COMPLETED] 모든 품질평가 및 4단 가치대조 리포트 발행이 완료되었습니다.")
 
