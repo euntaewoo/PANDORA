@@ -693,6 +693,82 @@ def parse_docx_content(docx_path: str) -> List[Tuple[str, str]]:
     return items
 
 
+def standardize_notice_table_items(items: List[Dict[str, str]], lang_code: str) -> List[Dict[str, str]]:
+    """고시정보표 4대 필수 법률 조항(고객상담번호 +82, 기능성 심사필, 주의사항 3대 조항, 공정위 품질보증기준)을 전역 표준화합니다."""
+    upper_lang = str(lang_code).upper()
+
+    for item in items:
+        lbl = item.get("label", "").lower()
+        val = item.get("value", "").strip()
+
+        # 1) 고객상담 전화번호 국제번호(+82) 표준화
+        if any(k in lbl for k in ["customer", "contact", "phone", "电话", "電話", "상담", "문의"]):
+            if "02-" in val or "02)" in val or "02." in val or "6743-3206" in val:
+                val_cleaned = re.sub(r"^02[-.)\s]*", "+82-2-", val)
+                if "+82" not in val_cleaned and "6743-3206" in val_cleaned:
+                    val_cleaned = "+82-2-6743-3206"
+                item["value"] = val_cleaned
+
+        # 2) 기능성화장품 심사필 표준화
+        if any(k in lbl for k in ["functional cosmetics", "special use", "특수용도", "기능성", "심사", "review"]):
+            if not val or val.lower() in ["not specified", "해당없음", "none", "null", ""]:
+                val = "화장품법에 따른 기능성 화장품 심사(또는 보고)를 필함"
+
+            if "TW" in upper_lang or "HK" in upper_lang:
+                prefix = "已完成特定用途化粧品審查 (依化粧品衛生安全管理法完成審查)"
+            elif "CN" in upper_lang or "ZH" in upper_lang:
+                prefix = "已完成特殊用途化妆品审查 (依据化妆品监督管理条例完成审查备案)"
+            elif "JP" in upper_lang or "JA" in upper_lang:
+                prefix = "機能性化粧品審査済 (医薬部外品承認または薬機法基準の届出済)"
+            elif "KO" in upper_lang:
+                prefix = "화장품법에 따른 기능성 화장품 심사(또는 보고)를 필함"
+            else:
+                prefix = "Completed Functional Cosmetics Review (or Report) in accordance with the Cosmetics Act"
+
+            match = re.match(r'^([Yy](?:es)?|[Oo]|심사필|해당(?:있음)?|是|已完成(?:審查|审查)?)\b', val, re.IGNORECASE)
+            if match:
+                remainder = val[match.end(1):].strip()
+                if not remainder:
+                    item["value"] = prefix
+                elif remainder.startswith('(') or remainder.startswith('（'):
+                    item["value"] = f"{prefix} {remainder}"
+                else:
+                    clean_rem = remainder.lstrip("- ")
+                    item["value"] = f"{prefix} - {clean_rem}"
+            elif val.lower() in ["not specified", "해당없음", "none", "null", "화장품법에 따른 기능성 화장품 심사(또는 보고)를 필함"]:
+                item["value"] = prefix
+
+        # 3) 사용할 때의 주의사항 3대 조항 표준화 (누락 또는 축약 시 법정 필수 조항으로 자동 보강)
+        if any(k in lbl for k in ["precaution", "caution", "주의사항", "注意事项", "注意事項"]):
+            if not val or len(val) < 25 or "not specified" in val.lower() or "상세" in val or "별도" in val:
+                if "TW" in upper_lang or "HK" in upper_lang:
+                    item["value"] = "1) 使用時或使用後因陽光直射導致使用部位出現紅斑、腫脹或搔癢等異常症狀或副作用時，請諮詢專業醫師。 2) 請勿使用於傷口等異常部位。 3) 保存及處理注意事項：A) 請置於嬰幼兒無法取得之處。B) 請避免陽光直射保存。"
+                elif "CN" in upper_lang or "ZH" in upper_lang:
+                    item["value"] = "1) 使用时或使用后因直射光线导致使用部位出现红斑、肿胀或瘙痒等异常症状或副作用时，请咨询专业医生。 2) 伤口等异常部位请勿使用。 3) 保管及处理注意事项：A) 请置于儿童接触不到的地方保管。B) 请避开直射光线保管。"
+                elif "JP" in upper_lang or "JA" in upper_lang:
+                    item["value"] = "1) お肌に異常が生じていないかよく注意して使用してください。化粧品がお肌に合わないとき即ち次のような場合には、使用を中止し、皮膚科専門医等にご相談されることをおすすめします。 2) 傷やはれもの、しっしん等、異常のある部位にはお使いにならないでください。 3) 保管及び取扱い上の注意：A) 乳幼児の手の届かないところに保管してください。B) 直射日光のあたる場所には保管しないでください。"
+                elif "KO" in upper_lang:
+                    item["value"] = "1) 화장품 사용 시 또는 사용 후 직사광선에 의하여 사용부위가 붉은 반점, 부어오름 또는 가려움증 등의 이상 증상이나 부작용이 있는 경우 전문의 등과 상담할 것 2) 상처가 있는 부위 등에는 사용을 자제할 것 3) 보관 및 취급 시의 주의사항: 가) 어린이의 손이 닿지 않는 곳에 보관할 것 나) 직사광선을 피해서 보관할 것"
+                else:
+                    item["value"] = "1) Consult a specialist if there are abnormal symptoms or side effects such as red spots, swelling, or itching caused by direct sunlight during or after use. 2) Refrain from using on wounded areas. 3) Precautions for storage and handling: A) Keep out of reach of children. B) Store away from direct sunlight."
+
+        # 4) 품질보증기준 표준화 (공정거래위원회 소비자분쟁해결기준)
+        if any(k in lbl for k in ["quality assurance", "warranty", "품질보증", "质量保证", "品質保證", "品質保証"]):
+            if not val or len(val) < 15 or "not specified" in val.lower() or "공정거래위원회" in val or "fair trade" in val.lower():
+                if "TW" in upper_lang or "HK" in upper_lang:
+                    item["value"] = "本產品如有任何異常，將依公平交易委員會公告之「消費者爭議解決基準」予以賠償。"
+                elif "CN" in upper_lang or "ZH" in upper_lang:
+                    item["value"] = "若本产品出现质量问题，依据公平交易委员会告示“消费者纷争解决标准”提供补偿。"
+                elif "JP" in upper_lang or "JA" in upper_lang:
+                    item["value"] = "本商品に異常がある場合、公正取引委員会告示（消費者紛争解決基準）に基づき補償いたします。"
+                elif "KO" in upper_lang:
+                    item["value"] = "본 제품에 이상이 있을 경우 공정거래위원회 고시 '소비자분쟁해결기준'에 의거하여 보상해 드립니다."
+                else:
+                    item["value"] = "Compensation will be provided in accordance with the Fair Trade Commission's Consumer Dispute Settlement Standards."
+
+    return items
+
+
 async def render_notice_table(client: genai.Client, mapping_data: Dict[str, Any], lang_code: str, out_path: str, orig_width: int = 860) -> bool:
     """render_notice_table_standard.py 모듈을 활용하여 1열(번역 라벨) 및 2열(번역 값) 고선명 표 이미지를 렌더링합니다."""
     std_script_dir = os.path.join(PROJECT_ROOT, "00_공통자료")
@@ -783,40 +859,8 @@ Output MUST be a JSON object: {"title": "PRODUCT DETAILS", "items": [{"label": "
         items = res_json.get("items", [])
         title = res_json.get("title", "商品基本信息")
 
-        for item in items:
-            lbl = item.get("label", "")
-            val = item.get("value", "")
-            # 1) 고객상담 전화번호 국제번호(+82) 표준화
-            if any(k in lbl.lower() for k in ["customer", "contact", "phone", "电话", "電話", "상담", "문의"]):
-                if "02-" in val or "02)" in val or "02." in val or "6743-3206" in val:
-                    val_cleaned = re.sub(r"^02[-.)\s]*", "+82-2-", val)
-                    if "+82" not in val_cleaned and "6743-3206" in val_cleaned:
-                        val_cleaned = "+82-2-6743-3206"
-                    item["value"] = val_cleaned
-            # 2) 기능성화장품 심사필 초월번역 자동 정제 게이트 (단순 'Y' 기계번역 차단 및 MFDS 인증 문구 승격)
-            if any(k in lbl.lower() for k in ["functional cosmetics", "special use", "특수용도", "기능성", "심사", "review"]):
-                val_s = val.strip()
-                upper_lang = lang_code.upper()
-                if "TW" in upper_lang or "HK" in upper_lang:
-                    prefix = "已完成特定用途化粧品審查"
-                elif "CN" in upper_lang or "ZH" in upper_lang:
-                    prefix = "已完成特殊用途化妆品审查"
-                elif "JP" in upper_lang or "JA" in upper_lang:
-                    prefix = "機能性化粧品審査済"
-                elif "KO" in upper_lang:
-                    prefix = "기능성화장품 심사필"
-                else:
-                    prefix = "MFDS-Certified Functional Cosmetic"
-
-                match = re.match(r'^([Yy](?:es)?|[Oo]|심사필|해당(?:있음)?|是|已完成(?:審查|审查)?)\b', val_s, re.IGNORECASE)
-                if match:
-                    remainder = val_s[match.end(1):].strip()
-                    if not remainder:
-                        item["value"] = prefix
-                    elif remainder.startswith('(') or remainder.startswith('（'):
-                        item["value"] = f"{prefix} {remainder}"
-                    else:
-                        item["value"] = f"{prefix} - {remainder.lstrip('- ')}"
+        # [4대 필수 법률 조항 전역 표준화 게이트] (고객상담번호 +82, 기능성 심사필, 주의사항 3대 조항, 공정위 품질보증기준)
+        items = standardize_notice_table_items(items, lang_code)
 
         return rnts.render_notice_table_to_png(title, items, out_path, lang=lang_code)
     except Exception as e:
@@ -985,40 +1029,8 @@ You MUST strictly map the following Korean labels to these standardized Taiwanes
         title = res_json.get("title", LANG_CONFIGS[lang_code]["name"])
         
         # [사용자 규칙 강제]: 고객상담 전화번호는 반드시 +82 국제전화 국가번호로 표기
-        for item in items:
-            lbl = item.get("label", "")
-            val = item.get("value", "")
-            # 1) 고객상담 전화번호 국제번호(+82) 표준화
-            if any(k in lbl.lower() for k in ["customer", "contact", "phone", "电话", "電話", "상담", "문의"]):
-                if "02-" in val or "02)" in val or "02." in val or "6743-3206" in val:
-                    val_cleaned = re.sub(r"^02[-.)\s]*", "+82-2-", val)
-                    if "+82" not in val_cleaned and "6743-3206" in val_cleaned:
-                        val_cleaned = "+82-2-6743-3206"
-                    item["value"] = val_cleaned
-            # 2) 기능성화장품 심사필 초월번역 자동 정제 게이트 (단순 'Y' 기계번역 차단 및 MFDS 인증 문구 승격)
-            if any(k in lbl.lower() for k in ["functional cosmetics", "special use", "특수용도", "기능성", "심사", "review"]):
-                val_s = val.strip()
-                upper_lang = lang_code.upper()
-                if "TW" in upper_lang or "HK" in upper_lang:
-                    prefix = "已完成特定用途化粧品審查"
-                elif "CN" in upper_lang or "ZH" in upper_lang:
-                    prefix = "已完成特殊用途化妆品审查"
-                elif "JP" in upper_lang or "JA" in upper_lang:
-                    prefix = "機能性化粧品審査済"
-                elif "KO" in upper_lang:
-                    prefix = "기능성화장품 심사필"
-                else:
-                    prefix = "MFDS-Certified Functional Cosmetic"
-
-                match = re.match(r'^([Yy](?:es)?|[Oo]|심사필|해당(?:있음)?|是|已完成(?:審查|审查)?)\b', val_s, re.IGNORECASE)
-                if match:
-                    remainder = val_s[match.end(1):].strip()
-                    if not remainder:
-                        item["value"] = prefix
-                    elif remainder.startswith('(') or remainder.startswith('（'):
-                        item["value"] = f"{prefix} {remainder}"
-                    else:
-                        item["value"] = f"{prefix} - {remainder.lstrip('- ')}"
+        # [4대 필수 법률 조항 전역 표준화 게이트] (고객상담번호 +82, 기능성 심사필, 주의사항 3대 조항, 공정위 품질보증기준)
+        items = standardize_notice_table_items(items, lang_code)
 
         print(f"  ✅ [PASS 1 완료] 총 {len(items)}개 고시 항목 번역 완료 (국제 전화번호 +82 규격 동기화)")
     except Exception as e:
