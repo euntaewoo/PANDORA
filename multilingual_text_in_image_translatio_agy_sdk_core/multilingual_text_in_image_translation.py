@@ -715,15 +715,15 @@ def standardize_notice_table_items(items: List[Dict[str, str]], lang_code: str) 
                 val = "화장품법에 따른 기능성 화장품 심사(또는 보고)를 필함"
 
             if "TW" in upper_lang or "HK" in upper_lang:
-                prefix = "已完成特定用途化粧品審查 (依化粧品衛生安全管理法完成審查)"
+                prefix = "已依韓國化粧品法完成韓國食品醫藥品安全處(MFDS)特定用途(功能性)化粧品審查(或報告)"
             elif "CN" in upper_lang or "ZH" in upper_lang:
-                prefix = "已完成特殊用途化妆品审查 (依据化妆品监督管理条例完成审查备案)"
+                prefix = "已依据韩国化妆品法完成韩国食品医药品安全处(MFDS)特殊用途(功能性)化妆品审查(或报告)"
             elif "JP" in upper_lang or "JA" in upper_lang:
-                prefix = "機能性化粧品審査済 (医薬部外品承認または薬機法基準の届出済)"
+                prefix = "韓国化粧品法に基づき韓国食品医薬品安全処(MFDS)の機能性化粧品審査(または報告)済"
             elif "KO" in upper_lang:
-                prefix = "화장품법에 따른 기능성 화장품 심사(또는 보고)를 필함"
+                prefix = "화장품법에 따른 식품의약품안전처(MFDS) 기능성화장품 심사(또는 보고)를 필함"
             else:
-                prefix = "Completed Functional Cosmetics Review (or Report) in accordance with the Cosmetics Act"
+                prefix = "Completed Functional Cosmetics Review (or Report) with the Ministry of Food and Drug Safety (MFDS, Republic of Korea) in accordance with the Cosmetics Act"
 
             match = re.match(r'^([Yy](?:es)?|[Oo]|심사필|해당(?:있음)?|是|已完成(?:審查|审查)?)\b', val, re.IGNORECASE)
             if match:
