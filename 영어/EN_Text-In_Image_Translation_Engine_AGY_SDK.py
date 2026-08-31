@@ -148,6 +148,10 @@ PASS1_PROMPT = """
 5) 화장품제조업자 및 책임판매업자 -> Manufacturer / Distributed by
 6) 제조국 -> Country of Origin
 7) 전성분 -> Ingredients
+8) 기능성화장품 심사 유무 -> Functional Cosmetics Review Status: Completed Functional Cosmetics Review (or Report) with the Ministry of Food and Drug Safety (MFDS, Republic of Korea) in accordance with the Cosmetics Act
+9) 사용할 때의 주의사항 -> Precautions for Use (전문의 상담, 상처부위 자제, 직사광선/어린이 보관 3대 법정 조항)
+10) 품질보증기준 -> Quality Assurance Standard (Compensation will be provided in accordance with the Fair Trade Commission's Consumer Dispute Settlement Standards)
+11) 소비자상담 -> Customer Service: +82-2-6743-3206
 
 출력은 반드시 아래 JSON 스키마를 엄격히 준수하십시오:
 ```json

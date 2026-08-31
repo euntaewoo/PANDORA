@@ -404,23 +404,7 @@ async def main_async():
                 t_data = json.loads(raw_t)
                 n_items = t_data.get("items", [])
                 n_title = t_data.get("title", "商品基本信息")
-                for itm in n_items:
-                    lbl = itm.get("label", "")
-                    val = itm.get("value", "")
-                    if any(k in lbl.lower() for k in ["电话", "咨询", "customer", "contact"]):
-                        itm["value"] = "+82-2-6743-3206"
-                    if any(k in lbl.lower() for k in ["functional cosmetics", "special use", "特殊", "기능성", "심사", "审查", "審查"]):
-                        val_s = val.strip()
-                        prefix = "已完成特殊用途化妆品审查" if target_region == "Simp" else "已完成特定用途化粧品審查"
-                        match = re.match(r'^([Yy](?:es)?|[Oo]|심사필|해당(?:있음)?|是|已完成(?:審查|审查)?)\b', val_s, re.IGNORECASE)
-                        if match:
-                            remainder = val_s[match.end(1):].strip()
-                            if not remainder:
-                                itm["value"] = prefix
-                            elif remainder.startswith('(') or remainder.startswith('（'):
-                                itm["value"] = f"{prefix} {remainder}"
-                            else:
-                                itm["value"] = f"{prefix} - {remainder.lstrip('- ')}"
+                n_items = standardize_notice_table_items(n_items, "CN" if target_region == "Simp" else "TW")
                 rnts.render_notice_table_to_png(n_title, n_items, out_path, lang=target_region)
                 print(f"  -> [NOTICE TABLE SUCCESS] 고시표 렌더링 완료: {out_name}")
                 continue
