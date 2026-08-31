@@ -85,9 +85,11 @@
    - **단문 라벨 1줄 유지 원칙**: 10자 미만 라벨(`Skin Type`, `Directions`, `Ingredients`, `Customer Service`, `使用注意事项`, `消费者咨询电话`)은 절대 2줄로 쪼개지 않고 유니코드 `\u00A0` 단어 결속을 통해 **100% 1줄 유지**.
    - **2열 본문 기능성화장품 심사필 초월번역 의무화**:
      * 단순 `Y` 알파벳 기계 번역을 엄격히 금지하고 공식 인증 문구로 승격:
-     * **영어 (EN)**: `MFDS-Certified Functional Cosmetic (Brightening, Wrinkle Improvement, UV Protection)`
-     * **중국어 (CN/TW)**: `已完成特殊用途化妆品审查 (美白、改善皱纹双重功效)` / `已完成特定用途化粧品審查`
-     * **일본어 (JP)**: `機能性化粧品審査済（美白・シワ改善・紫外線カット等）`
+     * **영어 (EN)**: Completed Functional Cosmetics Review (or Report) with the Ministry of Food and Drug Safety (MFDS, Republic of Korea) in accordance with the Cosmetics Act (또는 MFDS-Certified Functional Cosmetic...)
+     * **중국어 (CN)**: 已依据韩国化妆品法完成韩国食品医药品安全处(MFDS)特殊用途(功能性)化妆品审查(或报告)
+     * **대만어 (TW)**: 已依韓國化粧品法完成韓國食品醫藥品安全處(MFDS)特定用途(功能性)化粧品審查(或報告)
+     * **일본어 (JP)**: 韓国化粧品法に基づき韓国食品医薬品安全処(MFDS)の機能性化粧品審査(または報告)済
+     * **한국어 (KO)**: 화장품법에 따른 식품의약품안전처(MFDS) 기능성화장품 심사(또는 보고)를 필함
    - **10자 이상 긴 라벨 분할**: `Country of<br>Origin`, `Quality Assurance<br>Standard`, `Precautions<br>for Use`, `Manufacturer /<br>Distributed by`, `特殊用途化妆品<br>审查状态` 등 의미 단위 2줄 황금 분할.
 2. **2열 본문(td) 폭 확장 및 단어 결속 보호**:
    - 중화권(간체/번체) 기준 2열 순수 본문 폭을 **`570px`**로 확장 (`val_padding: 20px 15px`, `letter-spacing: 0px`).

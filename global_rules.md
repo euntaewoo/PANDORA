@@ -229,7 +229,7 @@
   - **2열 본문 단어 결속 보호**: 전문의 상담 어휘(`专业医生`, `专业医师`, `전문의 등과 상담할 것`) 등 핵심 구문은 `<span style="white-space: nowrap">` 또는 `\u00A0`로 묶어 1글자 낙오 원천 차단.
   - **2열 본문 기능성화장품 심사필 초월번역 의무화 (Functional Cosmetics Value Transcreation)**:
     * 원문의 `Y (미백, 주름개선 등)`, `해당있음`, `심사필` 등 단순 기계적 `Y` 알파벳 출력을 전면 금지한다.
-    * **영어 (EN)**: **`MFDS-Certified Functional Cosmetic (Brightening, Wrinkle Improvement, UV Protection)`** (또는 해당 기능성 공식 인증 명칭)으로 글로벌 신뢰도 문구 승격 의무화.
+    * **영어 (EN)**: **`Completed Functional Cosmetics Review (or Report) with the Ministry of Food and Drug Safety (MFDS, Republic of Korea) in accordance with the Cosmetics Act`** (한국 식약처 MFDS 관할기관 명시 의무화 및 국가별 법령 정규화).
     * **중국어 (CN/TW)**: **`已完成特殊用途化妆品审查 (美白、改善皱纹双重功效)`** (또는 `已完成特定用途化粧品審查`)으로 NMPA/TFDA 공인 표현 강제.
     * **일본어 (JP)**: **`機能性化粧品審査済（美白・シワ改善・紫外線カット等）`** 약기법 표준 표기 강제.
 - **5. 고시정보표 전담 프론트엔드 QA 서브에이전트 (`notice_table_frontend_qa_agent`) 4대 핵심 업무 및 자동 검수 의무화**:

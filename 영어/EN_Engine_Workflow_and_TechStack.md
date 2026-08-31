@@ -128,7 +128,7 @@ graph TD
      - 제조업자/책임판매업자 ➔ `Manufacturer / Distributed by`
      - 제조국/원산지 ➔ `Country of Origin`
      - 전성분 ➔ `Ingredients`
-     - 기능성화장품 심사 ➔ `Functional Cosmetics Review Status` (본문값 초월번역: 단순 'Y' 금지, `MFDS-Certified Functional Cosmetic (Brightening, Wrinkle Improvement, UV Protection)` 강제 적용)
+     - 기능성화장품 심사 ➔ `Functional Cosmetics Review Status` (본문값 초월번역: 단순 'Y' 금지, `Completed Functional Cosmetics Review (or Report) with the Ministry of Food and Drug Safety (MFDS, Republic of Korea) in accordance with the Cosmetics Act` 강제 적용)
      - 사용상 주의사항 ➔ `Precautions for Use`
      - 품질보증기준 ➔ `Quality Assurance Standard`
      - 소비자상담 ➔ `Customer Service` (+82-2-6743-3206)
