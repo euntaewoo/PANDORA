@@ -1,29 +1,51 @@
----
-description: "다국어 이미지 번역 메인 엔진 폴더(multilingual_text_in_image_translation) 전역 행동 수칙"
-priority: "CRITICAL"
----
+# multilingual_text_in_image_translation 시스템 규칙 (System Rules)
 
-# [HARD STOP] 다국어 이미지 번역 메인 엔진 전역 행동 수칙
+이 문서는 루트 경로에 구축된 `multilingual_text_in_image_translatio_agy_sdk.py` 엔진 시스템을 제어하는 최상위 시스템 룰 파일입니다. 에이전트는 다국어 이미지 번역 엔진을 다룰 때 이 문서의 규칙을 절대적으로 준수해야 합니다.
 
-이 폴더(multilingual_text_in_image_translation) 내에서 '고시정보표 작성', '이미지 번역', '렌더링' 등의 작업을 사용자로부터 지시받은 모든 AI 에이전트는, **작업 착수 전 아래 3대 수칙을 무조건 선-조회 및 강제 적용**해야 합니다. 이를 어길 시 AI의 모든 결과물은 무효로 간주됩니다.
+## 1. 아키텍처 원칙: 설정 주도형 플러그인 격리 (Configuration-Driven Pack)
+- **하드코딩 금지**: 코어 엔진 스크립트(`multilingual_text_in_image_translatio_agy_sdk.py`) 내에 특정 언어의 폰트 명칭, 규제 금지어, 약기법 등을 `if/else`로 하드코딩하는 것을 절대 금지합니다.
+- **플러그인 로드**: 언어별 규칙은 반드시 `config/` 디렉토리 하위의 독립된 JSON 팩(예: `EN_translation_rules.json`, `JP_translation_rules.json`)에 분리하여 저장하고, 엔진 구동 시 `--lang` 파라미터에 따라 런타임에 동적으로 주입(로드)해야 합니다.
 
-## 1. [ZERO-GUESSING] 즉흥적 코드 작성 및 바퀴의 재발명 금지
-- 사용자가 고시정보표 렌더링을 지시했다고 해서 백지 상태에서 새로운 파이썬 렌더링 스크립트를 즉흥적으로 짜지 마십시오.
-- **반드시 공용 모듈을 재사용하십시오.**
-  - 다국어 표준 렌더러: ../00_공통자료/render_notice_table_standard.py (영문 전용 padding: 14px 12px / 가용폭 271px / word-break: keep-all 강제)
-  - 한국어 원본 렌더러: render_notice_table_korean.py
+## 2. 언어별 렌더링 및 폰트 강제 원칙
+- **일본어(JP)**: 후생노동성 기준 56종 약기법 금지어 정규식(Regex) 락을 가동하고, 렌더링 시 반드시 `NotoSansJP` 폰트를 지정합니다.
+- **영어(EN)**: 규제 단어 강제 필터링 락을 해제하고 초월번역 톤앤매너를 지향하며, 렌더링 시 영미권 글로벌 프리미엄 지오메트릭 산세리프인 `Montserrat (몬세라트)` 폰트를 메인 서체로 강제 적용합니다. (단, 상품상세정보 고시정보 테이블 렌더링 시에만 `Pretendard` 적용).
+- **중국어(CN/TW)**: 중국 신광고법 및 NMPA 규정 필터링을 적용하며, 렌더링 시 `Noto Sans SC` (간체자) / `Noto Sans TC` (번체자) 폰트를 적용합니다.
 
-## 2. [DOCS-FIRST] 메인 기획 문서 최우선 열람 및 필수 스펙 강제 적용
-- 작업 착수 전, 반드시 아래 2개의 아키텍처 기획 문서를 정독하고 그 안의 스펙(해상도, 1열 고정폭 295px, padding: 14px 12px, 2580px 분할 룰 등)을 100% 준수하십시오.
-- **[CRITICAL] 전성분 번역 시, 국제화장품원료집(ICID/INCI) 및 한국화장품성분사전(KCID) 표준 명칭과 해당 국가 표기법을 100% 적용하십시오. 렌더링 시에는 의미 단위 줄바꿈(`word-break: keep-all; overflow-wrap: break-word;`)을 적용하여 전문성과 가독성을 모두 확보해야 합니다.**
-  1. SEO_GEO_AEO_Pipeline_Architecture.md
-  2. 기술적_기초_및_계승_내역_레퍼런스.md
+## 3. 안정성 방어망 (Safety Nets)
+- LLM(Gemini)이 JSON 결과 반환 시 ` ```json ` 과 같은 마크다운 코드 블록을 포함하여 응답할 경우, `JSONDecodeError`가 발생하여 튕기는 치명적 결함을 막기 위해 파이썬 단에서 `replace` 및 정제(Cleaning)하는 코드가 필수적으로 포함되어야 합니다.
 
-## 3. [GLOBAL-MAPPING] 글로벌 뷰티 표준 명칭 1:1 강제 매핑 준수
-- 영어(Amazon), 일본어(약기법), 대만 번체(TFDA), 중국 간체(NMPA) 번역 시 기획 문서에 정의된 '현지 이커머스 표준 명칭'을 무조건 강제 적용(1:1 매핑)하십시오. 임의의 직역을 엄격히 금지합니다.
+## 4. 핵심 기술 스택 및 아키텍처 명세
+- **AI Core (Google Gemini API)**: `gemini-3.1-pro-preview` (OCR, 텍스트 매핑, 법률 검열) 및 `gemini-3.1-flash-image` (시각적 밸런스 유지 100% 인페인팅 렌더링).
+- **Backend & Image Processing**: Python, Pillow(PIL) (해상도 리사이징 및 바이너리 I/O).
+- **Architecture Pattern**: 단일 통합 코어(`multilingual_text_in_image_translatio_agy_sdk.py`) 기반 언어별 분기 및 고시표 HTML 자동 렌더링.
 
-- **고시정보표 4대 법률 표준화 게이트 (`standardize_notice_table_items`)**:
-  1) 기능성 심사필: 한국 식품의약품안전처(`MFDS, Republic of Korea`) 관할기관 명시 의무화
-  2) 사용상 주의사항: 1) 전문의 상담 2) 상처부위 자제 3) 직사광선/어린이 보관 3대 법정 조항 보강
-  3) 품질보증기준: 공정거래위원회 '소비자분쟁해결기준' 공식 문안 매핑
-  4) 고객상담실: `+82-2-6743-3206` 국제표준 강제
+## 5. 클라우드 모델 신규 버전 즉각 반영 원칙 (최신성 유지)
+- **버전 업데이트 강제**: Google Cloud Vertex AI 또는 Agent Platform에서 `gemini` 모델의 신규 버전이 출시될 경우, 코어 스크립트에 하드코딩된 과거 모델명에 얽매이지 말고 가장 최신의, 성능이 가장 뛰어난 버전으로 즉각 코드를 갱신하여 품질을 최상위로 유지해야 합니다.
+
+## 6. 오류 복구 및 렌더링 원칙 (Full Regeneration Rule)
+- **부분 수정(Patching) 절대 금지**: 오류 발생 시 절대로 부분 덧칠(Patching)하지 말고, 전체 캔버스를 새롭게 다시 렌더링(Full Regeneration)해야 합니다.
+
+## 7. 원본 비율 및 해상도 절대 보존 원칙 (Aspect Ratio Lock)
+- Pillow `Image.Resampling.LANCZOS` 알고리즘을 통해 원본 해상도 및 종횡비를 100% 강제 동기화합니다.
+
+## 8. [HARD STOP] 1.5 라인업 및 구형 모델 사용 절대 금지 (3.1+ 강제)
+- 어떠한 상황에서도 `gemini-1.5-pro`, `gemini-1.5-flash` 등 구형 레거시 모델로 다운그레이드하는 행위를 절대 금지합니다.
+
+
+## 9. [COMPLIANCE-FIRST] 글로벌 법무 & 럭셔리 마케팅 초월번역 표준 규격
+1. **시스템 인스트럭션 전역 고정**: 모든 Pass 1 호출 시 `GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION` (다국어 법무팀 + 럭셔리 카피라이터) 주입 필수.
+2. **동적 렉시콘 연동**: `00_공통자료/compliance_lexicons/*.json`에서 4개국 법령 DB를 실시간 동적 로드.
+3. **5대 법적 리스크 & 콩글리시 100% 강제 치환**:
+   - `Complex skin issues` ➔ `Multiple skin concerns`
+   - `Troubled skin` ➔ `Blemish-prone skin`
+   - `nutrients for cellular vitality` ➔ `hydration for a resilient-looking complexion`
+   - `reinforces cellular resilience` ➔ `reinforces the skin's natural moisture barrier`
+   - `combats premature aging` ➔ `combats the signs of premature aging`
+4. **결정론적 후처리 게이트 (`apply_deterministic_qa_overrides`)**: Python 정규식 필터에서 금지어를 1ms 내에 전수 자동 교정.
+
+## 10. [SEO-GEO-AEO-STANDARDS] 검색엔진 최적화 표준 규격
+1. **4-Core 표준 구조 강제**: 1. 공식 상품명 (100자 이내 NPO) ➔ 2. 핵심 가치 및 5줄 마이크로 요약 ➔ 3. 제품 상세 비교 스펙 테이블 (HTML Table) ➔ 4. 5대 핵심 FAQ.
+2. **하이브리드 듀얼 인제스천 (Dual Ingestion)**: `url.txt` 존재 시 웹 실시간 HTML 스크래핑 팩트 주입. 미출시 제품은 고시표 이미지 앵커링(`is_table: true`) 및 INCI/KCID 사전 보정으로 100% 무결점 팩트 복원.
+3. **[HARD STOP] Zero Meta Commentary**: 결과물에 `GEO`, `AEO`, `RAG`, `(Character Count: 85)` 등 내부 개발/최적화 용어 출력 100% 영구 금지 (순수 B2C 고객 대면용 카피).
+4. **트리플 익스포트(Triple Export) 파이프라인**: 번역 완료 시 `[상품명]_[언어]_SEO_GEO_AEO.docx` (MS Word 서식), `.html` (원클릭 복사 뷰어), `.txt` (가독성 개행 텍스트), `.md` 4종 파일 일괄 동시 생성 의무화.
+

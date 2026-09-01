@@ -91,3 +91,10 @@
 - **표준 렉시콘 DB**: `00_공통자료/compliance_lexicons/*.json` 실시간 동적 바인딩
 - **하이퍼파라미터 전역 고정**: `temperature: 0.6`, `top_p: 0.9`, `max_output_tokens: 8192`
 - **안전망**: Python 정규식(`apply_deterministic_qa_overrides`) 100% 강제 치환 게이트 연동
+
+
+## 4-Core 검색 최적화(SEO/GEO/AEO) 및 하이브리드 인제스천 표준
+- **4-Core 표준 구조**: 1. 공식 상품명 (100자 NPO) ➔ 2. 5줄 마이크로 요약 ➔ 3. 제품 상세 비교 스펙 테이블(HTML Table) ➔ 4. 5대 핵심 FAQ
+- **하이브리드 듀얼 인제스천**: `url.txt` 웹 실시간 텍스트 스크래핑 및 미출시 신제품 4중 이미지 팩트 앵커링 지원
+- **트리플 익스포트**: `.docx` (MS Word), `.html` (원클릭 복사 뷰어), `.txt` (가독성 개행), `.md` 4종 파일 일괄 동시 생성
+- **Zero Meta Commentary**: 내부 개발/최적화 용어 일체 배제한 100% 고객 대면용 카피
