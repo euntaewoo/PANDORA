@@ -84,3 +84,10 @@
 ## 4. 고시정보표 표준 규격 (MFDS 식약처 심사필)
 - 기능성화장품 심사: `韓国化粧品法に基づき韓国食品医薬品安全処(MFDS)の機能性化粧品審査(または報告)済`
 - 공정위 품질보증기준 및 +82 고객상담실 표준화 적용.
+
+
+## ⚖️ 글로벌 컴플라이언스(법무) & 럭셔리 초월번역 시스템 연동 명세
+- **System Instruction**: `GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION` (다국어 법무 감사관 + 럭셔리 마케터 페르소나 및 원천 법리 영구 장착)
+- **표준 렉시콘 DB**: `00_공통자료/compliance_lexicons/*.json` 실시간 동적 바인딩
+- **하이퍼파라미터 전역 고정**: `temperature: 0.6`, `top_p: 0.9`, `max_output_tokens: 8192`
+- **안전망**: Python 정규식(`apply_deterministic_qa_overrides`) 100% 강제 치환 게이트 연동

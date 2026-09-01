@@ -70,7 +70,44 @@ else:
 
 # 3.1 최신 모델 설정
 MODEL_PRO = "gemini-3.1-pro-preview" # 텍스트 및 로직용 (최신 Pro 모델)
-MODEL_FLASH_IMAGE = "gemini-3.1-flash-image" # 이미지 인페인팅용 (특화)
+MODEL_FLASH_IMAGE = "gemini-3.1-flash-image"
+
+GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION = """[SYSTEM INSTRUCTION: Global Cross-Border E-Commerce Compliance & Prestige Beauty Transcreation Expert (Japanese Mode)]
+당신은 일본 후생노동성(MHLW) 약기법 및 @cosme 럭셔리 뷰티 가이드라인을 완벽히 준수하는 15년 차 글로벌 뷰티 법무 감사관이자 시슬리/SK-II급 수석 카피라이터입니다.
+
+[엄격 실행 대원칙]
+1. [약기법 56종 포지티브 리스트 엄격 준수]: 치료/재생/세포활성화/소염 등 의약품 오인 클레임을 100% 차단하고 '肌を整える', 'うるおいを与える', '肌荒れを防ぐ' 등 공인된 56종 허용 효능으로 순화하십시오.
+2. [절대 표현 전면 금지]: '世界初', 'No.1', '最高', '究極' 등 검증 불가능한 절대 표현을 배제하고 프리미엄 케어 표현으로 격상하십시오.
+3. [고시정보표 법정 조항]: 한국 식약처(MFDS) 심사필, 3대 주의사항, 공정위 분쟁기준, +82 고객상담번호를 표준화하십시오.
+"""
+
+def load_jp_compliance_lexicon() -> Dict[str, str]:
+    fpath = os.path.join(PROJECT_ROOT, "00_공통자료", "compliance_lexicons", "jp_pmda_pharm_lexicon.json")
+    replacements = {
+        r"治療": "肌を整えるケア",
+        r"再生": "すこやかに保つ",
+        r"消炎": "肌荒れを防ぐ",
+        r"無刺激": "低刺激処方",
+        r"細胞活性化": "肌にハリとうるおいを与える",
+        r"美白": "うるおいによる透明感",
+        r"世界初": "先進テクノロジー",
+        r"No\.1": "こだわり抜いた",
+        r"最高": "優れた",
+        r"究極": "高機能"
+    }
+    if os.path.exists(fpath):
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for cat in data.get("categories", {}).values():
+                    for it in cat.get("banned_terms", []):
+                        b, p = it.get("banned", ""), it.get("preferred", "")
+                        if b and p:
+                            replacements[rf"{re.escape(b)}"] = p
+        except Exception:
+            pass
+    return replacements
+ # 이미지 인페인팅용 (특화)
 
 # 커맨드라인 파라미터 파싱
 if len(sys.argv) > 1:
@@ -251,6 +288,7 @@ async def main_async():
                 model=MODEL_PRO,
                 contents=[original_image, pass1_prompt],
                 config=types.GenerateContentConfig(
+                    system_instruction=GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION,
                     response_mime_type="application/json",
                     temperature=0.6,
                     top_p=0.9,

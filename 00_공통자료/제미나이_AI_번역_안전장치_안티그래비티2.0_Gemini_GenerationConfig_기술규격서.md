@@ -112,3 +112,9 @@ model = GenerativeModel(
 - **클라이언트**: rom google import genai -> client = load_credentials()
 - **비동기 인터페이스**: wait client.aio.models.generate_content(model=..., contents=..., config=...)
 - **토큰 이원화**: 고시표 8192 토큰 / SEO 4096 토큰
+
+
+## 8. 글로벌 컴플라이언스(법무) 시스템 인스트럭션 (`GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION`) 규격
+- **목적**: 단순 번역기를 넘어선 '글로벌 법무 감사관 + 럭셔리 카피라이터' 이중 페르소나 및 원천 법리 강제.
+- **주입 위치**: `types.GenerateContentConfig(system_instruction=GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION, temperature=0.6, top_p=0.9, max_output_tokens=8192)`
+- **연동 데이터**: `00_공통자료/compliance_lexicons/*.json` (4개국 법령 DB 실시간 동적 바인딩).

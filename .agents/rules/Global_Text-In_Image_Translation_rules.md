@@ -4,12 +4,16 @@
 
 ## 1. 아키텍처 원칙: 설정 주도형 플러그인 격리 (Configuration-Driven Pack)
 - **하드코딩 금지**: 코어 엔진 스크립트(`multilingual_text_in_image_translatio_agy_sdk.py`) 내에 특정 언어의 폰트 명칭, 규제 금지어, 약기법 등을 `if/else`로 하드코딩하는 것을 절대 금지합니다.
-- **플러그인 로드**: 언어별 규칙은 반드시 `config/` 디렉토리 하위의 독립된 JSON 팩(예: `EN_translation_rules.json`, `JP_translation_rules.json`)에 분리하여 저장하고, 엔진 구동 시 `--lang` 파라미터에 따라 런타임에 동적으로 주입(로드)해야 합니다.
+- **표준 렉시콘 DB 연동**: 언어별 법률 규제 및 금지어/대체어는 반드시 `00_공통자료/compliance_lexicons/` 하위의 독립된 JSON 팩(예: `en_fda_mocra_lexicon.json`, `jp_pmda_pharm_lexicon.json`, `cn_nmpa_adlaw_lexicon.json`, `tw_tfda_lexicon.json`)에 분리 저장하고, 엔진 구동 시 `--lang` 파라미터에 따라 `load_dynamic_compliance_lexicon()`을 통해 런타임에 동적으로 주입(로드)해야 합니다.
 
-## 2. 언어별 렌더링 및 폰트 강제 원칙
-- **일본어(JP)**: 후생노동성 기준 56종 약기법 금지어 정규식(Regex) 락을 가동하고, 렌더링 시 반드시 `NotoSansJP` 폰트를 지정합니다.
-- **영어(EN)**: 규제 단어 강제 필터링 락을 해제하고 초월번역 톤앤매너를 지향하며, 렌더링 시 영미권 글로벌 프리미엄 지오메트릭 산세리프인 `Montserrat (몬세라트)` 폰트를 메인 서체로 강제 적용합니다. (단, 상품상세정보 고시정보 테이블 렌더링 시에만 `Pretendard` 적용).
-- **중국어(CN/TW)**: 중국 신광고법 및 NMPA 규정 필터링을 적용하며, 렌더링 시 `Noto Sans SC` (간체자) / `Noto Sans TC` (번체자) 폰트를 적용합니다.
+## 2. 언어별 렌더링, 폰트 및 컴플라이언스 강제 원칙
+- **영어(EN)**: 미국 FDA MoCRA 및 FTC 기준 의약품 오인(세포/생리기능 cellular vitality/resilience) 클레임 전면 차단, 노화는 반드시 `the signs of premature aging`으로 한정, K-뷰티 콩글리시(`Complex skin issues` -> `Multiple skin concerns`, `Troubled skin` -> `Blemish-prone skin`) 배제 및 럭셔리 초월번역 톤앤매너 강제. 렌더링 시 영미권 글로벌 프리미엄 지오메트릭 산세리프인 `Montserrat (몬세라트)` 폰트를 메인 서체로 100% 강제 적용합니다. (단, 고시정보 테이블 렌더링 시에만 `Pretendard` 적용).
+- **일본어(JP)**: 후생노동성 기준 56종 약기법 포지티브 리스트(Positive List) 엄격 준수, 치료/재생 클레임 배제, 렌더링 시 반드시 `NotoSansJP` 폰트를 지정합니다.
+- **중국어(CN/TW)**: 중국 신광고법 8대 절대화 금지어('最', '第一', '顶级' 등) 및 NMPA/TFDA 화장품 규정 필터링을 적용하며, 렌더링 시 `Noto Sans SC` (간체자) / `Noto Sans TC` (번체자) 폰트를 적용합니다.
+
+## 2-1. [GLOBAL-COMPLIANCE] 전역 시스템 인스트럭션 & 원천 법리 (First Principles Heuristic)
+- 모든 번역 엔진 호출 시 `GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION`을 최상위 시스템 지침으로 주입하여 '다국어 법무 감사관 + 럭셔리 카피라이터' 역할을 강제합니다.
+- 사전에 등록되지 않은 신규 성분/어휘라도 인체 세포/생리기능에 직접 관여하는 뉘앙스가 있다면 무조건 '피부 표면의 미용적 외관 개선(-looking, appearance of, moisture barrier)'으로 안전하게 우회해야 합니다.
 
 ## 3. 안정성 방어망 (Safety Nets)
 - LLM(Gemini)이 JSON 결과 반환 시 ` ```json ` 과 같은 마크다운 코드 블록을 포함하여 응답할 경우, `JSONDecodeError`가 발생하여 튕기는 치명적 결함을 막기 위해 파이썬 단에서 `replace` 및 정제(Cleaning)하는 코드가 필수적으로 포함되어야 합니다.

@@ -71,6 +71,25 @@
     5. `⑤ 이행 판정 (Status)`: `✅ 정상 반영` (100% 교정 완료) 또는 `❌ 미반영` (미결함)
   - **종합 합격 승인 요건**: 점수 90점 이상 달성 및 1단계 지적 사항의 `이행 판정`이 **100% `✅ 정상 반영`**으로 완결되어야만 `[PASSED (초월번역 승인)]` 뱃지를 발급한다.
 
+
+### 2.7 글로벌 컴플라이언스(법무) & 럭셔리 마케팅 초월번역 전역 표준 규격 (GLOBAL-COMPLIANCE-LEXICON-LOCK)
+- **[GLOBAL-COMPLIANCE-SYSTEM-INSTRUCTION]**: 모든 다국어 번역 엔진 Pass 1 호출 시 `GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION`을 시스템 인스트럭션(`types.GenerateContentConfig(system_instruction=...)`)으로 전역 강제하여 **'15년 차 글로벌 뷰티 법무 감사관이자 세포라/백화점 수석 카피라이터'** 역할을 수행한다.
+- **[FIRST-PRINCIPLES-HEURISTIC] (세포/생리기능 금지 원천 법리)**:
+  - 인체 구조, 생리적 기능, 세포(Cell/Cellular) 단위의 생화학적 변화나 치료·재생을 암시하는 클레임(예: `cellular vitality`, `cellular resilience`, `cell metabolism`, `collagen synthesis`, `anti-inflammatory`)을 100% 원천 차단한다.
+  - 사전에 등록되지 않은 신규 성분/어휘라도 세포/생리기능 직접 관여 뉘앙스가 있다면 무조건 **'피부 표면의 미용적 외관 개선(`-looking`, `appearance of`, `natural moisture barrier`)'**으로 안전하게 우회한다.
+- **[4개국 표준 컴플라이언스 렉시콘 DB 연동 (Data-Driven Architecture)]**:
+  - `00_공통자료/compliance_lexicons/` 하위의 4개국 JSON DB(`en_fda_mocra_lexicon.json`, `jp_pmda_pharm_lexicon.json`, `cn_nmpa_adlaw_lexicon.json`, `tw_tfda_lexicon.json`)를 `load_dynamic_compliance_lexicon()`으로 실시간 동적 바인딩한다.
+  - **5대 법적 리스크 & 콩글리시 100% 강제 치환**:
+    1. `Complex skin issues` ➔ **`Multiple skin concerns`**
+    2. `Troubled skin` ➔ **`Blemish-prone skin`**
+    3. `nutrients for cellular vitality` ➔ **`hydration for a resilient-looking complexion`**
+    4. `reinforces cellular resilience` ➔ **`reinforces the skin's natural moisture barrier`**
+    5. `combats premature aging` ➔ **`combats the signs of premature aging`**
+- **[DETERMINISTIC-OVERRIDE-GATE] (Python 정규식 100% 안전망)**:
+  - LLM 응답 텍스트에 대해 Python 코드 레벨(`apply_deterministic_qa_overrides`)에서 렉시콘 등록 금지어를 정규식(`re.sub`)으로 전수 검사하여 1ms 내에 럭셔리 표준어로 100% 강제 치환한다.
+- **[AUTONOMOUS-REGULATORY-SENTINEL] (자율 규제 동기화 크론)**:
+  - `00_공통자료/sync_regulatory_lexicon.py` 모듈을 통해 각국 정부(FDA Warning Letters, 후생성, NMPA) 웹 피드를 주기적으로 탐색하여 신규 단속 성분을 JSON DB에 스스로 추가(Append)한다.
+
 ### 2.6 4대 마스터 폴더 체계 및 3대 워크플로우별 결과표 차별화 표준 규격 (4-MASTER-FOLDERS-AND-3-TRACK-STANDARDS)
 - **[4-MASTER-FOLDER-LIFECYCLE-LOCK]**: 파이프라인의 데이터 오염 방지(Pipeline Isolation) 및 업무 생명주기(Lifecycle) 관리를 위해 다음 **4대 마스터 폴더 체계**를 전역 강제한다:
   - **`01_번역대상_원본`**: [신규 인풋] 순수 한국어 원본 이미지 및 DOCX 수납.

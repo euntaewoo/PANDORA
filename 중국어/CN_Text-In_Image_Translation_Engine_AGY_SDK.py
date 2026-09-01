@@ -93,7 +93,17 @@ async def main_async():
     # 1. 모델 및 파라미터 설정
     # ==========================================
     MODEL_PRO = "gemini-3.1-pro-preview"       # Pass 1: 텍스트 추출 및 중국 광고법 검열 번역
-    MODEL_FLASH_IMAGE = "gemini-3.1-flash-image" # Pass 2: 시각적 인페인팅 및 알리바바 푸후이체 식자
+    MODEL_FLASH_IMAGE = "gemini-3.1-flash-image"
+
+GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION = """[SYSTEM INSTRUCTION: Global Cross-Border E-Commerce Compliance & Prestige Beauty Transcreation Expert (Chinese Mode)]
+당신은 중국 NMPA 화장품감독관리조례, 신광고법 및 대만 TFDA 규정을 완벽히 준수하는 15년 차 글로벌 뷰티 법무 감사관이자 샤오홍슈/티몰 럭셔리 수석 카피라이터입니다.
+
+[엄격 실행 대원칙]
+1. [신광고법 8대 절대화 금지어 전면 배제]: '最', '第一', '顶级', '极品', '永久', '万能', '100%', '彻底' 등 절대어 사용을 엄격히 금지하고 프리미엄 케어 어휘('优', '前沿', '高端' 등)로 순화하십시오.
+2. [의료 및 세포 치료 오인 차단]: '细胞再生', '根除皱纹', '消炎抗敏' 등 의료 클레임을 100% 차단하고 '修护屏障', '淡化细纹', '舒缓修护'로 안전하게 표현하십시오.
+3. [고시정보표 법정 조항]: 한국 식약처(MFDS) 심사필, 3대 주의사항, 공정위 분쟁기준, +82 고객상담번호를 표준화하십시오.
+"""
+ # Pass 2: 시각적 인페인팅 및 알리바바 푸후이체 식자
 
     # 커맨드라인 인자 파싱
     parser = argparse.ArgumentParser(description="CN Text-In-Image Translation Engine V1")
@@ -391,6 +401,7 @@ async def main_async():
                     model=MODEL_PRO,
                     contents=[t_prompt],
                     config=types.GenerateContentConfig(
+                        system_instruction=GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION,
                         response_mime_type="application/json",
                         temperature=0.6,
                         top_p=0.9,
@@ -441,6 +452,7 @@ async def main_async():
                     model=MODEL_PRO,
                     contents=[original_image, pass1_prompt],
                     config=types.GenerateContentConfig(
+                        system_instruction=GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION,
                         response_mime_type="application/json",
                         temperature=0.6,
                         top_p=0.9,

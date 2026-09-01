@@ -105,3 +105,9 @@ model = GenerativeModel(
 1. **글로벌 컴플라이언스 완벽 통과**: 대만 TFDA(식품약물관리서), 중국 NMPA(국가약품감독관리국), 일본 PMDA(후생노동성)의 과대광고 모니터링 시스템을 우회하는 100% 합법적이고 안전한 상업용 카피 무한 생성.
 2. **독보적인 프리미엄 품질 구현**: 직역 투 번역기가 아닌 현지 지사 탑클래스 카피라이터가 직접 쓴 수준의 유려하고 격식 있는 브랜드 뷰티 문맥 확보.
 3. **인프라 비용 보존 및 속도 향상**: 불필요한 토큰 루프 출력을 막아 구글 인프라 API 청구 비용을 최소 30% 이상 절감하고 이미지 배치 렌더링 속도 대폭 개선.
+
+
+## 8. 글로벌 컴플라이언스(법무) 시스템 인스트럭션 (`GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION`) 규격
+- **목적**: 단순 번역기를 넘어선 '글로벌 법무 감사관 + 럭셔리 카피라이터' 이중 페르소나 및 원천 법리 강제.
+- **주입 위치**: `types.GenerateContentConfig(system_instruction=GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION, temperature=0.6, top_p=0.9, max_output_tokens=8192)`
+- **연동 데이터**: `00_공통자료/compliance_lexicons/*.json` (4개국 법령 DB 실시간 동적 바인딩).

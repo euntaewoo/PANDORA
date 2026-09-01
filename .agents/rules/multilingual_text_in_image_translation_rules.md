@@ -30,3 +30,15 @@
 
 ## 8. [HARD STOP] 1.5 라인업 및 구형 모델 사용 절대 금지 (3.1+ 강제)
 - 어떠한 상황에서도 `gemini-1.5-pro`, `gemini-1.5-flash` 등 구형 레거시 모델로 다운그레이드하는 행위를 절대 금지합니다.
+
+
+## 9. [COMPLIANCE-FIRST] 글로벌 법무 & 럭셔리 마케팅 초월번역 표준 규격
+1. **시스템 인스트럭션 전역 고정**: 모든 Pass 1 호출 시 `GLOBAL_COMPLIANCE_SYSTEM_INSTRUCTION` (다국어 법무팀 + 럭셔리 카피라이터) 주입 필수.
+2. **동적 렉시콘 연동**: `00_공통자료/compliance_lexicons/*.json`에서 4개국 법령 DB를 실시간 동적 로드.
+3. **5대 법적 리스크 & 콩글리시 100% 강제 치환**:
+   - `Complex skin issues` ➔ `Multiple skin concerns`
+   - `Troubled skin` ➔ `Blemish-prone skin`
+   - `nutrients for cellular vitality` ➔ `hydration for a resilient-looking complexion`
+   - `reinforces cellular resilience` ➔ `reinforces the skin's natural moisture barrier`
+   - `combats premature aging` ➔ `combats the signs of premature aging`
+4. **결정론적 후처리 게이트 (`apply_deterministic_qa_overrides`)**: Python 정규식 필터에서 금지어를 1ms 내에 전수 자동 교정.
