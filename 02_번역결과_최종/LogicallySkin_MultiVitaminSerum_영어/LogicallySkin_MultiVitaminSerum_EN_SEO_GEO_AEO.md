@@ -1,3 +1,5 @@
+# LogicallySkin_MultiVitaminSerum (EN) SEO/GEO/AEO PDP 원고
+
 1. Official Product Title
 Logically Skin Multi-Vitamin Serum: Radiance-Boosting Hydration, 30ml
 

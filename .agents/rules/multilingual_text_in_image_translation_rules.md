@@ -42,3 +42,10 @@
    - `reinforces cellular resilience` ➔ `reinforces the skin's natural moisture barrier`
    - `combats premature aging` ➔ `combats the signs of premature aging`
 4. **결정론적 후처리 게이트 (`apply_deterministic_qa_overrides`)**: Python 정규식 필터에서 금지어를 1ms 내에 전수 자동 교정.
+
+## 10. [SEO-GEO-AEO-STANDARDS] 검색엔진 최적화 표준 규격
+1. **4-Core 표준 구조 강제**: 1. 공식 상품명 (100자 이내 NPO) ➔ 2. 핵심 가치 및 5줄 마이크로 요약 ➔ 3. 제품 상세 비교 스펙 테이블 (HTML Table) ➔ 4. 5대 핵심 FAQ.
+2. **하이브리드 듀얼 인제스천 (Dual Ingestion)**: `url.txt` 존재 시 웹 실시간 HTML 스크래핑 팩트 주입. 미출시 제품은 고시표 이미지 앵커링(`is_table: true`) 및 INCI/KCID 사전 보정으로 100% 무결점 팩트 복원.
+3. **[HARD STOP] Zero Meta Commentary**: 결과물에 `GEO`, `AEO`, `RAG`, `(Character Count: 85)` 등 내부 개발/최적화 용어 출력 100% 영구 금지 (순수 B2C 고객 대면용 카피).
+4. **트리플 익스포트(Triple Export) 파이프라인**: 번역 완료 시 `[상품명]_[언어]_SEO_GEO_AEO.docx` (MS Word 서식), `.html` (원클릭 복사 뷰어), `.txt` (가독성 개행 텍스트), `.md` 4종 파일 일괄 동시 생성 의무화.
+
