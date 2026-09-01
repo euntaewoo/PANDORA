@@ -1,16 +1,20 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import os
+import datetime
 
-root_dir = r"C:\Users\euntaewoo\Desktop\multilingual_text_in_image_translatio_agy_sdk_uv-version"
-output_file = os.path.join(root_dir, "폴더구조_인덱스.txt")
+PROJECT_ROOT = r"C:\Users\euntaewoo\Desktop\이미지_다국어_번역_agy_sdk_uv_version"
+output_file = os.path.join(PROJECT_ROOT, "폴더구조_인덱스.txt")
+gen_script_target = os.path.join(PROJECT_ROOT, "00_공통자료", "generate_folder_index.py")
 
-# 무시할 디렉토리/파일 패턴 (선택사항, 하지만 전체 인덱스이므로 깔끔하게 정돈)
+# 무시할 디렉토리/파일 패턴
 IGNORE_DIRS = {'.git', '.venv', '__pycache__', '.pytest_cache', 'cache'}
 
 lines = []
+now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 lines.append("==========================================================================================")
-lines.append("📁 multilingual_text_in_image_translatio_agy_sdk_uv-version 전체 디렉토리 및 파일 인덱스")
-lines.append(f"📍 루트 경로: {root_dir}")
+lines.append("📁 이미지_다국어_번역_agy_sdk_uv_version 전체 디렉토리 및 파일 인덱스")
+lines.append(f"📍 루트 경로: {PROJECT_ROOT}")
+lines.append(f"🕒 최종 갱신 일시: {now_str}")
 lines.append("==========================================================================================\n")
 
 total_dirs = 0
@@ -31,7 +35,6 @@ def build_tree(dir_path, prefix=""):
     except PermissionError:
         return
     
-    # 디렉토리와 파일 분리 및 정렬
     dirs = []
     files = []
     for e in entries:
@@ -63,20 +66,19 @@ def build_tree(dir_path, prefix=""):
             total_files += 1
             try:
                 sz = os.path.getsize(full_path)
-                sz_str = format_size(sz)
+                sz_str = f" ({format_size(sz)})"
             except Exception:
-                sz_str = "N/A"
-            lines.append(f"{prefix}{connector}📄 {item} ({sz_str})")
+                sz_str = ""
+            lines.append(f"{prefix}{connector}📄 {item}{sz_str}")
 
-build_tree(root_dir)
+build_tree(PROJECT_ROOT)
 
-lines.append("\n" + "=" * 90)
-lines.append(f"📊 [총계] 총 폴더 수: {total_dirs}개 | 총 파일 수: {total_files}개")
-lines.append("=" * 90)
+lines.append("\n==========================================================================================")
+lines.append(f"📊 [통계 요약] 총 디렉토리 수: {total_dirs:,} 개 | 총 파일 수: {total_files:,} 개")
+lines.append("==========================================================================================")
 
-content = "\n".join(lines)
 with open(output_file, "w", encoding="utf-8") as f:
-    f.write(content)
+    f.write("\n".join(lines))
 
-print(f"SUCCESS: Generated {output_file}")
-print(f"Total Dirs: {total_dirs}, Total Files: {total_files}")
+print(f"✅ [인덱스 생성 완료] 경로: {output_file}")
+print(f"📊 총 디렉토리: {total_dirs:,} 개, 총 파일: {total_files:,} 개")

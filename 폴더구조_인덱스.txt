@@ -1,6 +1,7 @@
 ==========================================================================================
-📁 multilingual_text_in_image_translatio_agy_sdk_uv-version 전체 디렉토리 및 파일 인덱스
-📍 루트 경로: C:\Users\euntaewoo\Desktop\multilingual_text_in_image_translatio_agy_sdk_uv-version
+📁 이미지_다국어_번역_agy_sdk_uv_version 전체 디렉토리 및 파일 인덱스
+📍 루트 경로: C:\Users\euntaewoo\Desktop\이미지_다국어_번역_agy_sdk_uv_version
+🕒 최종 갱신 일시: 2026-09-02 02:41:33
 ==========================================================================================
 
 ├── 📁 .agents/
@@ -13,7 +14,7 @@
 │   │   ├── 📄 00_main_engine_rules.md (2.7 KB)
 │   │   ├── 📄 global_rules.md (46.1 KB)
 │   │   ├── 📄 Global_Text-In_Image_Translation_rules.md (4.8 KB)
-│   │   └── 📄 multilingual_text_in_image_translation_rules.md (4.7 KB)
+│   │   └── 📄 multilingual_text_in_image_translation_rules.md (5.7 KB)
 │   ├── 📁 skills/
 │   │   └── 📁 UI_UX_Library/
 │   │       ├── 📁 01_UI_StyleSeed/
@@ -71,24 +72,56 @@
 │   ├── 📁 임시_입출력/
 │   │   ├── 📁 temp_input/
 │   │   └── 📁 temp_output/
+│   ├── 📄 api_diff.py (1.3 KB)
 │   ├── 📄 API_무료_유료_비교표.csv (2.8 KB)
+│   ├── 📄 audit_legacy_sync.py (1.6 KB)
+│   ├── 📄 check_hardcoded_paths.py (1.2 KB)
+│   ├── 📄 clean_c_folder.py (1016 B)
+│   ├── 📄 clean_desktop_now.py (1006 B)
+│   ├── 📄 clean_pyd.py (985 B)
+│   ├── 📄 compare_dirs.py (673 B)
 │   ├── 📄 create_lexicons.py (11.9 KB)
+│   ├── 📄 current_diff.py (989 B)
+│   ├── 📄 deep_audit_legacy.py (4.6 KB)
+│   ├── 📄 deep_purpose_diff.py (745 B)
+│   ├── 📄 deep_tool_diff.py (2.2 KB)
+│   ├── 📄 diff_analysis.py (1.9 KB)
 │   ├── 📄 enforce_sys_instruction.py (2.6 KB)
+│   ├── 📄 final_integrity_check.py (3.0 KB)
+│   ├── 📄 final_stats_diff.py (1.0 KB)
+│   ├── 📄 finish_sync_to_legacy.py (1.3 KB)
+│   ├── 📄 fix_verify.py (2.4 KB)
+│   ├── 📄 fix_verify2.py (2.3 KB)
+│   ├── 📄 fix_verify3.py (2.7 KB)
+│   ├── 📄 fix_verify4.py (2.4 KB)
+│   ├── 📄 fix_verify5.py (2.4 KB)
+│   ├── 📄 force_clean.py (443 B)
+│   ├── 📄 gen_index_legacy.py (2.5 KB)
 │   ├── 📄 generate_folder_index.py (2.7 KB)
 │   ├── 📄 lint_workspace_rules.py (5.4 KB)
+│   ├── 📄 mirror_sync_all.py (1.0 KB)
+│   ├── 📄 move_folder_to_d.py (1.6 KB)
+│   ├── 📄 refactor_to_dynamic_paths.py (2.6 KB)
+│   ├── 📄 register_reboot_delete.py (644 B)
 │   ├── 📄 render_notice_table_korean.py (21.3 KB)
 │   ├── 📄 render_notice_table_standard.py (25.0 KB)
+│   ├── 📄 save_comparison_doc.py (6.1 KB)
+│   ├── 📄 scan_260901.py (547 B)
 │   ├── 📄 sync_regulatory_lexicon.py (3.9 KB)
+│   ├── 📄 sync_to_legacy.py (4.8 KB)
 │   ├── 📄 update_all_folders.py (9.7 KB)
+│   ├── 📄 update_comparison_all_async.py (1.6 KB)
 │   ├── 📄 update_engines.py (8.7 KB)
 │   ├── 📄 update_global_rules.py (3.5 KB)
 │   ├── 📄 update_other_engines.py (7.6 KB)
 │   ├── 📄 update_rule_docs.py (9.0 KB)
 │   ├── 📄 update_txt_html.py (3.0 KB)
-│   ├── 📄 verify_pipeline.py (2.1 KB)
+│   ├── 📄 upgrade_all_legacy_to_async.py (3.8 KB)
+│   ├── 📄 verify_pipeline.py (2.2 KB)
+│   ├── 📄 verify_upgraded_legacy.py (1.1 KB)
 │   ├── 📄 고시정보표_HTML_렌더링_표준규격.md (15.2 KB)
 │   ├── 📄 구글 클라우드(GCP) Vertex AI 인프라 환경에서 제미나이(Gemini) API 호출3가지 방식.MD (3.2 KB)
-│   ├── 📄 쇼핑몰_상품등록_원클릭_복사_실무가이드.md (4.3 KB)
+│   ├── 📄 쇼핑몰_상품등록_원클릭_복사_실무가이드.md (5.0 KB)
 │   ├── 📄 제미나이_AI_번역_안전장치_안티그래비티2.0_Gemini_GenerationConfig_기술규격서.md (8.6 KB)
 │   ├── 📄 초월번역_품질평가_4대루브릭_표준규격.md (6.7 KB)
 │   └── 📄 🇰🇷 한국어 상품정보제공고시(Notice Table) 표준 렌더링 규격서.MD (7.9 KB)
@@ -151,8 +184,10 @@
 │       ├── 📄 7_logicallyskin_MultiVitamiSerum_EN_Translated.png (1.00 MB)
 │       ├── 📄 8_logicallyskin_MultiVitaminSerum_EN_Translated.png (1.76 MB)
 │       ├── 📄 9_logicallyskin_MultiVitaminSerum_EN_Translated.png (1.05 MB)
-│       ├── 📄 LogicallySkin_MultiVitaminSerum_EN_SEO_GEO_AEO.txt (1.5 KB)
-│       ├── 📄 LogicallySkin_MultiVitaminSerum_EN_SEO_GEO_AEO_VIEWER.html (15.1 KB)
+│       ├── 📄 LogicallySkin_MultiVitaminSerum_EN_SEO_GEO_AEO.docx (37.7 KB)
+│       ├── 📄 LogicallySkin_MultiVitaminSerum_EN_SEO_GEO_AEO.md (2.8 KB)
+│       ├── 📄 LogicallySkin_MultiVitaminSerum_EN_SEO_GEO_AEO.txt (2.7 KB)
+│       ├── 📄 LogicallySkin_MultiVitaminSerum_EN_SEO_GEO_AEO_VIEWER.html (23.0 KB)
 │       ├── 📄 Transcreation_QA_Report.html (27.1 KB)
 │       └── 📄 Transcreation_QA_Report.json (7.4 KB)
 ├── 📁 03_번역품질평가/
@@ -196,7 +231,6 @@
 │   │   ├── 📄 9_logicallyskin_MultiVitaminSerum_EN_Translated.png (1.05 MB)
 │   │   ├── 📄 LogicallySkin_MultiVitaminSerum_EN_SEO_GEO_AEO.txt (1.6 KB)
 │   │   └── 📄 LogicallySkin_MultiVitaminSerum_EN_SEO_GEO_AEO_VIEWER.html (15.3 KB)
-│   ├── 📄 ~$초월번역시결과물법규위반및문제소지의문구들정리.xlsx (165 B)
 │   └── 📄 초월번역시결과물법규위반및문제소지의문구들정리.xlsx (10.6 KB)
 ├── 📁 2순위_텍스트_인_이미지_번역/
 │   ├── 📁 backend/
@@ -221,19 +255,19 @@
 │   ├── 📄 EN_translation_rules.json (1.8 KB)
 │   └── 📄 JP_translation_rules.json (766 B)
 ├── 📁 docs/
-│   └── 📄 SEO_GEO_AEO_Pipeline_Architecture.md (9.0 KB)
+│   └── 📄 SEO_GEO_AEO_Pipeline_Architecture.md (6.1 KB)
 ├── 📁 multilingual_text_in_image_translatio_agy_sdk_core/
 │   ├── 📁 .agents/
 │   │   └── 📁 rules/
-│   │       └── 📄 00_main_engine_rules.md (2.7 KB)
+│   │       └── 📄 00_main_engine_rules.md (5.7 KB)
 │   ├── 📄 Git 브랜치(Branch) 활용법.txt (1.4 KB)
-│   ├── 📄 multilingual_text_in_image_translation.py (101.8 KB)
-│   ├── 📄 multilingual_text_in_image_translation_branch.py (95.6 KB)
+│   ├── 📄 multilingual_text_in_image_translation.py (117.6 KB)
+│   ├── 📄 multilingual_text_in_image_translation_branch.py (117.6 KB)
 │   ├── 📄 multilingual_text_in_image_translation_워크플로우_차트_다이어그램.md (4.8 KB)
 │   ├── 📄 multilingual_transcreation_qa_evaluator_agy_sdk.py (20.4 KB)
-│   ├── 📄 README.md (8.4 KB)
+│   ├── 📄 README.md (8.8 KB)
 │   ├── 📄 render_notice_table_korean.py (21.3 KB)
-│   ├── 📄 SEO_GEO_AEO_Pipeline_Architecture.md (9.0 KB)
+│   ├── 📄 SEO_GEO_AEO_Pipeline_Architecture.md (6.1 KB)
 │   ├── 📄 기술적_기초_및_계승_내역_레퍼런스.md (11.8 KB)
 │   ├── 📄 다국어_통합번역_원클릭실행_260826.bat (862 B)
 │   ├── 📄 실행_방법_가이드.md (6.9 KB)
@@ -243,6 +277,11 @@
 │   │   └── 📄 __init__.py (91 B)
 │   └── 📁 multilingual_text_in_image_translatio_agy_sdk_uv_version/
 │       └── 📄 __init__.py (102 B)
+├── 📁 다국어 SEOGEOAEO 통합 강화 종합 분석 보고서 (최신 증보판)/
+│   ├── 📄 다국어_이미지_번역_엔진_SEO_GEO_AEO_통합_강화_종합_분석_보고서.docx (41.4 KB)
+│   ├── 📄 다국어_이미지_번역_엔진_SEO_GEO_AEO_통합_강화_종합_분석_보고서.html (14.9 KB)
+│   ├── 📄 다국어_이미지_번역_엔진_SEO_GEO_AEO_통합_강화_종합_분석_보고서.md (10.5 KB)
+│   └── 📄 다국어_이미지_번역_엔진_SEO_GEO_AEO_통합_강화_종합_분석_보고서.txt (10.4 KB)
 ├── 📁 로지컬리스킨_큐텐판매가격조사/
 │   └── 📄 02_ogically_Skin_PriceList_BARCODE.xlsx (29.7 KB)
 ├── 📁 영어/
@@ -304,8 +343,8 @@
 │   ├── 📁 temp_09/
 │   │   └── 📄 09_PDP_RED-BLEMISH-RELIEF-CLEANSER_200ml.png (466.3 KB)
 │   ├── 📄 .env (262 B)
-│   ├── 📄 EN_Engine_Workflow_and_TechStack.md (13.5 KB)
-│   ├── 📄 EN_Text-In_Image_Translation_Engine_AGY_SDK.py (23.6 KB)
+│   ├── 📄 EN_Engine_Workflow_and_TechStack.md (14.1 KB)
+│   ├── 📄 EN_Text-In_Image_Translation_Engine_AGY_SDK.py (121.4 KB)
 │   └── 📄 Run_English_Translation.bat (877 B)
 ├── 📁 일본어/
 │   ├── 📁 .agents/
@@ -348,9 +387,9 @@
 │   ├── 📄 .env.example (385 B)
 │   ├── 📄 .gitignore (107 B)
 │   ├── 📄 cosmetics_efficacy_56.json (7.0 KB)
-│   ├── 📄 JP_Text-In_Image_Translation_Engine_AGY_SDK.py (26.2 KB)
+│   ├── 📄 JP_Text-In_Image_Translation_Engine_AGY_SDK.py (103.4 KB)
 │   ├── 📄 NotoSansJP-VF.ttf (9.15 MB)
-│   ├── 📄 README.md (6.9 KB)
+│   ├── 📄 README.md (7.6 KB)
 │   ├── 📄 sample_info.png (57.8 KB)
 │   ├── 📄 sample_review.png (30.8 KB)
 │   └── 📄 vertex_service_account.json (2.3 KB)
@@ -401,18 +440,18 @@
 │   ├── 📄 Alibaba-PuHuiTi-Medium.ttf (9.12 MB)
 │   ├── 📄 Alibaba-PuHuiTi-Regular.ttf (9.27 MB)
 │   ├── 📄 CLI_명령어_가이드.md (7.7 KB)
-│   ├── 📄 CN_Engine_Workflow_and_TechStack.md (15.7 KB)
-│   ├── 📄 CN_Text-In_Image_Translation_Engine_AGY_SDK.py (33.9 KB)
+│   ├── 📄 CN_Engine_Workflow_and_TechStack.md (16.4 KB)
+│   ├── 📄 CN_Text-In_Image_Translation_Engine_AGY_SDK.py (89.4 KB)
 │   ├── 📄 NotoSansSC-Bold.ttf (16.95 MB)
 │   ├── 📄 NotoSansSC-Medium.ttf (16.95 MB)
 │   ├── 📄 NotoSansSC-Regular.ttf (16.95 MB)
 │   ├── 📄 NotoSansSC-VariableFont_wght.ttf (16.95 MB)
-│   ├── 📄 README.md (9.2 KB)
+│   ├── 📄 README.md (9.9 KB)
 │   ├── 📄 스마트스토어_오류송장입력건_20260818_0131.xlsx (11.0 KB)
 │   └── 📄 중화권 및 동남아 중국어 표기 기준 총정리.pdf (145.6 KB)
 ├── 📁 프로토(베이직엔진)_PROTO_Text-In_Image_Translation_Engine_AGY_SDK/
-│   ├── 📄 PROTO_Text-In_Image_Translation_Engine_AGY_SDK.py (25.8 KB)
-│   └── 📄 README.md (4.2 KB)
+│   ├── 📄 PROTO_Text-In_Image_Translation_Engine_AGY_SDK.py (102.6 KB)
+│   └── 📄 README.md (4.8 KB)
 ├── 📄 .antigravityignore (1017 B)
 ├── 📄 .env (438 B)
 ├── 📄 .gitignore (107 B)
@@ -426,7 +465,7 @@
 ├── 📄 harness_sync.py (3.7 KB)
 ├── 📄 lint_workspace_rules.py (5.6 KB)
 ├── 📄 make_qa_report.py (17.5 KB)
-├── 📄 multilingual_text_in_image_translatio_agy_sdk.py (101.8 KB)
+├── 📄 multilingual_text_in_image_translatio_agy_sdk.py (117.6 KB)
 ├── 📄 Product Specifications 또는 Product Details _하위 속성(Attributes,Fields)은 다음과 같이 표준화된 영문 명칭으로표기함.xlsx (6.0 KB)
 ├── 📄 pyproject.toml (817 B)
 ├── 📄 README.md (10.9 KB)
@@ -435,12 +474,16 @@
 ├── 📄 uv.lock (297.6 KB)
 ├── 📄 글로벌 컴플라이언스(법무) & 럭셔리 마케팅 초월번역 파이프라인 전면 개편 및 자율 규제 동기화 시스템_implementation_plan.md (7.3 KB)
 ├── 📄 다국어_이미지_번역_3대_프로그램_아키텍처_비교분석표.md (6.4 KB)
-├── 📄 로지컬리스킨 영문 PDP 번역 품질 객관적 분석_.260823txt.txt (3.4 KB)
 ├── 📄 로지컬리스킨_16종_전제품_PDP_상세영역_기계번역_검증_및_현지화_초월번역_비교표.docx (42.0 KB)
+├── 📄 로지컬리스킨_멀티비타민_데일리케어_세럼_50ml_상세페이지_완성원고.docx (41.9 KB)
+├── 📄 로지컬리스킨_멀티비타민_데일리케어_세럼_50ml_상세페이지_완성원고.html (26.8 KB)
+├── 📄 로지컬리스킨_멀티비타민_데일리케어_세럼_50ml_상세페이지_완성원고.md (9.7 KB)
+├── 📄 로지컬리스킨_멀티비타민_데일리케어_세럼_50ml_상세페이지_완성원고.txt (9.8 KB)
 ├── 📄 로지컬리스킨_영문글로벌샵_번역오류문제점및개선요구사항_260823.ods (18.7 KB)
 ├── 📄 제미나이_AI_번역_안전장치_안티그래비티2.0_Gemini_GenerationConfig_기술규격서.md (8.3 KB)
-└── 📄 캔바_vs_제디터_vs_TwoPass엔진_심층비교.md (7.3 KB)
+├── 📄 캔바_vs_제디터_vs_TwoPass엔진_심층비교.md (7.3 KB)
+└── 📄 폴더구조_인덱스.txt (30.6 KB)
 
 ==========================================================================================
-📊 [총계] 총 폴더 수: 76개 | 총 파일 수: 361개
+📊 [통계 요약] 총 디렉토리 수: 77 개 | 총 파일 수: 402 개
 ==========================================================================================
