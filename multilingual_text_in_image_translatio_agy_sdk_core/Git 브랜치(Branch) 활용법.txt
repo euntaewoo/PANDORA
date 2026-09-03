@@ -1,12 +1,17 @@
 올바른 Git 브랜치(Branch) 활용법
-현재 형상 관리를 하고 계신 PANDORA 프로젝트 리포지토리나 로컬 작업 환경에서 Git의 강력한 기능을 100% 활용하려면, 파일명은 원본(multilingual_text_in_image_translatio_agy_sdk_core.py) 그대로 둔 상태에서 Git 내부의 '브랜치' 환경을 분리하는 것이 개발 표준입니다.
+현재 형상 관리를 하고 계신 PANDORA 프로젝트 리포지토리나 로컬 작업 환경에서 \
+Git의 강력한 기능을 100% 활용하려면, 
+파일명은 원본(multilingual_text_in_image_translatio_agy_sdk_core.py) 그대로 둔 상태에서 
+Git 내부의 '브랜치' 환경을 분리하는 것이 개발 표준입니다.
 
 [권장하는 터미널(cmd) 작업 순서]
 새 브랜치 생성 및 이동: 안전한 격리 환경(평행우주)을 하나 만듭니다.
 
 git checkout -b feature/hyperparameter-tuning
 
-원본 파일에 코드 덮어쓰기: 방금 제가 출력해 드린 수정 코드를 이름이 변경된 파일이 아닌, 원본 multilingual_text_in_image_translatio_agy_sdk_core.py에 그대로 덮어쓰고 저장합니다. (기존 원본 코드는 메인 브랜치에 안전하게 보존되어 있습니다.)
+원본 파일에 코드 덮어쓰기: 방금 제가 출력해 드린 수정 코드를 이름이 변경된 파일이 아닌, 
+원본 multilingual_text_in_image_translatio_agy_sdk_core.py에 그대로 덮어쓰고 저장합니다.
+(기존 원본 코드는 메인 브랜치에 안전하게 보존되어 있습니다.)
 
 변경 사항 확정 (Commit): 변경된 내역을 방금 만든 브랜치에 저장합니다.
 
