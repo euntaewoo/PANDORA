@@ -37,7 +37,7 @@ RUBRIC_PROMPT_TEMPLATE = """[SYSTEM PROMPT: Global Luxury Beauty Transcreation &
 ## 4대 정밀 평가 루브릭 (100점 만점)
 1. [도메인/카테고리 적합성 (30점)]: 뷰티 전문 용어 현지화 및 콩글리시/직역투 탈피.
 2. [국가별 광고법 무결성 (30점)]: 미국 MoCRA(세포/생리기능 cellular vitality/cellular resilience 클레임 엄격 금지, 노화는 반드시 signs of aging으로 한정), 일본 약기법 56종, 중국 신광고법 8대 절대화 금지어 준수.
-   - [필수 교정 감점 대상]: 'Complex skin issues'(-> Multiple skin concerns), 'Troubled skin'(-> Blemish-prone skin), 'cellular vitality'(-> resilient-looking complexion), 'cellular resilience'(-> skin's natural moisture barrier), 'combats premature aging'(-> combats the signs of premature aging) 미준수 시 ad_law_compliance 즉시 감점 및 correction_feedbacks 필수 생성.
+   - [필수 교정 감점 대상]: 'Complex skin issues'(-> Multiple skin concerns), 'Troubled skin'(-> Blemish-prone skin), 'cellular vitality'(-> resilient-looking complexion), 'cellular resilience'(-> skin's natural moisture barrier), 'combats premature aging'(-> combats the signs of premature aging), '0.00 skin irritation index'(-> Hypoallergenic & Dermatologist-tested), 'Tone Care'(-> Evening Skin Tone / Discoloration Care 콩글리시 교정) 미준수 시 ad_law_compliance 즉시 감점 및 correction_feedbacks 필수 생성.
 3. [브랜드 감성 및 초월번역 완성도 (25점)]: 백화점/세포라급 하이엔드 뷰티 톤앤매너 및 소비자 구매 설득력.
 4. [시각적 레이아웃 및 텍스트 밸런스 (15점)]: 간결한 문장 구조 및 텍스트 오버플로우 방지.
 

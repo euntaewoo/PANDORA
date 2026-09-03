@@ -27,3 +27,11 @@ priority: "CRITICAL"
   2) 사용상 주의사항: 1) 전문의 상담 2) 상처부위 자제 3) 직사광선/어린이 보관 3대 법정 조항 보강
   3) 품질보증기준: 공정거래위원회 '소비자분쟁해결기준' 공식 문안 매핑
   4) 고객상담실: `+82-2-6743-3206` 국제표준 강제
+## 4. [COMPLIANCE-MAPPING] 무자극 및 각국 법무 표준 명칭 강제
+- **무자극(Non-irritating) 표준 표기**: 한국 인체적용시험 성적서의 '피부자극지수 0.00' 직역투를 배제하고 `Hypoallergenic & Dermatologist-tested for sensitive skin` 또는 `Clinically tested for zero irritation` 공인 표준을 전역에 강제합니다.
+
+## 11. [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK] 결과물 내보내기 전 사전 무결성 검증 및 리포트 강제
+1. **[HARD STOP] 결과물 파일 내보내기 전 무조건 사전 검증 실행**:
+   - 결과물 파일(.png, .html, .docx, .txt, .md 등)을 생성·저장·보고하기 전, 데이터 무결성과 포맷 규격을 체크하는 검증 함수(`pre_export_integrity_check`) 및 린터를 무조건 실행해야 합니다.
+2. **[REPORT-FIRST] 데이터 무결성 요약 리포트 선-출력 의무화**:
+   - 에이전트는 최종 결과물이나 파일 링크를 사용자에게 제시하기 전, 반드시 응답 상단에 `### 📋 [DATA-INTEGRITY-SUMMARY-REPORT]` 요약 리포트 표(포맷 무결성, 콩글리시/금지어 0건 여부, 수치 일치성, 4종 파일 생성 여부)를 먼저 출력하여 검증 결과를 입증해야 합니다. 이 리포트 출력이 누락된 답변은 즉시 무효로 간주합니다.

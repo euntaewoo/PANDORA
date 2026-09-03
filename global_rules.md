@@ -336,3 +336,27 @@
 1. **1단계 (py_compile)**: python -m py_compile <파일경로> 가동으로 문법/들여쓰기 100% 무결성 검증.
 2. **2단계 (정규식/보안 린트)**: client.aio 비동기 규격, 토큰 8192 안전천장, 정규식 문법 오류( * 등) 0건 스캔.
 3. **3단계 (RULE-QA-LOOP)**: view_file 도구로 최종 산출물(이미지/표)을 뷰어로 열어 시각적 무결성 실측 검수.
+
+## 11. [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK] 결과물 내보내기 전 사전 무결성 검증 및 리포트 강제
+1. **[HARD STOP] 결과물 파일 내보내기 전 무조건 사전 검증 실행**:
+   - 결과물 파일(.png, .html, .docx, .txt, .md 등)을 생성·저장·보고하기 전, 데이터 무결성과 포맷 규격을 체크하는 검증 함수(`pre_export_integrity_check`) 및 린터를 무조건 실행해야 합니다.
+2. **[REPORT-FIRST] 데이터 무결성 요약 리포트 선-출력 의무화**:
+   - 에이전트는 최종 결과물이나 파일 링크를 사용자에게 제시하기 전, 반드시 응답 상단에 `### 📋 [DATA-INTEGRITY-SUMMARY-REPORT]` 요약 리포트 표(포맷 무결성, 콩글리시/금지어 0건 여부, 수치 일치성, 4종 파일 생성 여부)를 먼저 출력하여 검증 결과를 입증해야 합니다. 이 리포트 출력이 누락된 답변은 즉시 무효로 간주합니다.
+
+## [GLOBAL-COMPLIANCE-STANDARDS] 영미권/글로벌 뷰티 표준 용어 및 콩글리시 배제 규격
+1. **무자극/저자극 공인 표준 표기**: 한국 인체적용시험 성적서의 '피부자극지수 0.00' 직역투를 엄격히 금지하고 반드시 `Hypoallergenic & Dermatologist-tested for sensitive skin` 또는 `Dermatologist-tested & clinically proven hypoallergenic`으로 표기합니다.
+2. **피부톤 케어 표준 표기**: 'Tone Care / Dark Spot & Tone Care' 등 콩글리시 단순 단어 조합을 배제하고 `Dark Spot & Discoloration Defense` 또는 `Evening Skin Tone & Discoloration Care` 표준 명칭을 강제합니다.
+---
+
+## 7. 제미나이 3.x 지시사항 누락(Semantic Drift) 원천 차단 및 축약 표현 하드밴 (PREVENT-SEMANTIC-DRIFT)
+
+복합 추론(Thinking) 모델 환경에서 "작업을 완료했다"고 서술하면서 실제 출력물에서 지시사항을 누락하거나 임의 축약하는 현상을 시스템 레벨에서 원천 차단한다.
+
+- **[LAZY-CODING-HARD-BAN]**: 다음 축약 및 회피 표현을 출력 코드 내에 포함하는 행위를 전면 영구 금지한다:
+  - `// ... 기존 코드와 동일 ...`
+  - `// ... 나머지 로직 구현 ...`
+  - `# 기존 코드 유지`, `TODO:`, `PASS`, `...`
+  - 작업이 완료되었다고 서술하면서 실제 코드 블록에서 해당 구현이 누락된 경우 시스템 오류로 간주하고 즉각 재수행한다.
+- **[PRE-EXECUTION-CHECKLIST-MANDATORY]**: 복잡한 다중 지시사항 또는 코드 변경 작업 시, 코드를 작성하기 전 **[지시사항 이행 매트릭스(체크리스트 표)]**를 선행 출력하여 모델 스스로 요구사항 반영 여부(O/X)를 자체 대조·검증하도록 강제한다.
+- **[DIFF-FORMAT-STANDARD]**: 수백 줄 이상의 전체 코드를 불필요하게 재출력함으로써 발생하는 토큰 버짓 잠식(Token Budget Collision)을 방지하기 위해, 코드 수정 시 Search/Replace 블록 또는 명확히 변경되는 대상 단위만 정밀 수정한다.
+- **[FLAGSHIP-MODEL-INTEGRITY]**: 모든 가이드, 스크립트, 예시 코드 작성 시 구형 1.5 및 2.5 계열의 사용·언급을 엄격히 금지하며, 오직 최신의 **`gemini-3.1-pro-preview`** 및 **`gemini-3.1-flash-image`** 플래그십 라인업만을 표준으로 적용한다.

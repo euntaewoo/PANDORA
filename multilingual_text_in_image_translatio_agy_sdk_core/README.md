@@ -130,3 +130,13 @@ flowchart TD
 - 4-Core 표준: 1. 상품명(NPO) ➔ 2. 5줄 마이크로 요약 ➔ 3. 제품 상세 비교표(HTML Table) ➔ 4. 5대 핵심 FAQ
 - 듀얼 인제스천: `url.txt` 웹 실시간 스크래핑 및 미출시 제품 4중 이미지 팩트 앵커링 지원
 - 트리플 익스포트: `.docx`, `.html`, `.txt`, `.md` 4종 파일 일괄 자동 생성
+
+## [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK] 결과물 내보내기 전 사전 무결성 검증 및 리포트 선-출력 강제
+1. **[HARD STOP] 결과물 파일 내보내기 전 무조건 사전 검증 실행**:
+   - 결과물 파일(.png, .html, .docx, .txt, .md 등)을 생성·저장·보고하기 전, 데이터 무결성과 포맷 규격을 체크하는 검증 함수(`pre_export_integrity_check`) 및 린터를 무조건 실행해야 합니다.
+2. **[REPORT-FIRST] 데이터 무결성 요약 리포트 선-출력 의무화**:
+   - 에이전트는 최종 결과물이나 파일 링크를 사용자에게 제시하기 전, 반드시 응답 상단에 `### 📋 [DATA-INTEGRITY-SUMMARY-REPORT]` 요약 리포트 표(포맷 무결성, 콩글리시/금지어 0건 여부, 수치 일치성, 4종 파일 생성 여부)를 먼저 출력하여 검증 결과를 입증해야 합니다. 이 리포트 출력이 누락된 답변은 즉시 무효로 간주합니다.
+
+## [GLOBAL-COMPLIANCE-STANDARDS] 영미권/글로벌 뷰티 표준 용어 및 콩글리시 배제 규격
+1. **무자극/저자극 공인 표준 표기**: 한국 인체적용시험 성적서의 '피부자극지수 0.00' 직역투를 엄격히 금지하고 반드시 `Hypoallergenic & Dermatologist-tested for sensitive skin` 또는 `Dermatologist-tested & clinically proven hypoallergenic`으로 표기합니다.
+2. **피부톤 케어 표준 표기**: 'Tone Care / Dark Spot & Tone Care' 등 콩글리시 단순 단어 조합을 배제하고 `Dark Spot & Discoloration Defense` 또는 `Evening Skin Tone & Discoloration Care` 표준 명칭을 강제합니다.

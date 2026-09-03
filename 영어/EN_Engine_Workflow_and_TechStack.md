@@ -76,7 +76,7 @@ graph TD
 > - **실측 동작 특성 비교**:
 >   - `T = 0.5`: 상위 1~2개 고확률 단어에 선택이 집중되어 결정론적/보수적 연산 수행 (문장이 딱딱한 기계 직역으로 고착됨).
 >   - `T = 0.7`: 하위 확률 단어의 채택 가능성이 높아져 무작위성 및 창의성은 증가하나, 원문에 없는 과장/절대화 금지어 환각 및 광고법 위반 리스크 급증.
->   - `T = 0.6`: 해외 화장품 광고법(미국 MoCRA, 대만 TFDA, 일본 약기법, 중국 NMPA) 위반 리스크 차단과 백화점·세포라급 럭셔리 초월번역(Transcreation) 감성 품질 간의 **최적 균형점(황금 비율)**.
+>   - `T = 0.6`: 미국 화장품 현대화법(MoCRA) 위반 리스크 차단과 글로벌 백화점·세포라급 럭셔리 초월번역(Transcreation) 감성 품질 간의 **최적 균형점(황금 비율)**.
 
 
 ---
@@ -144,7 +144,7 @@ graph TD
      * 탄력 복원/강화: `Rebuilding skin elasticity / Restoring visible firmness`
      * 눈가 잔주름/건조주름: `Fine lines and wrinkles / Micro-creases`
    - **절대적/과대 표현 전면 금지 (Ban on Absolute Claims)**: 'World's First', 'No.1', 'Best', 'The Ultimate' 등 검증 불가능한 과장 표현 전면 금지 ➔ `Innovative formula engineered for delicate eye areas`, `Advanced Multi-Corrective Solution`, `Targeted Precision Care` 등 프리미엄 혁신 표현으로 순화.
-   - **의료 시술 오인 금지 및 4대 안전 동사 (Compliance-Safe Verbs)**: 보톡스/필러 등 의료 시술 연상 및 '주름 완전 박멸(Wrinkle-free)' 표현 전면 배제 ➔ 반드시 **`Smooth` (抚平/撫平)**, **`Diminish` (淡化)**, **`Alleviate` (舒缓/舒緩)**, **`Care / Repair` (修护/修護)** 4대 안전 동사 사용.
+   - **의료 시술 오인 금지 및 4대 안전 동사 (Compliance-Safe Verbs)**: 보톡스/필러 등 의료 시술 연상 및 '주름 완전 박멸(Wrinkle-free)' 표현 전면 배제 ➔ 반드시 **`Smooth` (Skin texture refinement)**, **`Diminish` (Visible reduction)**, **`Alleviate` (Soothing/Protection)**, **`Care / Repair` (Barrier care/recovery)** 4대 안전 동사 사용.
    - **세포라/백화점 톤앤매너**: 세포라(Sephora) 및 최고급 백화점 프레스티지 뷰티 톤 적용.
 
 
@@ -156,7 +156,7 @@ graph TD
 
 ## 🏆 초월번역(Transcreation) 품질 자동 평가 4대 루브릭 (100점 만점)
 - **① 현지 카테고리 어휘 적합성 (30점)**: 콩글리시/직역투 배제, 현지 뷰티 플랫폼 네이티브 어휘 채택
-- **② 국가별 광고법 무결성 (30점)**: 미국 MoCRA, 일본 약기법, 중국 NMPA/신광고법 위반 표현 100% 차단
+- **② 미국 FDA MoCRA 광고법 무결성 (30점)**: 미국 MoCRA(세포/의약품 오인 클레임 등) 위반 표현 100% 차단
 - **③ 브랜드 감성 및 초월번역 완성도 (25점)**: 백화점·세포라급 하이엔드 뷰티 톤앤매너 및 구매 전환 설득력
 - **④ 시각적 레이아웃 및 가독성 (15점)**: 텍스트 박스 침범 방지 및 간결한 문장 구조
 - **[합격 기준 및 자가치유]**: **90점 이상 & 위반 0건 합격**, 미달 시 피드백 기반 **최대 2회 자동 재렌더링 및 `Transcreation_QA_Report.html` 발행**
@@ -167,3 +167,17 @@ graph TD
 - **하이브리드 듀얼 인제스천**: `url.txt` 웹 실시간 텍스트 스크래핑 및 미출시 신제품 4중 이미지 팩트 앵커링 지원
 - **트리플 익스포트**: `.docx` (MS Word), `.html` (원클릭 복사 뷰어), `.txt` (가독성 개행), `.md` 4종 파일 일괄 동시 생성
 - **Zero Meta Commentary**: 내부 개발/최적화 용어 일체 배제한 100% 고객 대면용 카피
+
+- **무자극(Non-irritating) 공식 표준 표기 강제**: 한국 인체적용시험 성적서의 '피부자극지수 0.00' 직역투를 배제하고 `Hypoallergenic & Dermatologist-tested for sensitive skin` 또는 `Clinically tested for zero irritation`으로 표기합니다.
+
+## [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK] 결과물 내보내기 전 사전 무결성 검증 및 리포트 강제
+1. **사전 검증 강제**: 결과물 파일(.png, .html, .docx, .txt, .md 등)을 최종 내보내기 전, 데이터 무결성과 포맷 규격을 체크하는 검증 단계를 무조건 실행합니다.
+2. **요약 리포트 선-출력 의무화**: 에이전트는 결과물 링크 제시 전 반드시 `[DATA-INTEGRITY-SUMMARY-REPORT]` 요약 리포트를 사용자에게 먼저 출력해야 합니다.
+---
+
+## [PREVENT-SEMANTIC-DRIFT] 지시사항 누락 방지 및 출력 생성제어 4대 안전장치
+
+1. **[LAZY-CODING-HARD-BAN]**: `// ... 기존 코드와 동일 ...`, `TODO:`, `...` 등 일체의 축약/생략 표현 전면 금지.
+2. **[PRE-EXECUTION-CHECKLIST]**: 복합 요구사항 처리 시 지시사항 이행 매트릭스(표) 선행 검증 강제.
+3. **[DIFF-FORMAT-STANDARD]**: 긴 코드/데이터 수정 시 불필요한 전체 재출력을 방지하여 토큰 버짓 보호.
+4. **[THINKING-BUDGET-CONTROL]**: 추론(Thinking) 토큰의 본문 잠식을 차단하는 파라미터 규격화 (`max_output_tokens=8192`, 최신 `gemini-3.1-*` 플래그십 유지).

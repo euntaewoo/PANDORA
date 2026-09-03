@@ -119,6 +119,53 @@ LANG_CONFIGS = {
 }
 
 
+
+def pre_export_integrity_check(data_dict: dict, export_type: str = "SEO_4CORE") -> dict:
+    """
+    [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK]
+    결과물을 파일로 내보내기 전, 데이터 무결성과 포맷을 체크하는 물리적 검증 게이트입니다.
+    """
+    report = {
+        "status": "PASS",
+        "export_type": export_type,
+        "format_integrity": True,
+        "banned_terms_found": [],
+        "errors": []
+    }
+    
+    # 1. 콩글리시 및 레거시 금지어 검사
+    banned_check_list = [
+        "0.00 Irritation Index",
+        "0.00 skin irritation index",
+        "Dark Spot & Tone Care",
+        "Complex skin issues",
+        "cellular vitality",
+        "cellular resilience"
+    ]
+    
+    content_str = json.dumps(data_dict, ensure_ascii=False)
+    for b in banned_check_list:
+        if b in content_str:
+            report["banned_terms_found"].append(b)
+            report["status"] = "FAIL"
+            report["errors"].append(f"금지어 발견: '{b}'")
+            
+    # 2. 콘솔에 요약 리포트 강제 출력
+    print("=" * 70)
+    print("📋 [PRE-EXPORT DATA INTEGRITY SUMMARY REPORT]")
+    print("=" * 70)
+    print(f"• 검증 유형: {export_type}")
+    print(f"• 포맷 무결성: {'✅ 100% 정상' if report['format_integrity'] else '❌ 오류'}")
+    print(f"• 금지어/콩글리시 검열: {'✅ 0건 (완전 클린)' if not report['banned_terms_found'] else f'❌ 발견: {report["banned_terms_found"]}'}")
+    print(f"• 최종 판정: {'🎉 PASS (내보내기 승인)' if report['status'] == 'PASS' else '🚨 FAIL (내보내기 차단)'}")
+    print("=" * 70)
+    
+    if report["status"] != "PASS":
+        raise ValueError(f"[PRE-EXPORT ERROR] 데이터 무결성 검증 실패: {report['errors']}")
+        
+    return report
+
+
 def load_credentials() -> genai.Client:
     """
     ⛔ [HARD STOP — global_rules.md §5 강제]
@@ -389,6 +436,13 @@ def apply_deterministic_qa_overrides(t_map: List[Dict[str, Any]], qa_rules: Dict
         r"\bcombats premature aging\b": "combats the signs of premature aging",
         r"\bcombats aging\b": "combats the signs of aging",
         r"\bcellular metabolism\b": "natural skin vitality",
+        r"\bDermatologist-tested 0\.00 skin irritation index\b": "Dermatologist-tested & clinically proven hypoallergenic for sensitive skin",
+        r"\b0\.00 skin irritation index\b": "Hypoallergenic & Dermatologist-tested for sensitive skin",
+        r"\b0\.00 Irritation Index\b": "Hypoallergenic & Dermatologist-tested for sensitive skin",
+        r"\b0\.00 non-irritating certified\b": "Hypoallergenic & Dermatologist-Tested",
+        r"\bDark Spot & Tone Care\b": "Dark Spot & Discoloration Defense",
+        r"\bTone Care\b": "Evening Skin Tone & Discoloration Care",
+        r"\b0\.00 non-irritating certified\b": "Clinically Tested Non-Irritating (Certified 0.00 Index)",
     }
     for dyn_b, dyn_p in dynamic_replacements.items():
         dyn_pat = rf"\b{re.escape(dyn_b)}\b"

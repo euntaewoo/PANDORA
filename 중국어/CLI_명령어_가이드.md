@@ -22,7 +22,7 @@
 > - **실측 동작 특성 비교**:
 >   - `T = 0.5`: 상위 1~2개 고확률 단어에 선택이 집중되어 결정론적/보수적 연산 수행 (문장이 딱딱한 기계 직역으로 고착됨).
 >   - `T = 0.7`: 하위 확률 단어의 채택 가능성이 높아져 무작위성 및 창의성은 증가하나, 원문에 없는 과장/절대화 금지어 환각 및 광고법 위반 리스크 급증.
->   - `T = 0.6`: 해외 화장품 광고법(미국 MoCRA, 대만 TFDA, 일본 약기법, 중국 NMPA) 위반 리스크 차단과 백화점·세포라급 럭셔리 초월번역(Transcreation) 감성 품질 간의 **최적 균형점(황금 비율)**.
+>   - `T = 0.6`: 중화권 화장품 광고법(중국 본토 NMPA 신광고법 및 대만 TFDA 규정) 위반 리스크 차단과 티몰·샤오홍슈·모모급 럭셔리 초월번역(Transcreation) 감성 품질 간의 **최적 균형점(황금 비율)**.
 
 
 ---
@@ -112,7 +112,25 @@ python C:\Users\euntaewoo\Desktop\multilingual_text_in_image_translatio_agy_sdk\
 
 ## 🏆 초월번역(Transcreation) 품질 자동 평가 4대 루브릭 (100점 만점)
 - **① 현지 카테고리 어휘 적합성 (30점)**: 콩글리시/직역투 배제, 현지 뷰티 플랫폼 네이티브 어휘 채택
-- **② 국가별 광고법 무결성 (30점)**: 미국 MoCRA, 일본 약기법, 중국 NMPA/신광고법 위반 표현 100% 차단
+- **② 중화권 광고법 무결성 (30점)**: 중국 대륙 NMPA 신광고법 및 대만 TFDA 광고법 위반 표현 100% 차단
 - **③ 브랜드 감성 및 초월번역 완성도 (25점)**: 백화점·세포라급 하이엔드 뷰티 톤앤매너 및 구매 전환 설득력
 - **④ 시각적 레이아웃 및 가독성 (15점)**: 텍스트 박스 침범 방지 및 간결한 문장 구조
 - **[합격 기준 및 자가치유]**: **90점 이상 & 위반 0건 합격**, 미달 시 피드백 기반 **최대 2회 자동 재렌더링 및 `Transcreation_QA_Report.html` 발행**
+
+## [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK] 결과물 내보내기 전 사전 무결성 검증 및 리포트 선-출력 강제
+1. **[HARD STOP] 결과물 파일 내보내기 전 무조건 사전 검증 실행**:
+   - 결과물 파일(.png, .html, .docx, .txt, .md 등)을 생성·저장·보고하기 전, 데이터 무결성과 포맷 규격을 체크하는 검증 함수(`pre_export_integrity_check`) 및 린터를 무조건 실행해야 합니다.
+2. **[REPORT-FIRST] 데이터 무결성 요약 리포트 선-출력 의무화**:
+   - 에이전트는 최종 결과물이나 파일 링크를 사용자에게 제시하기 전, 반드시 응답 상단에 `### 📋 [DATA-INTEGRITY-SUMMARY-REPORT]` 요약 리포트 표(포맷 무결성, 콩글리시/금지어 0건 여부, 수치 일치성, 4종 파일 생성 여부)를 먼저 출력하여 검증 결과를 입증해야 합니다. 이 리포트 출력이 누락된 답변은 즉시 무효로 간주합니다.
+
+## [GLOBAL-COMPLIANCE-STANDARDS] 영미권/글로벌 뷰티 표준 용어 및 콩글리시 배제 규격
+1. **무자극/저자극 공인 표준 표기**: 한국 인체적용시험 성적서의 '피부자극지수 0.00' 직역투를 엄격히 금지하고 반드시 `Hypoallergenic & Dermatologist-tested for sensitive skin` 또는 `Dermatologist-tested & clinically proven hypoallergenic`으로 표기합니다.
+2. **피부톤 케어 표준 표기**: 'Tone Care / Dark Spot & Tone Care' 등 콩글리시 단순 단어 조합을 배제하고 `Dark Spot & Discoloration Defense` 또는 `Evening Skin Tone & Discoloration Care` 표준 명칭을 강제합니다.
+---
+
+## [PREVENT-SEMANTIC-DRIFT] 지시사항 누락 방지 및 출력 생성제어 4대 안전장치
+
+1. **[LAZY-CODING-HARD-BAN]**: `// ... 기존 코드와 동일 ...`, `TODO:`, `...` 등 일체의 축약/생략 표현 전면 금지.
+2. **[PRE-EXECUTION-CHECKLIST]**: 복합 요구사항 처리 시 지시사항 이행 매트릭스(표) 선행 검증 강제.
+3. **[DIFF-FORMAT-STANDARD]**: 긴 코드/데이터 수정 시 불필요한 전체 재출력을 방지하여 토큰 버짓 보호.
+4. **[THINKING-BUDGET-CONTROL]**: 추론(Thinking) 토큰의 본문 잠식을 차단하는 파라미터 규격화 (`max_output_tokens=8192`, 최신 `gemini-3.1-*` 플래그십 유지).

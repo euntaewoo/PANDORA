@@ -260,3 +260,12 @@ C:\Users\euntaewoo\
 | 2026-05-11 | v1.4 | [MANDATORY-PROTOCOL] 도입 및 시스템 규칙(GEMINI.md) 하드닝 반영 |
 | 2026-08-06 | v1.5 | pdp-generator 전역 의존 독립 에이전트 경로, PART 5 통합 및 2026-08 고시정보 표 표준 규격 반영 판 |
 | **2026-08-19** | **v1.6** | **다국어 원클릭 이미지 번역 엔진(multilingual_text_in_image_translatio_agy_sdk_core) 통합 구축, 단일 공통 인풋(01_번역대상_원본) 및 [방안 3] 상품별 자동 서브폴더 격리 저장 아키텍처 공식 표준 등재 판** |
+
+## [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK] 결과물 내보내기 전 사전 무결성 검증 및 리포트 선-출력 강제
+1. **[HARD STOP] 결과물 파일 내보내기 전 무조건 사전 검증 실행**:
+   - 결과물 파일(.png, .html, .docx, .txt, .md 등)을 생성·저장·보고하기 전, 데이터 무결성과 포맷 규격을 체크하는 검증 함수(`pre_export_integrity_check`) 및 린터를 무조건 실행해야 합니다.
+2. **[REPORT-FIRST] 데이터 무결성 요약 리포트 선-출력 의무화**:
+   - 에이전트는 최종 결과물이나 파일 링크를 사용자에게 제시하기 전, 반드시 응답 상단에 `### 📋 [DATA-INTEGRITY-SUMMARY-REPORT]` 요약 리포트 표(포맷 무결성, 콩글리시/금지어 0건 여부, 수치 일치성, 4종 파일 생성 여부)를 먼저 출력하여 검증 결과를 입증해야 합니다. 이 리포트 출력이 누락된 답변은 즉시 무효로 간주합니다.
+3. **[GLOBAL-COMPLIANCE] 영미권/글로벌 뷰티 표준 명칭 강제**:
+   - 무자극/저자극: 한국 성적서 0.00 직역투 배제 -> `Hypoallergenic & Dermatologist-tested for sensitive skin` 표준 강제.
+   - 피부톤 케어: 'Tone Care / Dark Spot & Tone Care' 콩글리시 배제 -> `Dark Spot & Discoloration Defense` 표준 강제.

@@ -61,7 +61,7 @@ sequenceDiagram
   - **Core Ingredients**: (3~4개 핵심 유효 성분 및 정량 농도)
   - **Key Benefits**: (각국 화장품법 허용 효능 클레임)
   - **Texture & Absorption**: (제형 및 흡수력 특성)
-  - **Skin Compatibility**: (저자극 지수 0.00 및 피부 적합성)
+  - **Skin Compatibility**: (영미권 공인 표준 표기 `Hypoallergenic & Dermatologist-tested for sensitive skin` 및 피부 적합성)
 
 ### Sector 3. 제품 상세 스펙 비교표 (Product Specifications & Comparison Table)
 - **제약 사항**: 구글 AI Overviews 및 아마존 루퍼스가 긁어가기 쉬운 2차원 HTML `<table>` 구조.
@@ -95,3 +95,7 @@ sequenceDiagram
 | **`.html`** | `[상품명]_[언어]_SEO_GEO_AEO_VIEWER.html` | 웹 브라우저에서 버튼 클릭 한 번으로 항목별/전체 HTML 복사 |
 | **`.txt`** | `[상품명]_[언어]_SEO_GEO_AEO.txt` | 대량 ERP 등록 및 메모장 열람용 (CRLF 개행 보존) |
 | **`.md`** | `[상품명]_[언어]_SEO_GEO_AEO.md` | 마크다운 에디터 및 아카이빙용 표준 문서 |
+
+## [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK] 결과물 내보내기 전 사전 무결성 검증 및 리포트 강제
+1. **사전 검증 강제**: 결과물 파일(.png, .html, .docx, .txt, .md 등)을 최종 내보내기 전, 데이터 무결성과 포맷 규격을 체크하는 검증 단계를 무조건 실행합니다.
+2. **요약 리포트 선-출력 의무화**: 에이전트는 결과물 링크 제시 전 반드시 `[DATA-INTEGRITY-SUMMARY-REPORT]` 요약 리포트를 사용자에게 먼저 출력해야 합니다.

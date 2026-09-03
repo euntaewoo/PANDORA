@@ -41,11 +41,18 @@
    - `nutrients for cellular vitality` ➔ `hydration for a resilient-looking complexion`
    - `reinforces cellular resilience` ➔ `reinforces the skin's natural moisture barrier`
    - `combats premature aging` ➔ `combats the signs of premature aging`
+   - `0.00 skin irritation index` ➔ `Hypoallergenic & Dermatologist-tested for sensitive skin`
+   - `Tone Care / Dark Spot & Tone Care` ➔ `Dark Spot & Discoloration Defense / Evening Skin Tone` (한국식 콩글리시 조합 탈피 및 영미권 표준 명칭 강제) / `Clinically tested for zero irritation` (한국식 시험성적서 직역 배제 및 공인 '무자극' 표준 표기 강제)
 4. **결정론적 후처리 게이트 (`apply_deterministic_qa_overrides`)**: Python 정규식 필터에서 금지어를 1ms 내에 전수 자동 교정.
 
 ## 10. [SEO-GEO-AEO-STANDARDS] 검색엔진 최적화 표준 규격
-1. **4-Core 표준 구조 강제**: 1. 공식 상품명 (100자 이내 NPO) ➔ 2. 핵심 가치 및 5줄 마이크로 요약 ➔ 3. 제품 상세 비교 스펙 테이블 (HTML Table) ➔ 4. 5대 핵심 FAQ.
+1. **4-Core 표준 구조 강제**: 1. 공식 상품명 (100자 이내 NPO) ➔ 2. 핵심 가치 및 5줄 마이크로 요약(Skin Compatibility: 무자극 공식 명칭 `Clinically tested, non-irritating` 강제) ➔ 3. 제품 상세 비교 스펙 테이블 (HTML Table) ➔ 4. 5대 핵심 FAQ.
 2. **하이브리드 듀얼 인제스천 (Dual Ingestion)**: `url.txt` 존재 시 웹 실시간 HTML 스크래핑 팩트 주입. 미출시 제품은 고시표 이미지 앵커링(`is_table: true`) 및 INCI/KCID 사전 보정으로 100% 무결점 팩트 복원.
 3. **[HARD STOP] Zero Meta Commentary**: 결과물에 `GEO`, `AEO`, `RAG`, `(Character Count: 85)` 등 내부 개발/최적화 용어 출력 100% 영구 금지 (순수 B2C 고객 대면용 카피).
 4. **트리플 익스포트(Triple Export) 파이프라인**: 번역 완료 시 `[상품명]_[언어]_SEO_GEO_AEO.docx` (MS Word 서식), `.html` (원클릭 복사 뷰어), `.txt` (가독성 개행 텍스트), `.md` 4종 파일 일괄 동시 생성 의무화.
 
+## 11. [PRE-EXPORT-INTEGRITY-VERIFICATION-LOCK] 결과물 내보내기 전 사전 무결성 검증 및 리포트 강제
+1. **[HARD STOP] 결과물 파일 내보내기 전 무조건 사전 검증 실행**:
+   - 결과물 파일(.png, .html, .docx, .txt, .md 등)을 생성·저장·보고하기 전, 데이터 무결성과 포맷 규격을 체크하는 검증 함수(`pre_export_integrity_check`) 및 린터를 무조건 실행해야 합니다.
+2. **[REPORT-FIRST] 데이터 무결성 요약 리포트 선-출력 의무화**:
+   - 에이전트는 최종 결과물이나 파일 링크를 사용자에게 제시하기 전, 반드시 응답 상단에 `### 📋 [DATA-INTEGRITY-SUMMARY-REPORT]` 요약 리포트 표(포맷 무결성, 콩글리시/금지어 0건 여부, 수치 일치성, 4종 파일 생성 여부)를 먼저 출력하여 검증 결과를 입증해야 합니다. 이 리포트 출력이 누락된 답변은 즉시 무효로 간주합니다.
